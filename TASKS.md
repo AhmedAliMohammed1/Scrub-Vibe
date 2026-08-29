@@ -1,0 +1,27 @@
+# Tasks
+
+## Phase 0 — Discovery
+
+- [x] **DONE** Inspect repository (empty greenfield). Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Inspect reference information architecture and storefront journey. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Define phased architecture and recovery state. Tests: PASS. Commit: foundation checkpoint.
+
+## Phase 1 — Foundation
+
+- [x] **DONE** Create Next.js 16 / TypeScript / Tailwind project structure. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Add design tokens, owned UI primitive and responsive bilingual shell. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Add initial storefront, catalogue contract and original asset. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Add Vitest and CI configuration. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Install dependencies and generate pnpm lockfile. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Pass lint, typecheck, unit tests and production build. Tests: PASS. Commit: foundation checkpoint.
+- [x] **DONE** Browser QA at required breakpoints and RTL. Tests: PASS. Commit: foundation checkpoint.
+
+## Phase 2 — Database/Auth
+
+- [ ] **IN_PROGRESS** Create and verify Supabase foundation migration and RLS. Tests: NOT_RUN.
+- [ ] **TODO** Implement SSR auth and server-validated RBAC. Tests: NOT_RUN.
+
+## Phase 3+
+
+- [ ] **TODO** Implement production catalogue/search/inventory repository. Tests: NOT_RUN.
+- [ ] **TODO** Implement customer, checkout, orders, admin, analytics, risk and production validation phases. Tests: NOT_RUN.
