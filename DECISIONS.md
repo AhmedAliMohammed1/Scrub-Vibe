@@ -23,3 +23,11 @@
 ## ADR-006 — Original editorial identity
 
 **Status:** Accepted. **Reason:** The reference informs structure only. NOVA Cairo uses original copy, generated photography and a sand/clay/olive visual system.
+
+## ADR-007 — Database-backed RBAC with private policy helper
+
+**Status:** Accepted. **Reason:** Roles are server-controlled relational data. A private `security definer` helper performs indexed role lookup for RLS, explicitly checks `auth.uid()`, fixes its search path and revokes broad execution.
+
+## ADR-008 — Supabase session refresh in Next.js 16 Proxy
+
+**Status:** Accepted. **Reason:** Server Components cannot write refreshed cookies. Proxy verifies claims before rendering and propagates the cache-prevention headers supplied by the current SSR client.

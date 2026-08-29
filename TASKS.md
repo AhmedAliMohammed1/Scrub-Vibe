@@ -18,8 +18,9 @@
 
 ## Phase 2 — Database/Auth
 
-- [ ] **IN_PROGRESS** Create and verify Supabase foundation migration and RLS. Tests: NOT_RUN.
-- [ ] **TODO** Implement SSR auth and server-validated RBAC. Tests: NOT_RUN.
+- [ ] **BLOCKED** Execute Supabase foundation migration and live RLS tests. Static tests: PASS. Blocker: Docker or hosted project connection.
+- [x] **DONE** Implement normalized identity/catalogue/variant/inventory migration, grants and policies. Tests: PASS (static security invariants). Commit: pending Phase 2 checkpoint.
+- [x] **DONE** Implement SSR auth and server-validated RBAC. Tests: PASS. Commit: pending Phase 2 checkpoint.
 
 ## Phase 3+
 
