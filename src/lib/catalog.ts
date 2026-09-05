@@ -1,19 +1,9 @@
-import { demoProducts } from "../features/catalog/demo-catalog";
-import type { Product } from "../features/catalog/types";
+import { DevelopmentCatalog } from "../features/catalog/development-catalog";
+import type { CatalogRepository } from "../features/catalog/repository";
+import { hasSupabaseEnvironment } from "./supabase/config";
+import { createPublicClient } from "./supabase/public";
+import { SupabaseCatalog } from "../server/catalog/supabase-catalog";
 
-export interface CatalogRepository {
-  featured(): Promise<Product[]>;
-  bySlug(slug: string): Promise<Product | null>;
-}
-
-class DevelopmentCatalog implements CatalogRepository {
-  async featured() {
-    return demoProducts;
-  }
-  async bySlug(slug: string) {
-    return demoProducts.find((product) => product.slug === slug) ?? null;
-  }
-}
-
-// Switch to SupabaseCatalog once credentials are configured; UI never depends on the adapter.
-export const catalog: CatalogRepository = new DevelopmentCatalog();
+export const catalog: CatalogRepository = hasSupabaseEnvironment()
+  ? new SupabaseCatalog(createPublicClient)
+  : new DevelopmentCatalog();

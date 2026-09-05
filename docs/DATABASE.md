@@ -4,8 +4,9 @@
 
 - Project ref: `iqufqtjotgpmhhtvlxwf`
 - PostgreSQL: 17.6
-- Applied migrations: `foundation_identity_catalogue`, `optimize_inventory_select_policy`
-- Verification: 13/13 tables have RLS; security advisor clean; Data API read verified with the publishable key
+- Applied migrations: `foundation_identity_catalogue`, `optimize_inventory_select_policy`, `seed_initial_catalogue`
+- Verification: 13/13 tables have RLS; security advisor clean; anonymous Data API reads return the seeded catalogue through the publishable key
+- Seeded catalogue: 2 categories, 4 bilingual products, 15 active variants and 15 inventory rows
 
 The target model is normalized around products → options → values → variants, with per-variant inventory and append-only movements. Orders snapshot product, variant, price and tax display data to remain historically accurate.
 
@@ -17,4 +18,6 @@ The first CLI-generated migration creates normalized profile/RBAC, category, pro
 
 All 13 exposed tables enable RLS. Client grants are revoked globally and selectively restored. Public catalogue policies expose only active published products, while profile access is owner-scoped. Staff checks use a private, locked-down role lookup rather than editable user metadata.
 
-Local migration execution is pending because Docker is unavailable on this workstation. Run `pnpm supabase start`, `pnpm supabase db reset`, and `pnpm supabase test db` in an environment with Docker before applying to a hosted project.
+The production storefront reads normalized catalogue rows through a typed server-only Supabase adapter. The initial seed resolves generated identities with `RETURNING` rather than hardcoding IDs and is safe to replay through its unique-key upserts.
+
+Local migration execution remains unavailable because Docker is not installed on this workstation. Run `pnpm supabase start`, `pnpm supabase db reset`, and `pnpm supabase test db` in an environment with Docker when local PostgreSQL parity is needed.

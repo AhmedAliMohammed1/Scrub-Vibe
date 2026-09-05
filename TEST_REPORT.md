@@ -42,3 +42,17 @@
 - Lint: PASS — zero warnings
 - Typecheck: PASS — strict TypeScript
 - Build: PASS — Next.js 16.3.3 production build with Proxy and all application routes
+
+## Production catalogue checkpoint — 2026-09-05
+
+- Migration: PASS — `seed_initial_catalogue` recorded remotely
+- Live data: PASS — 4 active products, 8 translations, 15 active variants and 15 inventory rows visible to `anon` through RLS
+- Unit: PASS — 4 files, 8 tests including normalized Supabase-row mapping
+- Integration: PASS — 1 file, 5 migration-security/seed tests
+- Total: PASS — 5 files, 13 tests
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript with generated database types wired into every Supabase client
+- Build: PASS — Next.js 16.3.3 production build
+- Local browser: PASS — Supabase-backed home and product detail routes; correct localized title, prices, sizes, sale/low-stock badges; no fresh console errors
+- Security advisor: PASS — zero findings
+- Performance advisor: PASS — zero warnings; informational unused-index notices expected on the new low-traffic schema

@@ -18,6 +18,14 @@ const inventoryPolicyOptimization = readFileSync(
   "utf8",
 );
 
+const catalogueSeed = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260905154310_seed_initial_catalogue.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -64,5 +72,21 @@ describe("foundation migration security", () => {
     expect(inventoryPolicyOptimization).toMatch(
       /create policy inventory_authenticated_read[\s\S]*to authenticated/,
     );
+  });
+
+  it("seeds localized products without hardcoding generated identities", () => {
+    expect(catalogueSeed).toContain('"slug": "linen-ease-shirt"');
+    expect(catalogueSeed).toContain('"slug": "soft-structure-vest"');
+    expect(catalogueSeed).toContain("public.product_translations");
+    expect(catalogueSeed).toContain("public.product_variants");
+    expect(catalogueSeed).toContain("public.inventory");
+    expect(catalogueSeed).toMatch(
+      /insert into public\.products \(\s*category_id,[\s\S]*?\) values \(\s*v_category_id,/,
+    );
+    expect(catalogueSeed).toMatch(
+      /insert into public\.inventory \(\s*variant_id,[\s\S]*?\) values \(\s*v_variant_id,/,
+    );
+    expect(catalogueSeed).toMatch(/returning id into v_product_id/);
+    expect(catalogueSeed).not.toMatch(/overriding system value/i);
   });
 });

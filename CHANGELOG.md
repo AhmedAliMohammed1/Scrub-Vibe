@@ -14,3 +14,6 @@
 - Applied and live-verified the Supabase foundation migration on the hosted production project.
 - Added a follow-up migration that removes overlapping permissive inventory read policies.
 - Generated TypeScript database types from the live Supabase schema.
+- Added a typed server-only Supabase catalogue repository while preserving the development adapter for unconfigured environments.
+- Seeded four bilingual products with normalized options, 15 variants and per-variant inventory in production.
+- Verified the Supabase-backed home and product detail routes end to end with no fresh browser errors.

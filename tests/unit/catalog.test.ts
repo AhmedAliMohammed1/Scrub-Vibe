@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { catalog } from "../../src/lib/catalog";
+import { DevelopmentCatalog } from "../../src/features/catalog/development-catalog";
+
 describe("catalog contract", () => {
+  const catalog = new DevelopmentCatalog();
+
   it("returns variant-ready products", async () => {
     const products = await catalog.featured();
     expect(products.length).toBeGreaterThan(0);
