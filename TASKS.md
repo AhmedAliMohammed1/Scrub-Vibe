@@ -27,5 +27,5 @@
 
 - [x] **DONE** Implement the production Supabase catalogue/inventory read repository and localized seed. Tests: PASS (live RLS + local browser).
 - [ ] **TODO** Implement catalogue search and richer filtering. Tests: NOT_RUN.
-- [ ] **TODO** Implement customer authentication UI against the existing SSR auth foundation. Tests: NOT_RUN.
+- [x] **DONE** Implement customer authentication UI against the existing SSR auth foundation. Tests: PASS (21 total + local browser).
 - [ ] **TODO** Implement customer, checkout, orders, admin, analytics, risk and production validation phases. Tests: NOT_RUN.

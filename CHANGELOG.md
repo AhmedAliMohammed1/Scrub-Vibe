@@ -17,3 +17,5 @@
 - Added a typed server-only Supabase catalogue repository while preserving the development adapter for unconfigured environments.
 - Seeded four bilingual products with normalized options, 15 variants and per-variant inventory in production.
 - Verified the Supabase-backed home and product detail routes end to end with no fresh browser errors.
+- Added bilingual customer sign-in, registration, sign-out, password recovery/update and authenticated account experiences.
+- Added PKCE/OTP email confirmation handling with server-validated callback destinations and auth validation coverage.

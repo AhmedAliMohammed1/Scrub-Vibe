@@ -56,3 +56,15 @@
 - Local browser: PASS — Supabase-backed home and product detail routes; correct localized title, prices, sizes, sale/low-stock badges; no fresh console errors
 - Security advisor: PASS — zero findings
 - Performance advisor: PASS — zero warnings; informational unused-index notices expected on the new low-traffic schema
+
+## Customer authentication checkpoint — 2026-09-06
+
+- Unit: PASS — 5 files, 16 tests including auth input and callback redirect safety
+- Integration: PASS — 1 file, 5 migration-security/seed tests
+- Total: PASS — 6 files, 21 tests
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript after Next.js route type generation
+- Build: PASS — Next.js 16.3.3 production build with all sign-in, sign-up, recovery, account and confirmation routes
+- Local browser: PASS — English and Arabic auth screens, empty-form server validation, signup password confirmation and invalid callback recovery
+- Browser console: PASS — no application warnings, errors or framework overlays
+- External email flow: NOT_RUN — no customer address was used and no account/recovery email was sent
