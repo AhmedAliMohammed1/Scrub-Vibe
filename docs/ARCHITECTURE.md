@@ -4,6 +4,8 @@ Next.js App Router serves localized React Server Component pages. Reads go throu
 
 The present `DevelopmentCatalog` is an explicit no-credentials adapter. It preserves the production interface but is not a production data store.
 
+Catalogue discovery is request-driven: the shop page parses a strict allow-list of URL search parameters, loads the RLS-filtered catalogue through the active repository, then applies a pure localized filter/sort pipeline. This keeps URLs shareable and the filter contract independently testable; database-side search can replace the pipeline when catalogue scale requires pagination without changing the page interface.
+
 ## Boundaries
 
 - `src/app` — routing, metadata and composition

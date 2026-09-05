@@ -70,3 +70,15 @@
 - Production deployment: PASS — auth UI from commit `4a84dac` is live on the Vercel production alias
 - Supabase callback configuration: PASS — production Site URL and `https://scrub-vibe-tau.vercel.app/**` redirect allow-list verified in the dashboard
 - External email flow: NOT_RUN — no customer address was used and no account/recovery email was sent
+
+## Catalogue search and filtering checkpoint — 2026-09-06
+
+- Unit: PASS — 6 files, 21 tests including URL normalization, localized search, combined filters and immutable sorting
+- Integration: PASS — 1 file, 5 migration-security/seed tests
+- Total: PASS — 7 files, 26 tests
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript after Next.js route type generation
+- Build: PASS — Next.js 16.3.3 production build
+- Local browser: PASS — Supabase-backed base catalogue, combined audience/size/sale/price filter, GET form navigation, Arabic search, invalid-parameter normalization and empty state
+- Responsive QA: PASS — full filter form and product results at 375px with no horizontal overflow
+- Browser console: PASS — fresh final session has no warnings, errors or framework overlays

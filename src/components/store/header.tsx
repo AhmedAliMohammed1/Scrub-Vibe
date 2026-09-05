@@ -41,9 +41,9 @@ export function Header({ locale }: { locale: Locale }) {
             NOVA<span className="text-[#a6432b]">.</span>
           </Link>
           <div className="flex items-center gap-4">
-            <button aria-label="Search">
+            <Link href={`/${locale}/shop#catalog-search`} aria-label="Search">
               <Search size={19} />
-            </button>
+            </Link>
             <Link
               href={`/${locale}/account`}
               className="hidden sm:block"
@@ -81,7 +81,13 @@ export function Header({ locale }: { locale: Locale }) {
           {t.nav.slice(4).map((item, i) => (
             <Link
               key={item}
-              href={`/${locale}/shop?edit=${i}`}
+              href={
+                i === 0
+                  ? `/${locale}/shop?category=accessories`
+                  : i === 2
+                    ? `/${locale}/shop?sale=1`
+                    : `/${locale}/shop`
+              }
               className={i === 2 ? "nav-sale" : "nav-secondary"}
             >
               {item}

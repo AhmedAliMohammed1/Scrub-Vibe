@@ -67,8 +67,12 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
   const activeVariants = row.product_variants.filter(
     (variant) => variant.is_active,
   );
+  const inStockVariants = activeVariants.filter((variant) => {
+    const inventory = variant.inventory;
+    return inventory !== null && inventory.on_hand - inventory.reserved > 0;
+  });
   const activeValueIds = new Set(
-    activeVariants.flatMap((variant) =>
+    inStockVariants.flatMap((variant) =>
       variant.product_variant_values.map((value) => value.option_value_id),
     ),
   );
@@ -98,11 +102,13 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
     price: row.base_price_minor,
     compareAt: row.compare_at_price_minor ?? undefined,
     color: color?.swatch_hex ?? "#c8b298",
+    colorCode: color?.code ?? "natural",
     colorName: {
       en: color?.label_en ?? "Natural",
       ar: color?.label_ar ?? "طبيعي",
     },
     sizes,
+    inStock: inStockVariants.length > 0,
     badge: row.compare_at_price_minor
       ? "sale"
       : hasLowStockVariant

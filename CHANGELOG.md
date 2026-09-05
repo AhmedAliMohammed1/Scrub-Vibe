@@ -20,3 +20,6 @@
 - Added bilingual customer sign-in, registration, sign-out, password recovery/update and authenticated account experiences.
 - Added PKCE/OTP email confirmation handling with server-validated callback destinations and auth validation coverage.
 - Configured the production Supabase Site URL and deployed-app redirect allow-list for localized authentication callbacks.
+- Added localized catalogue search with URL-addressable audience, size, colour, price, sale and stock filters.
+- Added featured, price and localized-name sorting, filter-aware headings, corrected result grammar and clearable empty states.
+- Connected the header search and merchandising navigation to meaningful catalogue views and exposed only in-stock variant sizes.

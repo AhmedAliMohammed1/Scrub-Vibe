@@ -92,8 +92,10 @@ describe("Supabase catalogue mapping", () => {
       price: 109900,
       compareAt: 139900,
       color: "#ede5d5",
+      colorCode: "bone",
       colorName: { en: "Bone", ar: "عاجي" },
       sizes: ["S", "M"],
+      inStock: true,
       badge: "sale",
       art: "clay",
     });
@@ -111,8 +113,10 @@ describe("Supabase catalogue mapping", () => {
     ).toMatchObject({
       title: { en: "Soft Structure Vest", ar: "Soft Structure Vest" },
       color: "#c8b298",
+      colorCode: "natural",
       colorName: { en: "Natural", ar: "طبيعي" },
       sizes: [],
+      inStock: false,
       badge: "new",
       art: "sand",
     });

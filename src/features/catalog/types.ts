@@ -6,8 +6,10 @@ export type Product = {
   price: number;
   compareAt?: number;
   color: string;
+  colorCode: string;
   colorName: { en: string; ar: string };
   sizes: string[];
+  inStock: boolean;
   badge?: "new" | "sale" | "low";
   art: "clay" | "olive" | "ink" | "sand";
 };
