@@ -82,3 +82,4 @@
 - Local browser: PASS — Supabase-backed base catalogue, combined audience/size/sale/price filter, GET form navigation, Arabic search, invalid-parameter normalization and empty state
 - Responsive QA: PASS — full filter form and product results at 375px with no horizontal overflow
 - Browser console: PASS — fresh final session has no warnings, errors or framework overlays
+- Production deployment: PASS — commit `b716a52` serves the combined audience/size/sale filter correctly on the Vercel production alias

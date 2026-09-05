@@ -13,7 +13,7 @@
 - **Latest tests:** PASS — 7 files, 26 tests, including catalogue URL parsing, combined filtering and immutable sorting
 - **Latest build:** PASS — Next.js 16.3.3 production build
 - **Latest local browser verification:** PASS — Supabase-backed search, combined filters, form navigation, sorting state, localized Arabic results, empty state and 375px no-overflow; no fresh console errors
-- **Latest deployment:** PASS — auth checkpoint `4a84dac` is live at https://scrub-vibe-tau.vercel.app/en/account
+- **Latest deployment:** PASS — catalogue search checkpoint `b716a52` is live at https://scrub-vibe-tau.vercel.app/en/shop
 - **Exact next action:** implement database-backed customer cart and wishlist persistence with safe anonymous-to-authenticated merge behavior.
 
 ## Latest visual QA
