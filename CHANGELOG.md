@@ -11,3 +11,6 @@
 - Added a CLI-generated Supabase identity/catalogue/variant/inventory migration with least-privilege grants and RLS.
 - Added Next.js 16 Proxy session refresh, Supabase browser/server clients and server-enforced RBAC guards.
 - Updated pinned Supabase CLI, SSR and JavaScript clients to current stable releases.
+- Applied and live-verified the Supabase foundation migration on the hosted production project.
+- Added a follow-up migration that removes overlapping permissive inventory read policies.
+- Generated TypeScript database types from the live Supabase schema.

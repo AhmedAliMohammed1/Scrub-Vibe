@@ -10,6 +10,14 @@ const migration = readFileSync(
   "utf8",
 );
 
+const inventoryPolicyOptimization = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260829194305_optimize_inventory_select_policy.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -40,6 +48,21 @@ describe("foundation migration security", () => {
     expect(migration).toContain("set search_path = ''");
     expect(migration).toContain(
       "revoke execute on function private.has_any_role(public.app_role[]) from public, anon",
+    );
+  });
+
+  it("keeps anonymous and authenticated inventory reads role-disjoint", () => {
+    expect(inventoryPolicyOptimization).toContain(
+      "drop policy inventory_public_read on public.inventory",
+    );
+    expect(inventoryPolicyOptimization).toContain(
+      "drop policy inventory_staff_select on public.inventory",
+    );
+    expect(inventoryPolicyOptimization).toMatch(
+      /create policy inventory_public_read[\s\S]*to anon/,
+    );
+    expect(inventoryPolicyOptimization).toMatch(
+      /create policy inventory_authenticated_read[\s\S]*to authenticated/,
     );
   });
 });

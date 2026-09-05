@@ -21,3 +21,24 @@
 - Typecheck: PASS
 - Build: PASS — Proxy and all application routes compiled
 - SQL invariants: PASS — 13 created public tables, 13 with RLS; global client grants revoked; deprecated `auth.role()` absent
+
+## Hosted Supabase verification — 2026-08-29
+
+- Migrations: PASS — `foundation_identity_catalogue` and `optimize_inventory_select_policy` recorded remotely
+- Schema: PASS — 13/13 application tables present with RLS enabled
+- Policies: PASS — 21 policies; anonymous and authenticated inventory reads are role-disjoint
+- Grants: PASS — explicit least-privilege `anon` and `authenticated` Data API grants
+- Private RBAC: PASS — `anon` has no private-schema/function access; `authenticated` can execute the role helper
+- Auth trigger: PASS — `on_auth_user_created` exists
+- Data API: PASS — publishable-key product read returned an RLS-filtered empty result
+- Security advisor: PASS — zero findings
+- Performance advisor: PASS — zero warnings after policy optimization; informational unused-index notices expected on empty tables
+
+## Database checkpoint recovery verification — 2026-09-05
+
+- Unit: PASS — 3 files, 6 tests
+- Integration: PASS — 1 file, 4 migration-security tests
+- Total: PASS — 4 files, 10 tests
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript
+- Build: PASS — Next.js 16.3.3 production build with Proxy and all application routes
