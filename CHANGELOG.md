@@ -19,3 +19,4 @@
 - Verified the Supabase-backed home and product detail routes end to end with no fresh browser errors.
 - Added bilingual customer sign-in, registration, sign-out, password recovery/update and authenticated account experiences.
 - Added PKCE/OTP email confirmation handling with server-validated callback destinations and auth validation coverage.
+- Configured the production Supabase Site URL and deployed-app redirect allow-list for localized authentication callbacks.

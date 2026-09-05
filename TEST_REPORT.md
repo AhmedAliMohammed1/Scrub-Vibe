@@ -67,4 +67,6 @@
 - Build: PASS — Next.js 16.3.3 production build with all sign-in, sign-up, recovery, account and confirmation routes
 - Local browser: PASS — English and Arabic auth screens, empty-form server validation, signup password confirmation and invalid callback recovery
 - Browser console: PASS — no application warnings, errors or framework overlays
+- Production deployment: PASS — auth UI from commit `4a84dac` is live on the Vercel production alias
+- Supabase callback configuration: PASS — production Site URL and `https://scrub-vibe-tau.vercel.app/**` redirect allow-list verified in the dashboard
 - External email flow: NOT_RUN — no customer address was used and no account/recovery email was sent
