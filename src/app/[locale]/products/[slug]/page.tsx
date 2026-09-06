@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Heart, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { AddProduct } from "@/components/store/add-product";
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return p
     ? {
         title: p.title[locale],
-        description: `${p.title[locale]} — contemporary clothing by NOVA Cairo.`,
+        description: p.description[locale],
       }
     : {};
 }
@@ -28,6 +29,8 @@ export default async function ProductPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.title[locale],
+    description: p.description[locale],
+    image: p.image.src,
     sku: p.id,
     offers: {
       "@type": "Offer",
@@ -43,17 +46,18 @@ export default async function ProductPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="grid gap-10 lg:grid-cols-[1.35fr_.65fr]">
-        <div
-          className={`product-art art-${p.art} min-h-[520px] lg:min-h-[760px]`}
-        >
-          <div className="garment" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
+        <div className="product-art min-h-[520px] bg-[#ebe9e4] lg:min-h-[760px]">
+          <Image
+            src={p.image.src}
+            alt={p.image.alt[locale]}
+            fill
+            preload
+            sizes="(min-width: 1024px) 60vw, 100vw"
+            className="object-cover object-top"
+          />
         </div>
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <p className="eyebrow text-neutral-500">NOVA · {p.category}</p>
+          <p className="eyebrow text-[#0e7468]">SCRUB VIBE · {p.category}</p>
           <h1 className="mt-4 font-serif text-4xl md:text-5xl">
             {p.title[locale]}
           </h1>
@@ -68,6 +72,9 @@ export default async function ProductPage({ params }: Props) {
               </>
             )}
           </div>
+          <p className="mt-7 max-w-lg text-sm leading-7 text-neutral-600">
+            {p.description[locale]}
+          </p>
           <p className="mt-8 text-xs font-bold uppercase tracking-[.14em]">
             {p.colorName[locale]}
           </p>
@@ -78,7 +85,7 @@ export default async function ProductPage({ params }: Props) {
           <AddProduct product={p} locale={locale} />
           <div className="mt-8 divide-y divide-black/10 border-y border-black/10 text-xs">
             {[
-              [Truck, "Delivery in 2–5 business days"],
+              [Truck, "Delivery across Egypt"],
               [RotateCcw, "14-day returns"],
               [ShieldCheck, "Secure payment or cash on delivery"],
             ].map(([Icon, text]) => {

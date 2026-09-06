@@ -10,21 +10,21 @@ describe("catalogue URL filters", () => {
   it("normalizes supported values and rejects unknown input", () => {
     expect(
       parseCatalogFilters({
-        q: "  linen  ",
+        q: "  scrub  ",
         category: "women",
         size: ["m", "M", "../../bad"],
         color: ["olive", "#invalid"],
-        price: "under-1300",
+        price: "700-900",
         sale: "1",
         stock: "1",
         sort: "price-desc",
       }),
     ).toEqual({
-      query: "linen",
+      query: "scrub",
       category: "women",
       sizes: ["M"],
       colors: ["olive"],
-      price: "under-1300",
+      price: "700-900",
       saleOnly: true,
       inStockOnly: true,
       sort: "price-desc",
@@ -39,7 +39,7 @@ describe("catalogue URL filters", () => {
     const filters = parseCatalogFilters({ q: "زيتوني" });
     expect(
       filterCatalog(demoProducts, filters, "ar").map((item) => item.id),
-    ).toEqual(["p-003"]);
+    ).toEqual(["sv-m2"]);
   });
 
   it("combines audience, size, sale, and price filters", () => {
@@ -47,11 +47,11 @@ describe("catalogue URL filters", () => {
       category: "women",
       size: "M",
       sale: "1",
-      price: "under-1300",
+      price: "700-900",
     });
     expect(
       filterCatalog(demoProducts, filters, "en").map((item) => item.id),
-    ).toEqual(["p-002"]);
+    ).toEqual(["sv-f2", "sv-f9", "sv-f4", "sv-f7", "sv-f6"]);
   });
 
   it("sorts without mutating the repository result", () => {
@@ -63,7 +63,7 @@ describe("catalogue URL filters", () => {
     );
 
     expect(result.map((item) => item.price)).toEqual([
-      159900, 149900, 129900, 109900,
+      85000, 85000, 85000, 85000, 85000, 85000, 85000, 85000, 55000,
     ]);
     expect(products.map((item) => item.id)).toEqual(
       demoProducts.map((item) => item.id),

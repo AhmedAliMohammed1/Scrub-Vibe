@@ -3,17 +3,17 @@ import type { Locale } from "@/lib/i18n";
 
 export function Newsletter({ locale }: { locale: Locale }) {
   return (
-    <section className="bg-[#1e211a] px-5 py-20 text-center text-white">
-      <p className="eyebrow text-white/60">NOVA NOTES</p>
+    <section className="bg-[#073b36] px-5 py-20 text-center text-white">
+      <p className="eyebrow text-white/60">SCRUB VIBE NOTES</p>
       <h2 className="mx-auto mt-4 max-w-xl font-serif text-4xl md:text-5xl">
         {locale === "ar"
-          ? "رسائل قليلة. أفكار جيدة فقط."
-          : "Fewer emails. Better ideas."}
+          ? "ابقَ قريباً من أحدث التصميمات."
+          : "Fresh fits for your next shift."}
       </h2>
       <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-white/65">
         {locale === "ar"
-          ? "سجل لمعرفة الإصدارات الجديدة والقصص والعروض الخاصة."
-          : "Sign up for considered updates on new releases, stories, and private offers."}
+          ? "سجل لمعرفة التصميمات الجديدة والألوان والعروض الخاصة."
+          : "Sign up for new scrub designs, colours and private offers."}
       </p>
       <form className="mx-auto mt-8 flex max-w-md border-b border-white/50">
         <label htmlFor="email" className="sr-only">

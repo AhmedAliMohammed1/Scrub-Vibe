@@ -13,8 +13,10 @@ export default async function SignUpPage({
 
   return (
     <AuthShell
-      eyebrow={locale === "ar" ? "انضم إلى نوفا" : "JOIN NOVA"}
-      title={locale === "ar" ? "مساحتك الخاصة" : "Your considered space"}
+      eyebrow={locale === "ar" ? "انضم إلى سكراب فايب" : "JOIN SCRUB VIBE"}
+      title={
+        locale === "ar" ? "جاهز لشيفتك القادمة" : "Ready for your next shift"
+      }
       body={
         locale === "ar"
           ? "أنشئ حساباً لمتابعة الطلبات وحفظ القطع المفضلة وتسريع عملية الشراء."

@@ -26,6 +26,14 @@ const catalogueSeed = readFileSync(
   "utf8",
 );
 
+const scrubVibeCatalogue = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260905230532_rebrand_scrub_vibe_catalogue.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -88,5 +96,14 @@ describe("foundation migration security", () => {
     );
     expect(catalogueSeed).toMatch(/returning id into v_product_id/);
     expect(catalogueSeed).not.toMatch(/overriding system value/i);
+  });
+
+  it("replaces demo fashion with the localized Scrub Vibe catalogue", () => {
+    expect(scrubVibeCatalogue).toContain('"slug": "female-design-2-scrub-set"');
+    expect(scrubVibeCatalogue).toContain('"slug": "male-design-1-scrub-set"');
+    expect(scrubVibeCatalogue).toContain('"slug": "classic-medical-lab-coat"');
+    expect(scrubVibeCatalogue).toContain("public.product_images");
+    expect(scrubVibeCatalogue).toMatch(/returning id into v_product_id/);
+    expect(scrubVibeCatalogue).not.toMatch(/overriding system value/i);
   });
 });

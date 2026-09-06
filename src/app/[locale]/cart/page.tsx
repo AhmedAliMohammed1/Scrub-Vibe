@@ -13,7 +13,7 @@ export default function CartPage({
   if (!isLocale(locale)) return null;
   return (
     <main className="mx-auto min-h-[60vh] max-w-3xl px-5 py-20">
-      <p className="eyebrow">NOVA BAG</p>
+      <p className="eyebrow">SCRUB VIBE BAG</p>
       <h1 className="mt-4 font-serif text-6xl">
         {locale === "ar" ? "حقيبتك" : "Your bag"}
       </h1>

@@ -14,7 +14,7 @@ export function Header({ locale }: { locale: Locale }) {
       <div className="bg-neutral-950 px-4 py-2 text-center text-[10px] font-medium uppercase tracking-[.18em] text-white">
         {t.freeShipping}
       </div>
-      <header className="relative z-20 border-b border-black/10 bg-[#f6f2ea]/95 backdrop-blur">
+      <header className="relative z-20 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
         <div className="mx-auto flex h-17 max-w-[1600px] items-center justify-between px-4 md:px-8">
           <button className="md:hidden" aria-label="Open menu">
             <Menu size={21} />
@@ -26,7 +26,15 @@ export function Header({ locale }: { locale: Locale }) {
             {t.nav.slice(0, 4).map((item, i) => (
               <Link
                 key={item}
-                href={`/${locale}/shop?category=${["new", "women", "men", "kids"][i]}`}
+                href={
+                  i === 0
+                    ? `/${locale}/shop?category=new`
+                    : i === 1
+                      ? `/${locale}/shop?category=women`
+                      : i === 2
+                        ? `/${locale}/shop?category=men`
+                        : `/${locale}/shop?q=lab+coat`
+                }
                 className="text-[11px] font-semibold uppercase tracking-[.13em] hover:opacity-55"
               >
                 {item}
@@ -36,9 +44,12 @@ export function Header({ locale }: { locale: Locale }) {
           <Link
             href={`/${locale}`}
             className="absolute start-1/2 -translate-x-1/2 text-[25px] font-black tracking-[-.07em]"
-            aria-label="NOVA home"
+            aria-label="Scrub Vibe home"
           >
-            NOVA<span className="text-[#a6432b]">.</span>
+            <span className="tracking-[-.06em]">SCRUB</span>
+            <span className="ms-1 font-light tracking-[-.05em] text-[#0e7468]">
+              VIBE
+            </span>
           </Link>
           <div className="flex items-center gap-4">
             <Link href={`/${locale}/shop#catalog-search`} aria-label="Search">
@@ -83,11 +94,15 @@ export function Header({ locale }: { locale: Locale }) {
               key={item}
               href={
                 i === 0
-                  ? `/${locale}/shop?category=accessories`
-                  : i === 2
-                    ? `/${locale}/shop?sale=1`
-                    : `/${locale}/shop`
+                  ? "https://www.instagram.com/scrubvibe_egy/"
+                  : i === 1
+                    ? `/${locale}#quality`
+                    : i === 2
+                      ? `/${locale}/shop?sale=1`
+                      : `/${locale}/shop`
               }
+              target={i === 0 ? "_blank" : undefined}
+              rel={i === 0 ? "noreferrer" : undefined}
               className={i === 2 ? "nav-sale" : "nav-secondary"}
             >
               {item}

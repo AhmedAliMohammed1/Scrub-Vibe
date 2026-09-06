@@ -9,7 +9,7 @@ const content = {
   en: {
     filter: "Filter & sort",
     search: "Search the collection",
-    searchPlaceholder: "Shirts, linen, olive…",
+    searchPlaceholder: "Scrub set, lab coat, navy…",
     audience: "Audience",
     all: "All",
     new: "New in",
@@ -22,9 +22,9 @@ const content = {
     color: "Colour",
     price: "Price",
     anyPrice: "Any price",
-    under: "Under 1,300 EGP",
-    middle: "1,300–1,500 EGP",
-    over: "Over 1,500 EGP",
+    under: "Under 700 EGP",
+    middle: "700–900 EGP",
+    over: "Over 900 EGP",
     availability: "Availability",
     sale: "Sale only",
     stock: "In stock only",
@@ -39,7 +39,7 @@ const content = {
   ar: {
     filter: "تصفية وترتيب",
     search: "ابحث في المجموعة",
-    searchPlaceholder: "قمصان، كتان، زيتوني…",
+    searchPlaceholder: "طقم سكراب، بالطو، كحلي…",
     audience: "الفئة",
     all: "الكل",
     new: "وصل حديثاً",
@@ -52,9 +52,9 @@ const content = {
     color: "اللون",
     price: "السعر",
     anyPrice: "كل الأسعار",
-    under: "أقل من ١٣٠٠ جنيه",
-    middle: "١٣٠٠–١٥٠٠ جنيه",
-    over: "أكثر من ١٥٠٠ جنيه",
+    under: "أقل من ٧٠٠ جنيه",
+    middle: "٧٠٠–٩٠٠ جنيه",
+    over: "أكثر من ٩٠٠ جنيه",
     availability: "التوفر",
     sale: "التخفيضات فقط",
     stock: "المتوفر فقط",
@@ -135,9 +135,7 @@ export function CatalogFilterForm({
               <option value="new">{t.new}</option>
               <option value="women">{t.women}</option>
               <option value="men">{t.men}</option>
-              <option value="kids">{t.kids}</option>
               <option value="unisex">{t.unisex}</option>
-              <option value="accessories">{t.accessories}</option>
             </select>
           </label>
 
@@ -197,9 +195,9 @@ export function CatalogFilterForm({
               className="mt-2 h-11 w-full border border-black/20 bg-transparent px-3 text-xs font-normal normal-case"
             >
               <option value="">{t.anyPrice}</option>
-              <option value="under-1300">{t.under}</option>
-              <option value="1300-1500">{t.middle}</option>
-              <option value="over-1500">{t.over}</option>
+              <option value="under-700">{t.under}</option>
+              <option value="700-900">{t.middle}</option>
+              <option value="over-900">{t.over}</option>
             </select>
           </label>
 

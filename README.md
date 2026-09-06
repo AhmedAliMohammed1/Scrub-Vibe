@@ -1,6 +1,6 @@
-# NOVA Cairo Commerce
+# Scrub Vibe Commerce
 
-Original bilingual fashion commerce platform for the Egyptian market. The current checkpoint provides a polished storefront foundation and a database-first path to production services.
+Bilingual medical apparel storefront for Scrub Vibe Egypt. The app presents real scrub and lab-coat catalogue data through Supabase with responsive English and Arabic shopping flows.
 
 ## Quick start
 

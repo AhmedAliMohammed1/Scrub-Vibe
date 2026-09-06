@@ -25,18 +25,22 @@ export default async function HomePage({
   const products = await catalog.featured();
   return (
     <main>
-      <section className="relative min-h-[650px] overflow-hidden md:min-h-[780px]">
+      <section className="relative min-h-[650px] overflow-hidden bg-[#073b36] md:min-h-[780px]">
         <Image
-          src="/images/nova-cairo-hero.png"
-          alt="NOVA Cairo summer editorial"
+          src="/images/scrub-vibe/female-collection.webp"
+          alt={
+            locale === "ar"
+              ? "فريق طبي يرتدي سكراب فايب"
+              : "Medical professionals wearing Scrub Vibe sets"
+          }
           fill
-          priority
+          preload
           sizes="100vw"
-          className="object-cover object-[68%_center]"
+          className="object-cover object-[55%_58%] md:object-[60%_55%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#efe2c8]/95 via-[#efe2c8]/35 to-transparent rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#062e2a]/95 via-[#062e2a]/55 to-black/10 rtl:bg-gradient-to-l" />
         <div className="relative mx-auto flex min-h-[650px] max-w-[1600px] items-center px-5 py-24 md:min-h-[780px] md:px-12">
-          <div className="max-w-2xl">
+          <div className="max-w-2xl text-white">
             <p className="eyebrow mb-7">{t.eyebrow}</p>
             <h1 className="hero-title max-w-xl">{t.title}</h1>
             <p className="mt-7 max-w-md text-sm leading-6 md:text-base">
@@ -45,20 +49,20 @@ export default async function HomePage({
             <div className="mt-9 flex flex-wrap gap-3">
               <Link
                 href={`/${locale}/shop?category=women`}
-                className="bg-neutral-950 px-6 py-4 text-[11px] font-bold uppercase tracking-[.14em] text-white"
+                className="bg-white px-6 py-4 text-[11px] font-bold uppercase tracking-[.14em] text-[#073b36]"
               >
                 {t.shopWomen}
               </Link>
               <Link
                 href={`/${locale}/shop?category=men`}
-                className="border border-neutral-950 px-6 py-4 text-[11px] font-bold uppercase tracking-[.14em]"
+                className="border border-white px-6 py-4 text-[11px] font-bold uppercase tracking-[.14em]"
               >
                 {t.shopMen}
               </Link>
             </div>
           </div>
           <ArrowDown
-            className="absolute bottom-7 start-1/2 animate-bounce"
+            className="absolute bottom-7 start-1/2 animate-bounce text-white"
             size={20}
           />
         </div>
@@ -66,7 +70,7 @@ export default async function HomePage({
       <section className="mx-auto max-w-[1600px] px-5 py-20 md:px-10 md:py-28">
         <div className="mb-10 flex items-end justify-between">
           <div>
-            <p className="eyebrow text-[#a6432b]">JUST LANDED</p>
+            <p className="eyebrow text-[#0e7468]">NEW COLLECTION</p>
             <h2 className="mt-3 font-serif text-4xl md:text-6xl">
               {t.arrivals}
             </h2>
@@ -86,34 +90,38 @@ export default async function HomePage({
           ))}
         </div>
       </section>
-      <section className="grid min-h-[640px] overflow-hidden md:grid-cols-2">
-        <div className="relative min-h-[480px] min-w-0 overflow-hidden bg-[#a6432b]">
-          <div className="absolute -end-20 -top-20 size-96 rounded-full border border-white/20" />
-          <div className="absolute -bottom-32 -start-20 size-[34rem] rounded-full border border-white/20" />
-          <div className="absolute inset-0 grid place-items-center">
-            <div className="relative h-[68%] w-[48%] rotate-[-7deg] bg-[#e6d7bd] shadow-2xl">
-              <div className="absolute inset-4 border border-black/15" />
-              <span className="absolute bottom-7 start-7 font-serif text-3xl">
-                N° 01
-              </span>
-            </div>
-          </div>
+      <section
+        id="quality"
+        className="grid min-h-[640px] overflow-hidden md:grid-cols-2"
+      >
+        <div className="relative min-h-[540px] min-w-0 overflow-hidden bg-[#0e7468]">
+          <Image
+            src="/images/scrub-vibe/male-collection.jpg"
+            alt={
+              locale === "ar"
+                ? "سكراب رجالي من سكراب فايب"
+                : "Scrub Vibe male scrub collection"
+            }
+            fill
+            sizes="(min-width: 768px) 50vw, 100vw"
+            className="object-cover object-center"
+          />
         </div>
-        <div className="flex min-w-0 items-center overflow-hidden bg-[#ded4c1] px-8 py-20 md:px-16">
+        <div className="flex min-w-0 items-center overflow-hidden bg-[#dce9e5] px-8 py-20 md:px-16">
           <div className="min-w-0 max-w-lg">
-            <p className="eyebrow text-[#a6432b]">{t.curated}</p>
+            <p className="eyebrow text-[#0e7468]">{t.curated}</p>
             <h2 className="mt-5 font-serif text-5xl leading-[.98] md:text-7xl">
               {locale === "ar"
-                ? "خزانة أخف، باختيارات أدق."
-                : "A lighter wardrobe, considered."}
+                ? "صُنع للراحة. مصمم ليدوم."
+                : "Made for comfort. Built to last."}
             </h2>
             <p className="mt-7 max-w-md text-sm leading-7 text-neutral-700">
               {locale === "ar"
-                ? "قطع أساسية قابلة للتنسيق، مصنوعة لتُلبس كثيراً وتدوم طويلاً."
-                : "Versatile essentials built to be worn often, combined freely, and kept for longer."}
+                ? "نصنع السكراب في مصنعنا بخامات عالية الجودة، وقصات مضبوطة، وجيوب عملية تساعدك في كل شيفت."
+                : "Manufactured in our own factory with premium fabric, a precise fit and practical pockets that work as hard as you do."}
             </p>
             <Link
-              href={`/${locale}/shop?edit=essentials`}
+              href={`/${locale}/shop`}
               className="mt-9 inline-flex items-center gap-2 border-b border-current pb-1 text-[10px] font-bold uppercase tracking-[.15em]"
             >
               {t.viewAll}
@@ -124,10 +132,10 @@ export default async function HomePage({
       </section>
       <section className="trust-grid grid grid-cols-2 md:grid-cols-4">
         {[
-          [Truck, "Free shipping", "Over 1,500 EGP"],
-          [PackageCheck, "Easy returns", "Within 14 days"],
+          [Truck, "Egypt-wide delivery", "To every governorate"],
+          [PackageCheck, "Easy exchange", "Clear, simple policy"],
           [ShieldCheck, "Secure checkout", "Protected payments"],
-          [Headphones, "Here to help", "Every day, 10–10"],
+          [Headphones, "Here to help", "Sunday–Thursday, 10–6"],
         ].map(([Icon, title, body]) => {
           const C = Icon as typeof Truck;
           return (
@@ -143,12 +151,11 @@ export default async function HomePage({
       </section>
       <Newsletter locale={locale} />
       <footer className="flex flex-col justify-between gap-8 px-6 py-10 text-[10px] font-semibold uppercase tracking-[.13em] md:flex-row md:px-10">
-        <span>© 2026 NOVA CAIRO</span>
+        <span>© 2026 SCRUB VIBE EGYPT</span>
         <div className="flex flex-wrap gap-6">
-          <Link href="#">Shipping</Link>
-          <Link href="#">Returns</Link>
-          <Link href="#">Privacy</Link>
-          <Link href="#">Instagram</Link>
+          <Link href="mailto:scrubvibe30@gmail.com">Contact</Link>
+          <Link href="tel:01096733209">01096733209</Link>
+          <Link href="https://www.instagram.com/scrubvibe_egy/">Instagram</Link>
         </div>
       </footer>
     </main>

@@ -3,7 +3,12 @@ import type { Product } from "./types";
 
 type ProductTranslation = Pick<
   Database["public"]["Tables"]["product_translations"]["Row"],
-  "locale" | "title"
+  "locale" | "title" | "description"
+>;
+
+type ProductImage = Pick<
+  Database["public"]["Tables"]["product_images"]["Row"],
+  "storage_path" | "alt_en" | "alt_ar" | "position"
 >;
 
 type OptionValue = Pick<
@@ -39,6 +44,7 @@ export type CatalogProductRow = Pick<
   "id" | "slug" | "gender" | "base_price_minor" | "compare_at_price_minor"
 > & {
   product_translations: ProductTranslation[];
+  product_images: ProductImage[];
   product_options: ProductOption[];
   product_variants: ProductVariant[];
 };
@@ -46,6 +52,16 @@ export type CatalogProductRow = Pick<
 function titleFor(translations: ProductTranslation[], locale: "en" | "ar") {
   return translations.find((translation) => translation.locale === locale)
     ?.title;
+}
+
+function descriptionFor(
+  translations: ProductTranslation[],
+  locale: "en" | "ar",
+) {
+  return (
+    translations.find((translation) => translation.locale === locale)
+      ?.description ?? ""
+  );
 }
 
 function artFor(swatch: string | null | undefined): Product["art"] {
@@ -87,6 +103,9 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
       inventory.on_hand - inventory.reserved <= inventory.low_stock_threshold
     );
   });
+  const image = row.product_images.toSorted(
+    (a, b) => a.position - b.position,
+  )[0];
 
   return {
     id: String(row.id),
@@ -97,6 +116,12 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
         titleFor(row.product_translations, "ar") ??
         titleFor(row.product_translations, "en") ??
         row.slug,
+    },
+    description: {
+      en: descriptionFor(row.product_translations, "en"),
+      ar:
+        descriptionFor(row.product_translations, "ar") ||
+        descriptionFor(row.product_translations, "en"),
     },
     category: row.gender ?? "unisex",
     price: row.base_price_minor,
@@ -115,5 +140,18 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
         ? "low"
         : "new",
     art: artFor(color?.swatch_hex),
+    image: {
+      src: image?.storage_path ?? "/images/scrub-vibe/female-collection.webp",
+      alt: {
+        en:
+          image?.alt_en ?? titleFor(row.product_translations, "en") ?? row.slug,
+        ar:
+          image?.alt_ar ??
+          titleFor(row.product_translations, "ar") ??
+          image?.alt_en ??
+          titleFor(row.product_translations, "en") ??
+          row.slug,
+      },
+    },
   };
 }

@@ -21,7 +21,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   const initial =
     typeof window === "undefined"
       ? null
-      : window.localStorage.getItem("nova-shop");
+      : window.localStorage.getItem("scrub-vibe-shop");
   const parsed = initial
     ? (JSON.parse(initial) as { cart: number; wishlist: string[] })
     : { cart: 0, wishlist: [] };
@@ -34,7 +34,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   );
   useEffect(() => {
     window.localStorage.setItem(
-      "nova-shop",
+      "scrub-vibe-shop",
       JSON.stringify({ cart, wishlist }),
     );
   }, [cart, wishlist]);

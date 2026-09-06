@@ -22,7 +22,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
   if (!userId) {
     return (
       <AuthShell
-        eyebrow={locale === "ar" ? "حساب نوفا" : "NOVA ACCOUNT"}
+        eyebrow={locale === "ar" ? "حساب سكراب فايب" : "SCRUB VIBE ACCOUNT"}
         title={locale === "ar" ? "مرحباً بعودتك" : "Welcome back"}
         body={
           locale === "ar"
@@ -53,7 +53,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto min-h-[70vh] max-w-[1200px] px-5 py-16 md:px-10 md:py-24">
       <p className="eyebrow text-[#a6432b]">
-        {locale === "ar" ? "حساب نوفا" : "NOVA ACCOUNT"}
+        {locale === "ar" ? "حساب سكراب فايب" : "SCRUB VIBE ACCOUNT"}
       </p>
       <div className="mt-4 grid gap-12 md:grid-cols-[1.2fr_.8fr]">
         <section>

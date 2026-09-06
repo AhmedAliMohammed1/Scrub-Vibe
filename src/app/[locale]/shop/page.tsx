@@ -13,29 +13,29 @@ import { isLocale } from "@/lib/i18n";
 
 const headings = {
   en: {
-    all: "Shop all",
+    all: "Shop all scrubs",
     new: "New in",
-    women: "Women",
-    men: "Men",
+    women: "Female scrubs",
+    men: "Male scrubs",
     kids: "Kids",
     unisex: "Unisex",
     accessories: "Accessories",
-    collection: "NOVA COLLECTION",
+    collection: "SCRUB VIBE COLLECTION",
     piece: "piece",
     pieces: "pieces",
-    empty: "Nothing matched your edit.",
-    emptyBody: "Try removing a filter or searching for a different piece.",
+    empty: "No scrubs matched your filters.",
+    emptyBody: "Try removing a filter or searching for a different design.",
     clear: "Clear all filters",
   },
   ar: {
-    all: "تسوق الكل",
+    all: "تسوق كل السكراب",
     new: "وصل حديثاً",
-    women: "نساء",
-    men: "رجال",
+    women: "سكراب حريمي",
+    men: "سكراب رجالي",
     kids: "أطفال",
     unisex: "للجميع",
     accessories: "إكسسوارات",
-    collection: "مجموعة نوفا",
+    collection: "مجموعة سكراب فايب",
     piece: "قطعة",
     pieces: "قطع",
     empty: "لم نجد قطعاً مطابقة.",
@@ -65,7 +65,7 @@ export default async function ShopPage({
 
   return (
     <main className="mx-auto max-w-[1600px] px-5 py-14 md:px-10">
-      <p className="eyebrow text-[#a6432b]">{t.collection}</p>
+      <p className="eyebrow text-[#0e7468]">{t.collection}</p>
       <div className="mt-3 flex items-end justify-between border-b border-black/15 pb-8">
         <div>
           <h1 className="font-serif text-5xl md:text-7xl">{heading}</h1>

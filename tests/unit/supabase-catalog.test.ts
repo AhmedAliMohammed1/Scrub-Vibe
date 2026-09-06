@@ -6,13 +6,29 @@ import {
 
 const row: CatalogProductRow = {
   id: 42,
-  slug: "soft-structure-vest",
+  slug: "female-design-2-scrub-set",
   gender: "women",
-  base_price_minor: 109900,
-  compare_at_price_minor: 139900,
+  base_price_minor: 85000,
+  compare_at_price_minor: 100000,
   product_translations: [
-    { locale: "en", title: "Soft Structure Vest" },
-    { locale: "ar", title: "صديري بقصّة ناعمة" },
+    {
+      locale: "en",
+      title: "Women's Design 2 Scrub Set",
+      description: "Made for long shifts.",
+    },
+    {
+      locale: "ar",
+      title: "طقم سكراب حريمي تصميم ٢",
+      description: "مصمم للشيفتات الطويلة.",
+    },
+  ],
+  product_images: [
+    {
+      storage_path: "/images/scrub-vibe/female-design-2.webp",
+      alt_en: "Women's Design 2 Scrub Set",
+      alt_ar: "طقم سكراب حريمي تصميم ٢",
+      position: 10,
+    },
   ],
   product_options: [
     {
@@ -86,11 +102,18 @@ describe("Supabase catalogue mapping", () => {
   it("maps normalized localized rows to the storefront product", () => {
     expect(mapCatalogProduct(row)).toEqual({
       id: "42",
-      slug: "soft-structure-vest",
-      title: { en: "Soft Structure Vest", ar: "صديري بقصّة ناعمة" },
+      slug: "female-design-2-scrub-set",
+      title: {
+        en: "Women's Design 2 Scrub Set",
+        ar: "طقم سكراب حريمي تصميم ٢",
+      },
+      description: {
+        en: "Made for long shifts.",
+        ar: "مصمم للشيفتات الطويلة.",
+      },
       category: "women",
-      price: 109900,
-      compareAt: 139900,
+      price: 85000,
+      compareAt: 100000,
       color: "#ede5d5",
       colorCode: "bone",
       colorName: { en: "Bone", ar: "عاجي" },
@@ -98,6 +121,13 @@ describe("Supabase catalogue mapping", () => {
       inStock: true,
       badge: "sale",
       art: "clay",
+      image: {
+        src: "/images/scrub-vibe/female-design-2.webp",
+        alt: {
+          en: "Women's Design 2 Scrub Set",
+          ar: "طقم سكراب حريمي تصميم ٢",
+        },
+      },
     });
   });
 
@@ -107,11 +137,16 @@ describe("Supabase catalogue mapping", () => {
         ...row,
         compare_at_price_minor: null,
         product_translations: [row.product_translations[0]],
+        product_images: [],
         product_options: [],
         product_variants: [],
       }),
     ).toMatchObject({
-      title: { en: "Soft Structure Vest", ar: "Soft Structure Vest" },
+      title: {
+        en: "Women's Design 2 Scrub Set",
+        ar: "Women's Design 2 Scrub Set",
+      },
+      description: { en: "Made for long shifts.", ar: "Made for long shifts." },
       color: "#c8b298",
       colorCode: "natural",
       colorName: { en: "Natural", ar: "طبيعي" },
@@ -119,6 +154,13 @@ describe("Supabase catalogue mapping", () => {
       inStock: false,
       badge: "new",
       art: "sand",
+      image: {
+        src: "/images/scrub-vibe/female-collection.webp",
+        alt: {
+          en: "Women's Design 2 Scrub Set",
+          ar: "Women's Design 2 Scrub Set",
+        },
+      },
     });
   });
 });

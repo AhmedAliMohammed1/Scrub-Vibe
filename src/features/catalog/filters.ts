@@ -8,7 +8,7 @@ export type CatalogCategory =
   | "kids"
   | "unisex"
   | "accessories";
-export type CatalogPrice = "under-1300" | "1300-1500" | "over-1500";
+export type CatalogPrice = "under-700" | "700-900" | "over-900";
 export type CatalogSort = "featured" | "price-asc" | "price-desc" | "name";
 
 export type CatalogFilters = {
@@ -32,7 +32,7 @@ const categories = new Set<CatalogCategory>([
   "unisex",
   "accessories",
 ]);
-const prices = new Set<CatalogPrice>(["under-1300", "1300-1500", "over-1500"]);
+const prices = new Set<CatalogPrice>(["under-700", "700-900", "over-900"]);
 const sorts = new Set<CatalogSort>([
   "featured",
   "price-asc",
@@ -98,9 +98,9 @@ function matchesCategory(product: Product, category?: CatalogCategory) {
 
 function matchesPrice(price: number, band?: CatalogPrice) {
   if (!band) return true;
-  if (band === "under-1300") return price < 130000;
-  if (band === "1300-1500") return price >= 130000 && price <= 150000;
-  return price > 150000;
+  if (band === "under-700") return price < 70000;
+  if (band === "700-900") return price >= 70000 && price <= 90000;
+  return price > 90000;
 }
 
 export function filterCatalog(

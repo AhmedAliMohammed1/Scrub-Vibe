@@ -14,7 +14,8 @@ const catalogSelect = `
   gender,
   base_price_minor,
   compare_at_price_minor,
-  product_translations(locale, title),
+  product_translations(locale, title, description),
+  product_images(storage_path, alt_en, alt_ar, position),
   product_options(
     code,
     position,

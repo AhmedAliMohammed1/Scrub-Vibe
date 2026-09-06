@@ -6,11 +6,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   ),
   title: {
-    default: "NOVA Cairo — Contemporary essentials",
-    template: "%s — NOVA Cairo",
+    default: "Scrub Vibe Egypt — Premium medical scrubs",
+    template: "%s — Scrub Vibe Egypt",
   },
   description:
-    "Original contemporary fashion designed in Cairo for life in motion.",
+    "Premium medical scrubs and lab coats made in Egypt for comfort, movement and a precise fit.",
 };
 
 export default function RootLayout({
