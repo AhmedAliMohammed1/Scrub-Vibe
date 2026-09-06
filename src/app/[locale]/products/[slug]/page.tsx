@@ -40,13 +40,19 @@ export default async function ProductPage({ params }: Props) {
     },
   };
   return (
-    <main className="mx-auto max-w-[1600px] px-5 py-8 md:px-10 md:py-14">
+    <main
+      className="mx-auto max-w-[1600px] px-5 py-8 md:px-10 md:py-14"
+      data-product-id={p.id}
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="grid gap-10 lg:grid-cols-[1.35fr_.65fr]">
-        <div className="product-art min-h-[520px] bg-[#ebe9e4] lg:min-h-[760px]">
+        <div
+          className="product-art relative min-h-[520px] bg-[#ebe9e4] lg:min-h-[760px]"
+          style={{ position: "relative" }}
+        >
           <Image
             src={p.image.src}
             alt={p.image.alt[locale]}

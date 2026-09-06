@@ -34,6 +34,14 @@ const scrubVibeCatalogue = readFileSync(
   "utf8",
 );
 
+const adminAnalytics = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260906043757_admin_catalogue_analytics.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -105,5 +113,47 @@ describe("foundation migration security", () => {
     expect(scrubVibeCatalogue).toContain("public.product_images");
     expect(scrubVibeCatalogue).toMatch(/returning id into v_product_id/);
     expect(scrubVibeCatalogue).not.toMatch(/overriding system value/i);
+  });
+
+  it("protects analytics and subscriber data behind staff RLS", () => {
+    expect(adminAnalytics).toContain(
+      "alter table public.analytics_events enable row level security",
+    );
+    expect(adminAnalytics).toContain(
+      "alter table public.newsletter_subscribers enable row level security",
+    );
+    expect(adminAnalytics).toContain(
+      "revoke all on public.analytics_events from anon, authenticated",
+    );
+    expect(adminAnalytics).toContain(
+      "revoke all on public.newsletter_subscribers from anon, authenticated",
+    );
+    expect(adminAnalytics).not.toMatch(/auth\.role\s*\(/);
+  });
+
+  it("limits privileged public functions and validates their callers", () => {
+    expect(adminAnalytics).toMatch(
+      /create or replace function public\.track_store_event[\s\S]*security definer[\s\S]*set search_path = ''/,
+    );
+    expect(adminAnalytics).toContain(
+      "revoke execute on function public.track_store_event",
+    );
+    expect(adminAnalytics).toMatch(
+      /create or replace function public\.admin_create_product[\s\S]*security invoker/,
+    );
+    expect(adminAnalytics).toContain(
+      "private.has_any_role(array['product_manager','admin','super_admin']",
+    );
+  });
+
+  it("keeps catalogue creation and stock adjustments transactional", () => {
+    expect(adminAnalytics).toContain(
+      "create or replace function public.admin_create_product",
+    );
+    expect(adminAnalytics).toContain(
+      "create or replace function public.admin_adjust_inventory",
+    );
+    expect(adminAnalytics).toContain("for update;");
+    expect(adminAnalytics).toContain("'Opening stock', auth.uid()");
   });
 });

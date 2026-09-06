@@ -35,7 +35,7 @@ export function AddProduct({
           </button>
         ))}
       </div>
-      <Button onClick={addToCart} className="mt-4 w-full">
+      <Button onClick={() => addToCart(product.id)} className="mt-4 w-full">
         {locale === "ar" ? "أضف إلى الحقيبة" : "Add to bag"}
       </Button>
     </div>

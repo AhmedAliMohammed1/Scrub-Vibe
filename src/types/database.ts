@@ -14,6 +14,68 @@ export type Database = {
   };
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          anonymous_id: string;
+          device_type: string | null;
+          event_name: string;
+          id: number;
+          locale: string | null;
+          metadata: Json;
+          occurred_at: string;
+          path: string;
+          product_id: number | null;
+          referrer_host: string | null;
+          session_id: string;
+          user_id: string | null;
+          utm_campaign: string | null;
+          utm_medium: string | null;
+          utm_source: string | null;
+        };
+        Insert: {
+          anonymous_id: string;
+          device_type?: string | null;
+          event_name: string;
+          id?: never;
+          locale?: string | null;
+          metadata?: Json;
+          occurred_at?: string;
+          path: string;
+          product_id?: number | null;
+          referrer_host?: string | null;
+          session_id: string;
+          user_id?: string | null;
+          utm_campaign?: string | null;
+          utm_medium?: string | null;
+          utm_source?: string | null;
+        };
+        Update: {
+          anonymous_id?: string;
+          device_type?: string | null;
+          event_name?: string;
+          id?: never;
+          locale?: string | null;
+          metadata?: Json;
+          occurred_at?: string;
+          path?: string;
+          product_id?: number | null;
+          referrer_host?: string | null;
+          session_id?: string;
+          user_id?: string | null;
+          utm_campaign?: string | null;
+          utm_medium?: string | null;
+          utm_source?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       categories: {
         Row: {
           created_at: string;
@@ -162,6 +224,36 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      newsletter_subscribers: {
+        Row: {
+          consented_at: string;
+          email: string;
+          id: number;
+          is_active: boolean;
+          locale: string;
+          source: string;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          consented_at?: string;
+          email: string;
+          id?: never;
+          is_active?: boolean;
+          locale?: string;
+          source?: string;
+          unsubscribed_at?: string | null;
+        };
+        Update: {
+          consented_at?: string;
+          email?: string;
+          id?: never;
+          is_active?: boolean;
+          locale?: string;
+          source?: string;
+          unsubscribed_at?: string | null;
+        };
+        Relationships: [];
       };
       product_images: {
         Row: {
@@ -534,7 +626,72 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      admin_adjust_inventory: {
+        Args: {
+          p_new_on_hand: number;
+          p_reason: string;
+          p_variant_id: number;
+        };
+        Returns: undefined;
+      };
+      admin_analytics_summary: {
+        Args: { p_days?: number };
+        Returns: Json;
+      };
+      admin_create_product: {
+        Args: {
+          p_base_price_minor: number;
+          p_category_id: number;
+          p_color_ar: string;
+          p_color_code: string;
+          p_color_en: string;
+          p_compare_at_price_minor: number | null;
+          p_cost_minor: number | null;
+          p_description_ar: string;
+          p_description_en: string;
+          p_fit: string;
+          p_gender: string;
+          p_image_url: string;
+          p_low_stock_threshold: number;
+          p_material: string;
+          p_sizes: string[];
+          p_slug: string;
+          p_status: Database["public"]["Enums"]["product_status"];
+          p_stock: number;
+          p_swatch_hex: string;
+          p_title_ar: string;
+          p_title_en: string;
+        };
+        Returns: number;
+      };
+      admin_set_product_status: {
+        Args: {
+          p_product_id: number;
+          p_status: Database["public"]["Enums"]["product_status"];
+        };
+        Returns: undefined;
+      };
+      track_store_event: {
+        Args: {
+          p_anonymous_id: string;
+          p_device_type?: string;
+          p_event_name: string;
+          p_locale?: string;
+          p_metadata?: Json;
+          p_path: string;
+          p_product_id?: number;
+          p_referrer_host?: string;
+          p_session_id: string;
+          p_utm_campaign?: string;
+          p_utm_medium?: string;
+          p_utm_source?: string;
+        };
+        Returns: undefined;
+      };
+      subscribe_newsletter: {
+        Args: { p_email: string; p_locale?: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role:

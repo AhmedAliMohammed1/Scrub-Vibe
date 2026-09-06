@@ -8,11 +8,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { trackStoreEvent } from "@/lib/analytics";
 
 type ShopState = {
   cart: number;
   wishlist: string[];
-  addToCart: () => void;
+  addToCart: (productId?: string) => void;
   toggleWishlist: (id: string) => void;
 };
 const ShopContext = createContext<ShopState | null>(null);
@@ -42,11 +43,16 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     () => ({
       cart: hydrated ? cart : 0,
       wishlist: hydrated ? wishlist : [],
-      addToCart: () => setCart((n) => n + 1),
+      addToCart: (productId?: string) => {
+        setCart((n) => n + 1);
+        trackStoreEvent("add_to_cart", { productId });
+      },
       toggleWishlist: (id: string) =>
-        setWishlist((ids) =>
-          ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id],
-        ),
+        setWishlist((ids) => {
+          const removing = ids.includes(id);
+          if (!removing) trackStoreEvent("wishlist_add", { productId: id });
+          return removing ? ids.filter((item) => item !== id) : [...ids, id];
+        }),
     }),
     [cart, hydrated, wishlist],
   );

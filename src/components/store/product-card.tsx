@@ -21,8 +21,15 @@ export function ProductCard({
   const discount = discountPercent(product.price, product.compareAt);
   return (
     <article className="group min-w-0">
-      <div className="product-art bg-[#ebe9e4]">
-        <Link href={`/${locale}/products/${product.slug}`} tabIndex={-1}>
+      <div
+        className="product-art relative bg-[#ebe9e4]"
+        style={{ position: "relative" }}
+      >
+        <Link
+          href={`/${locale}/products/${product.slug}`}
+          tabIndex={-1}
+          className="relative block size-full"
+        >
           <Image
             src={product.image.src}
             alt={product.image.alt[locale]}
@@ -50,7 +57,7 @@ export function ProductCard({
           <Heart size={17} fill={wished ? "currentColor" : "none"} />
         </button>
         <Button
-          onClick={addToCart}
+          onClick={() => addToCart(product.id)}
           className="absolute inset-x-3 bottom-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus:translate-y-0 focus:opacity-100"
         >
           <Plus size={15} /> {locale === "ar" ? "إضافة سريعة" : "Quick add"}

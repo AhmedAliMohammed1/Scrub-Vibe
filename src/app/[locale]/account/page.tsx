@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { signOutAction } from "@/features/auth/actions";
 import { AuthForm } from "@/features/auth/auth-form";
@@ -47,6 +48,13 @@ export default async function AccountPage({ params, searchParams }: Props) {
     .select("email, full_name, preferred_locale")
     .eq("id", userId)
     .maybeSingle();
+  const { data: roleRows } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  const canAdmin = roleRows?.some(
+    ({ role }) => role === "admin" || role === "super_admin",
+  );
   const email = profile?.email ?? String(claimsData.claims.email ?? "");
   const name = profile?.full_name?.trim() || email.split("@")[0];
 
@@ -95,6 +103,14 @@ export default async function AccountPage({ params, searchParams }: Props) {
           >
             {locale === "ar" ? "تغيير كلمة المرور" : "Change password"}
           </Link>
+          {canAdmin && (
+            <Link
+              href={`/${locale}/admin` as Route}
+              className="mt-4 block bg-[#073b36] px-5 py-4 text-center text-xs font-bold uppercase tracking-[.14em] text-white"
+            >
+              {locale === "ar" ? "فتح لوحة الإدارة" : "Open admin dashboard"}
+            </Link>
+          )}
           <form action={signOutAction} className="mt-8">
             <input type="hidden" name="locale" value={locale} />
             <button className="h-12 w-full border border-neutral-950 text-xs font-bold uppercase tracking-[.14em]">

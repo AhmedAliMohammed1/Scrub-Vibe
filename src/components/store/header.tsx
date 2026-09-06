@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 import { copy, type Locale } from "@/lib/i18n";
 import { useShop } from "./cart-provider";
+import { trackStoreEvent } from "@/lib/analytics";
 
 export function Header({ locale }: { locale: Locale }) {
   const t = copy[locale];
@@ -46,6 +47,7 @@ export function Header({ locale }: { locale: Locale }) {
                   href="https://www.instagram.com/scrubvibe_egy/"
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() => trackStoreEvent("instagram_click")}
                   className="text-xs font-bold uppercase tracking-[.13em]"
                 >
                   {t.nav[4]}
@@ -149,6 +151,9 @@ export function Header({ locale }: { locale: Locale }) {
               }
               target={i === 0 ? "_blank" : undefined}
               rel={i === 0 ? "noreferrer" : undefined}
+              onClick={
+                i === 0 ? () => trackStoreEvent("instagram_click") : undefined
+              }
               className={i === 2 ? "nav-sale" : "nav-secondary"}
             >
               {item}

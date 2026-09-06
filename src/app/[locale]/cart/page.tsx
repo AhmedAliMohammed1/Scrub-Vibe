@@ -3,6 +3,7 @@ import { use } from "react";
 import Link from "next/link";
 import { useShop } from "@/components/store/cart-provider";
 import { isLocale } from "@/lib/i18n";
+import { trackStoreEvent } from "@/lib/analytics";
 export default function CartPage({
   params,
 }: {
@@ -32,6 +33,25 @@ export default function CartPage({
       >
         {locale === "ar" ? "واصل التسوق" : "Continue shopping"}
       </Link>
+      {cart > 0 && (
+        <a
+          href={`https://wa.me/201096733209?text=${encodeURIComponent(
+            locale === "ar"
+              ? `مرحباً سكراب فايب، أريد إتمام طلب يحتوي على ${cart} قطعة.`
+              : `Hello Scrub Vibe, I would like to complete an order for ${cart} item${cart === 1 ? "" : "s"}.`,
+          )}`}
+          target="_blank"
+          rel="noreferrer"
+          onClick={() =>
+            trackStoreEvent("begin_checkout", {
+              metadata: { cart_items: cart },
+            })
+          }
+          className="ms-3 mt-8 inline-block bg-[#0e7468] px-6 py-4 text-xs font-bold uppercase tracking-[.14em] text-white"
+        >
+          {locale === "ar" ? "اطلب عبر واتساب" : "Order on WhatsApp"}
+        </a>
+      )}
     </main>
   );
 }
