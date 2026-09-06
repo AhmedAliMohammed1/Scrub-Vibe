@@ -138,6 +138,7 @@ describe("Supabase catalogue mapping", () => {
           swatch: "#ede5d5",
           name: { en: "Bone", ar: "عاجي" },
           sizes: ["S", "M"],
+          variants: { S: "10", M: "11" },
           inStock: true,
         },
         {
@@ -146,6 +147,7 @@ describe("Supabase catalogue mapping", () => {
           swatch: "#172c52",
           name: { en: "Navy", ar: "كحلي" },
           sizes: ["M"],
+          variants: { M: "13" },
           inStock: true,
         },
       ],
@@ -189,6 +191,7 @@ describe("Supabase catalogue mapping", () => {
           swatch: "#c8b298",
           name: { en: "Natural", ar: "طبيعي" },
           sizes: [],
+          variants: {},
           inStock: false,
         },
       ],

@@ -198,8 +198,8 @@ export async function createProductAction(
     p_status: data.status,
     p_base_price_minor: Math.round(data.price * 100),
     p_compare_at_price_minor:
-      data.compareAt === "" ? null : Math.round(data.compareAt * 100),
-    p_cost_minor: data.cost === "" ? null : Math.round(data.cost * 100),
+      (data.compareAt === "" ? null : Math.round(data.compareAt * 100)) as number,
+    p_cost_minor: (data.cost === "" ? null : Math.round(data.cost * 100)) as number,
     p_material: data.material,
     p_fit: data.fit,
     p_colours: parsedColours.data,

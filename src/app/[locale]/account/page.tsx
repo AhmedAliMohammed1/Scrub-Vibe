@@ -5,6 +5,7 @@ import { signOutAction } from "@/features/auth/actions";
 import { AuthForm } from "@/features/auth/auth-form";
 import { AuthShell } from "@/features/auth/auth-shell";
 import { isLocale } from "@/lib/i18n";
+import { formatMoney } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -52,6 +53,11 @@ export default async function AccountPage({ params, searchParams }: Props) {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
+  const { data: orderRows } = await supabase
+    .from("orders")
+    .select("id, order_number, status, payment_status, total_minor, created_at")
+    .order("created_at", { ascending: false })
+    .limit(8);
   const canAdmin = roleRows?.some(
     ({ role }) => role === "admin" || role === "super_admin",
   );
@@ -76,6 +82,41 @@ export default async function AccountPage({ params, searchParams }: Props) {
                 : "Your password has been updated."}
             </p>
           )}
+          <div className="mt-12">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="font-serif text-3xl">
+                {locale === "ar" ? "طلباتك" : "Your orders"}
+              </h2>
+            </div>
+            {orderRows?.length ? (
+              <div className="mt-5 divide-y divide-black/10 border-y border-black/10">
+                {orderRows.map((order) => (
+                  <Link
+                    key={order.id}
+                    href={`/${locale}/track/${order.order_number}` as Route}
+                    className="grid grid-cols-[1fr_auto] gap-4 py-4 hover:text-[#0e7468]"
+                  >
+                    <span>
+                      <strong className="block text-sm">{order.order_number}</strong>
+                      <small className="mt-1 block text-[10px] uppercase text-neutral-500">
+                        {order.status.replaceAll("_", " ")} · {order.payment_status.replaceAll("_", " ")}
+                      </small>
+                    </span>
+                    <span className="text-end">
+                      <strong className="block text-sm">{formatMoney(order.total_minor, locale)}</strong>
+                      <small className="mt-1 block text-[10px] text-neutral-500">
+                        {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(order.created_at))}
+                      </small>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-5 border border-dashed border-black/15 p-6 text-sm text-neutral-500">
+                {locale === "ar" ? "لا توجد طلبات مرتبطة بهذا الحساب بعد." : "No orders are linked to this account yet."}
+              </p>
+            )}
+          </div>
         </section>
         <aside className="border border-black/10 bg-white/35 p-6 md:p-8">
           <h2 className="font-serif text-3xl">

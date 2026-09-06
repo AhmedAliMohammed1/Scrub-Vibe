@@ -14,6 +14,7 @@ import { trackStoreEvent } from "@/lib/analytics";
 export type CartLine = {
   key: string;
   productId: string;
+  variantId: string;
   slug: string;
   title: Product["title"];
   image: Product["image"];
@@ -37,6 +38,7 @@ type ShopState = {
   wishlist: string[];
   addToCart: (product: Product, selection?: ProductSelection) => void;
   removeCartItem: (key: string) => void;
+  clearCart: () => void;
   toggleWishlist: (id: string) => void;
 };
 
@@ -91,6 +93,8 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         if (!colour || !size) return;
 
         const key = `${product.id}:${colour.code}:${size}`;
+        const variantId = colour.variants[size];
+        if (!variantId) return;
         setCartItems((lines) => {
           const existing = lines.find((line) => line.key === key);
           if (existing) {
@@ -105,6 +109,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
             {
               key,
               productId: product.id,
+              variantId,
               slug: product.slug,
               title: product.title,
               image: product.image,
@@ -124,6 +129,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       },
       removeCartItem: (key) =>
         setCartItems((lines) => lines.filter((line) => line.key !== key)),
+      clearCart: () => setCartItems([]),
       toggleWishlist: (id) =>
         setWishlist((ids) => {
           const removing = ids.includes(id);

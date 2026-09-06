@@ -4,6 +4,7 @@ export type ProductColour = {
   swatch: string;
   name: { en: string; ar: string };
   sizes: string[];
+  variants: Record<string, string>;
   inStock: boolean;
 };
 

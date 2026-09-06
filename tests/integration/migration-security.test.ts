@@ -50,6 +50,14 @@ const multiColourVariants = readFileSync(
   "utf8",
 );
 
+const checkoutOrders = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260906100228_checkout_orders.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -176,5 +184,26 @@ describe("foundation migration security", () => {
     expect(multiColourVariants).toContain(
       "revoke execute on function public.admin_create_product_with_colours",
     );
+  });
+
+  it("protects checkout, order and payment-proof data with RLS", () => {
+    const tables = [
+      ...checkoutOrders.matchAll(/create table public\.([a-z_]+)/g),
+    ].map(([, table]) => table);
+    const secured = new Set(
+      [...checkoutOrders.matchAll(/alter table public\.([a-z_]+) enable row level security/g)].map(([, table]) => table),
+    );
+    expect(tables.filter((table) => !secured.has(table))).toEqual([]);
+    expect(checkoutOrders).toContain("'payment-proofs', 'payment-proofs', false");
+    expect(checkoutOrders).toContain("grant execute on function public.create_verified_order");
+    expect(checkoutOrders).toContain("to service_role");
+    expect(checkoutOrders).not.toMatch(/auth\.role\s*\(/);
+  });
+
+  it("creates orders and reserves stock in one locked transaction", () => {
+    expect(checkoutOrders).toMatch(/create or replace function public\.create_verified_order[\s\S]*for update/);
+    expect(checkoutOrders).toContain("coalesce(pv.price_override_minor, p.base_price_minor)");
+    expect(checkoutOrders).toContain("reserved = reserved + v_quantity");
+    expect(checkoutOrders).toContain("PHONE_VERIFICATION_INVALID");
   });
 });

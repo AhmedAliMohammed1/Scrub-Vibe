@@ -3,6 +3,7 @@
 import { use } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import type { Route } from "next";
 import { Trash2 } from "lucide-react";
 import { useShop } from "@/components/store/cart-provider";
 import { isLocale } from "@/lib/i18n";
@@ -104,11 +105,9 @@ export default function CartPage({
         >
           {locale === "ar" ? "واصل التسوق" : "Continue shopping"}
         </Link>
-        {cart > 0 && (
-          <a
-            href={`https://wa.me/201096733209?text=${encodeURIComponent(message)}`}
-            target="_blank"
-            rel="noreferrer"
+        {cart > 0 && (<>
+          <Link
+            href={`/${locale}/checkout` as Route}
             onClick={() =>
               trackStoreEvent("begin_checkout", {
                 metadata: { cart_items: cart, cart_lines: cartItems.length },
@@ -116,9 +115,12 @@ export default function CartPage({
             }
             className="inline-block bg-[#0e7468] px-6 py-4 text-xs font-bold uppercase tracking-[.14em] text-white"
           >
-            {locale === "ar" ? "اطلب عبر واتساب" : "Order on WhatsApp"}
+            {locale === "ar" ? "الدفع وإتمام الطلب" : "Secure checkout"}
+          </Link>
+          <a href={`https://wa.me/201096733209?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer" className="inline-block border border-black/20 px-6 py-4 text-xs font-bold uppercase tracking-[.14em]">
+            {locale === "ar" ? "مساعدة عبر واتساب" : "WhatsApp help"}
           </a>
-        )}
+        </>)}
       </div>
     </main>
   );

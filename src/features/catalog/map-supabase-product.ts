@@ -105,6 +105,14 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
           ),
         )
         .map((size) => size.label_en);
+      const variants = Object.fromEntries(
+        sizeValues.flatMap((size) => {
+          const variant = inStockVariants.find((item) =>
+            variantHasValues(item, color.id, size.id),
+          );
+          return variant ? [[size.label_en, String(variant.id)]] : [];
+        }),
+      );
 
       return {
         id: String(color.id),
@@ -112,6 +120,7 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
         swatch: color.swatch_hex ?? "#c8b298",
         name: { en: color.label_en, ar: color.label_ar },
         sizes: availableSizes,
+        variants,
         inStock: availableSizes.length > 0,
       };
     });
@@ -121,6 +130,7 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
     swatch: "#c8b298",
     name: { en: "Natural", ar: "طبيعي" },
     sizes: [],
+    variants: {},
     inStock: false,
   };
   const primaryColour =
