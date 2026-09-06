@@ -99,3 +99,14 @@
 - Responsive QA: PASS after correcting the tablet navigation/logo collision with a functional dropdown menu
 - Security advisor: one existing Auth warning — leaked-password protection is disabled; no catalogue/RLS regression found
 - Performance advisor: informational unused-index notices only on the low-traffic schema
+
+## Egypt checkout, payments and order tracking checkpoint — 2026-09-06
+
+- Database: PASS — order, item, payment-proof, OTP-verification and status-history migrations recorded remotely with RLS and private proof storage
+- Transactional checkout: PASS — a live order/inventory-reservation scenario completed inside a database transaction and was rolled back, leaving no test order
+- Unit/integration: PASS — 8 files, 42 tests including Egyptian phone normalization, checkout validation, catalogue variant mapping and migration security invariants
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript
+- Build: PASS — Next.js 16.3.3 production build including checkout, OTP, Paymob webhook, order tracking and admin fulfilment routes
+- Local browser: PASS — live Supabase product, exact Burgundy/XS variant handoff, all Egyptian governorates, OTP gate, COD, Vodafone Cash and InstaPay checkout options
+- External providers: NOT_RUN — production Twilio Verify and Paymob credentials are not configured; no SMS or real payment was attempted

@@ -1,20 +1,20 @@
 # Project state
 
-- **Current phase:** Phase 5 — Customer state
-- **Current task:** Persistent customer cart and wishlist with anonymous-to-account merge
-- **Last successful task:** Rebranded the live storefront and production catalogue to Scrub Vibe using the supplied store and Instagram material
+- **Current phase:** Phase 7 — Payments and fulfilment
+- **Current task:** Configure production provider credentials and validate the first sandbox payment/OTP flow
+- **Last successful task:** Implemented Egypt checkout, phone OTP, payment proof review, Paymob integration and customer/admin order tracking
 - **Current branch:** `main`
 - **Latest relevant commit:** current checkpoint (see `git log -1` for the immutable hash)
-- **Implemented:** Phase 1 storefront foundation; pinned Supabase CLI 2.116.0, SSR 0.12.5 and JS 2.112.4; normalized identity/catalogue/variant/inventory schema live on project `iqufqtjotgpmhhtvlxwf`; least-privilege grants and RLS on all 13 public tables; private RBAC helper; auth-user profile/customer-role trigger; optimized role-disjoint inventory read policies; generated live database types; typed public Supabase catalogue repository; nine localized Scrub Vibe products with real brand photography, 53 active size variants and inventory rows; female, male and lab-coat catalogue structure with source pricing; localized URL-addressable catalogue search, audience/size/colour/price/sale/stock filters, sorting and empty states; Next.js 16 Proxy session refresh; browser/server clients; server-validated role guards; bilingual customer sign-in, sign-up, sign-out, password recovery/update and account pages; PKCE/OTP confirmation callback with safe redirect validation; migration, auth and catalogue-filter tests.
-- **Remaining:** persistent customer cart/wishlist, checkout and orders, CMS-backed merchandising, admin, payments, email delivery, analytics, risk and the remaining production validation phases.
+- **Implemented:** Phase 1 storefront foundation; pinned Supabase CLI 2.116.0, SSR 0.12.5 and JS 2.112.4; normalized identity/catalogue/variant/inventory/order schema live on project `iqufqtjotgpmhhtvlxwf`; least-privilege grants and RLS; private RBAC helper; auth-user profile/customer-role trigger; generated live database types; typed public Supabase catalogue repository; nine localized Scrub Vibe products with real brand photography and colour/size inventory; localized catalogue filters and sorting; bilingual customer authentication/account pages; admin commerce and marketing dashboard; transactional Egypt-only checkout with server-priced variant snapshots and inventory reservations; Egyptian phone OTP; COD; private Vodafone Cash/InstaPay proof upload and review; Paymob Unified Checkout/webhook integration; customer order timeline and shipment tracking; admin fulfilment workflow; migration, auth, catalogue and checkout tests.
+- **Remaining:** persistent database-backed cart/wishlist merge, production Twilio and Paymob credential validation, shipping-zone pricing, transactional email/WhatsApp notifications, automated abandoned-cart recovery, webhook replay operations, CMS-backed merchandising and final production monitoring/security validation.
 - **Known bugs:** none confirmed in the implemented scope.
-- **Blocked tasks:** Paymob and Resend validation require credentials/connections; a Supabase secret key is only needed when a future trusted server operation requires RLS bypass.
-- **Required inputs:** Paymob credentials; Resend key/sender domain; shipping-zone prices; production domain.
-- **Latest tests:** PASS — 7 files, 27 tests, including Scrub Vibe catalogue migration, URL parsing, combined filtering and immutable sorting
+- **Blocked tasks:** Live OTP and automated payment validation require Twilio Verify and Paymob merchant credentials. Email delivery requires Resend credentials.
+- **Required inputs:** Twilio Verify credentials; Paymob public/secret/HMAC/integration credentials; Vodafone Cash destination; InstaPay address; Resend key/sender domain; shipping-zone prices.
+- **Latest tests:** PASS — 8 files, 42 tests, including checkout validation, order security invariants, catalogue variants, authentication and filtering
 - **Latest build:** PASS — Next.js 16.3.3 production build
-- **Latest local browser verification:** PASS — real product imagery, product-detail content, prices, English/Arabic catalogue rendering and responsive header behavior
-- **Latest deployment:** PASS — Scrub Vibe rebrand commit `90a01e5` is live at https://scrub-vibe-tau.vercel.app/en
-- **Exact next action:** implement database-backed customer cart and wishlist persistence with safe anonymous-to-authenticated merge behavior.
+- **Latest local browser verification:** PASS — live Supabase catalogue, exact colour/size variant cart handoff and secure checkout navigation
+- **Latest deployment:** Checkout/payment implementation is committed on `main`; production activation awaits Vercel provider environment variables and a fresh deployment.
+- **Exact next action:** configure Twilio/Paymob/manual-transfer environment variables in Vercel, register the Paymob webhook, then complete one sandbox OTP/payment/order-tracking acceptance test.
 
 ## Latest visual QA
 

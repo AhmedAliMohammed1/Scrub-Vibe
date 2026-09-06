@@ -23,3 +23,10 @@
 - Added localized catalogue search with URL-addressable audience, size, colour, price, sale and stock filters.
 - Added featured, price and localized-name sorting, filter-aware headings, corrected result grammar and clearable empty states.
 - Connected the header search and merchandising navigation to meaningful catalogue views and exposed only in-stock variant sizes.
+- Added exact colour/size variant cart lines and an Egypt-only secure checkout.
+- Added rate-limited Egyptian phone verification through Twilio Verify with one-time checkout tokens.
+- Added COD, Paymob Unified Checkout, and private Vodafone Cash/InstaPay screenshot verification flows.
+- Added transactional server-side order creation, inventory reservations, status history and expiry cleanup in Supabase.
+- Added bilingual customer order tracking with payment, fulfilment and shipment milestones.
+- Added admin order metrics, private proof review, payment decisions and fulfilment/shipment controls.
+- Added Paymob HMAC webhook processing and checkout/order security coverage.
