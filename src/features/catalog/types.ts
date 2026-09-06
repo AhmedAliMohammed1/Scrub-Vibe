@@ -1,3 +1,12 @@
+export type ProductColour = {
+  id: string;
+  code: string;
+  swatch: string;
+  name: { en: string; ar: string };
+  sizes: string[];
+  inStock: boolean;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -9,6 +18,7 @@ export type Product = {
   color: string;
   colorCode: string;
   colorName: { en: string; ar: string };
+  colors: ProductColour[];
   sizes: string[];
   inStock: boolean;
   badge?: "new" | "sale" | "low";

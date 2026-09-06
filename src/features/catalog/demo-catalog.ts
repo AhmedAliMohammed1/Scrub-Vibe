@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product, ProductColour } from "./types";
 
 type ScrubInput = Pick<
   Product,
@@ -15,12 +15,62 @@ type ScrubInput = Pick<
   | "image"
 > & { compareAt?: number };
 
-const scrub = (product: ScrubInput): Product => ({
-  ...product,
-  inStock: true,
-  badge: product.compareAt ? "sale" : "new",
-  art: "ink",
-});
+const originalScrubVibePalette: Omit<
+  ProductColour,
+  "id" | "sizes" | "inStock"
+>[] = [
+  {
+    code: "burgundy",
+    swatch: "#6f182f",
+    name: { en: "Burgundy", ar: "نبيتي" },
+  },
+  { code: "black", swatch: "#171717", name: { en: "Black", ar: "أسود" } },
+  { code: "stone", swatch: "#a89e91", name: { en: "Stone", ar: "حجري" } },
+  { code: "charcoal", swatch: "#34363d", name: { en: "Charcoal", ar: "فحمي" } },
+  {
+    code: "sky-blue",
+    swatch: "#a8cce7",
+    name: { en: "Sky blue", ar: "سماوي" },
+  },
+  { code: "navy", swatch: "#172c52", name: { en: "Navy", ar: "كحلي" } },
+  { code: "olive", swatch: "#4f5041", name: { en: "Olive", ar: "زيتوني" } },
+  { code: "teal", swatch: "#07516a", name: { en: "Teal", ar: "بترولي" } },
+];
+
+const scrub = (product: ScrubInput): Product => {
+  const palette =
+    product.slug === "classic-medical-lab-coat"
+      ? [
+          {
+            code: product.colorCode,
+            swatch: product.color,
+            name: product.colorName,
+          },
+        ]
+      : [
+          {
+            code: product.colorCode,
+            swatch: product.color,
+            name: product.colorName,
+          },
+          ...originalScrubVibePalette.filter(
+            (colour) => colour.code !== product.colorCode,
+          ),
+        ];
+
+  return {
+    ...product,
+    colors: palette.map((colour) => ({
+      ...colour,
+      id: `${product.id}-${colour.code}`,
+      sizes: product.sizes,
+      inStock: true,
+    })),
+    inStock: true,
+    badge: product.compareAt ? "sale" : "new",
+    art: "ink",
+  };
+};
 
 const products: ScrubInput[] = [
   {

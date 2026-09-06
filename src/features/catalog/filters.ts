@@ -113,7 +113,7 @@ export function filterCatalog(
     const searchable = [
       product.title[locale],
       product.slug,
-      product.colorName[locale],
+      ...product.colors.map((colour) => colour.name[locale]),
       product.category,
     ]
       .join(" ")
@@ -124,7 +124,10 @@ export function filterCatalog(
       matchesCategory(product, filters.category) &&
       (!filters.sizes.length ||
         filters.sizes.some((size) => product.sizes.includes(size))) &&
-      (!filters.colors.length || filters.colors.includes(product.colorCode)) &&
+      (!filters.colors.length ||
+        product.colors.some((colour) =>
+          filters.colors.includes(colour.code),
+        )) &&
       matchesPrice(product.price, filters.price) &&
       (!filters.saleOnly || Boolean(product.compareAt)) &&
       (!filters.inStockOnly || product.inStock)

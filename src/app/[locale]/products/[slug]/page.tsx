@@ -81,13 +81,6 @@ export default async function ProductPage({ params }: Props) {
           <p className="mt-7 max-w-lg text-sm leading-7 text-neutral-600">
             {p.description[locale]}
           </p>
-          <p className="mt-8 text-xs font-bold uppercase tracking-[.14em]">
-            {p.colorName[locale]}
-          </p>
-          <span
-            className="mt-3 block size-8 rounded-full border-2 border-white ring-1 ring-black"
-            style={{ background: p.color }}
-          />
           <AddProduct product={p} locale={locale} />
           <div className="mt-8 divide-y divide-black/10 border-y border-black/10 text-xs">
             {(locale === "ar"

@@ -6,6 +6,8 @@ import {
   ImagePlus,
   LoaderCircle,
   PackagePlus,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { createProductAction, type AdminActionState } from "./actions";
@@ -16,6 +18,23 @@ const initialState: AdminActionState = { status: "idle" };
 const input =
   "mt-2 h-11 w-full border border-black/15 bg-white px-3 text-sm outline-none transition focus:border-[#0e7468] focus:ring-2 focus:ring-[#0e7468]/10";
 const textarea = `${input} h-28 py-3 resize-y`;
+type ColourInput = { code: string; en: string; ar: string; hex: string };
+const defaultColour: ColourInput = {
+  code: "navy",
+  en: "Navy",
+  ar: "كحلي",
+  hex: "#172c52",
+};
+const originalPalette: ColourInput[] = [
+  { code: "burgundy", en: "Burgundy", ar: "نبيتي", hex: "#6f182f" },
+  { code: "black", en: "Black", ar: "أسود", hex: "#171717" },
+  { code: "stone", en: "Stone", ar: "حجري", hex: "#a89e91" },
+  { code: "charcoal", en: "Charcoal", ar: "فحمي", hex: "#34363d" },
+  { code: "sky-blue", en: "Sky blue", ar: "سماوي", hex: "#a8cce7" },
+  defaultColour,
+  { code: "olive", en: "Olive", ar: "زيتوني", hex: "#4f5041" },
+  { code: "teal", en: "Teal", ar: "بترولي", hex: "#07516a" },
+];
 
 function slugify(value: string) {
   return value
@@ -36,6 +55,7 @@ export function ProductForm({
   const [slug, setSlug] = useState("");
   const slugTouched = useRef(false);
   const [fileName, setFileName] = useState("");
+  const [colours, setColours] = useState<ColourInput[]>([defaultColour]);
   const ar = locale === "ar";
   const [state, formAction, pending] = useActionState(
     async (previousState: AdminActionState, formData: FormData) => {
@@ -45,6 +65,7 @@ export function ProductForm({
         slugTouched.current = false;
         setSlug("");
         setFileName("");
+        setColours([defaultColour]);
       }
       return nextState;
     },
@@ -60,6 +81,7 @@ export function ProductForm({
       className="border border-black/10 bg-white p-5 shadow-[0_25px_70px_rgba(10,50,45,.07)] md:p-8"
     >
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="colours" value={JSON.stringify(colours)} />
       <div className="flex items-start justify-between gap-4 border-b border-black/10 pb-6">
         <div>
           <p className="eyebrow text-[#0e7468]">
@@ -264,54 +286,151 @@ export function ProductForm({
           </Label>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <Label
-            text={ar ? "اسم اللون EN" : "Colour name EN"}
-            error={errorFor("colorEn")}
-          >
-            <input
-              name="colorEn"
-              required
-              className={input}
-              placeholder="Royal blue"
-            />
-          </Label>
-          <Label
-            text={ar ? "اسم اللون AR" : "Colour name AR"}
-            error={errorFor("colorAr")}
-          >
-            <input
-              name="colorAr"
-              dir="rtl"
-              required
-              className={input}
-              placeholder="أزرق ملكي"
-            />
-          </Label>
-          <Label
-            text={ar ? "كود اللون" : "Colour code"}
-            error={errorFor("colorCode")}
-          >
-            <input
-              name="colorCode"
-              required
-              className={input}
-              placeholder="royal-blue"
-            />
-          </Label>
-          <Label
-            text={ar ? "درجة اللون" : "Swatch"}
-            error={errorFor("swatchHex")}
-          >
-            <input
-              name="swatchHex"
-              type="color"
-              defaultValue="#0e7468"
-              required
-              className={`${input} p-1`}
-            />
-          </Label>
-        </div>
+        <fieldset className="border border-black/10 bg-[#f8faf9] p-4 md:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <legend className="text-[10px] font-bold uppercase tracking-[.14em] text-neutral-600">
+                {ar ? "ألوان المنتج" : "Product colours"}
+              </legend>
+              <p className="mt-1 text-xs text-neutral-500">
+                {ar
+                  ? "سيتم إنشاء مخزون مستقل لكل تركيبة لون ومقاس."
+                  : "A separate stock variant is created for every colour and size combination."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setColours((items) => [
+                  ...items,
+                  { code: "", en: "", ar: "", hex: "#0e7468" },
+                ])
+              }
+              className="inline-flex h-9 items-center gap-2 border border-black/20 bg-white px-3 text-[10px] font-bold uppercase"
+            >
+              <Plus size={14} /> {ar ? "أضف لوناً" : "Add colour"}
+            </button>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {originalPalette.map((colour) => {
+              const selected = colours.some(
+                (item) => item.code === colour.code,
+              );
+              return (
+                <button
+                  key={colour.code}
+                  type="button"
+                  disabled={selected}
+                  onClick={() => setColours((items) => [...items, colour])}
+                  className="flex items-center gap-2 border border-black/15 bg-white px-3 py-2 text-[10px] disabled:opacity-40"
+                >
+                  <span
+                    className="size-3 rounded-full border border-black/15"
+                    style={{ backgroundColor: colour.hex }}
+                  />
+                  {ar ? colour.ar : colour.en}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            {colours.map((colour, index) => (
+              <div
+                key={index}
+                className="grid gap-3 border-t border-black/10 pt-3 sm:grid-cols-[1fr_1fr_1fr_80px_auto]"
+              >
+                <Label text={ar ? "الاسم EN" : "Name EN"}>
+                  <input
+                    required
+                    value={colour.en}
+                    onChange={(event) =>
+                      setColours((items) =>
+                        items.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? { ...item, en: event.target.value }
+                            : item,
+                        ),
+                      )
+                    }
+                    className={input}
+                    placeholder="Royal blue"
+                  />
+                </Label>
+                <Label text={ar ? "الاسم AR" : "Name AR"}>
+                  <input
+                    required
+                    dir="rtl"
+                    value={colour.ar}
+                    onChange={(event) =>
+                      setColours((items) =>
+                        items.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? { ...item, ar: event.target.value }
+                            : item,
+                        ),
+                      )
+                    }
+                    className={input}
+                    placeholder="أزرق ملكي"
+                  />
+                </Label>
+                <Label text={ar ? "الكود" : "Code"}>
+                  <input
+                    required
+                    value={colour.code}
+                    onChange={(event) =>
+                      setColours((items) =>
+                        items.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? { ...item, code: slugify(event.target.value) }
+                            : item,
+                        ),
+                      )
+                    }
+                    className={input}
+                    placeholder="royal-blue"
+                  />
+                </Label>
+                <Label text={ar ? "الدرجة" : "Swatch"}>
+                  <input
+                    type="color"
+                    value={colour.hex}
+                    onChange={(event) =>
+                      setColours((items) =>
+                        items.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? { ...item, hex: event.target.value }
+                            : item,
+                        ),
+                      )
+                    }
+                    className={`${input} p-1`}
+                  />
+                </Label>
+                <button
+                  type="button"
+                  disabled={colours.length === 1}
+                  onClick={() =>
+                    setColours((items) =>
+                      items.filter((_, itemIndex) => itemIndex !== index),
+                    )
+                  }
+                  aria-label={ar ? "حذف اللون" : "Remove colour"}
+                  className="mt-5 grid size-11 place-items-center border border-black/15 bg-white text-neutral-500 hover:text-red-700 disabled:opacity-30"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+          {errorFor("colours") && (
+            <p className="mt-3 text-[11px] text-red-700">
+              {errorFor("colours")}
+            </p>
+          )}
+        </fieldset>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <Label

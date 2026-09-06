@@ -19,6 +19,7 @@ export function ProductCard({
   const { addToCart, toggleWishlist, wishlist } = useShop();
   const wished = wishlist.includes(product.id);
   const discount = discountPercent(product.price, product.compareAt);
+  const quickColour = product.colors.find((colour) => colour.inStock);
   return (
     <article className="group min-w-0">
       <div
@@ -57,7 +58,8 @@ export function ProductCard({
           <Heart size={17} fill={wished ? "currentColor" : "none"} />
         </button>
         <Button
-          onClick={() => addToCart(product.id)}
+          onClick={() => addToCart(product)}
+          disabled={!quickColour}
           className="absolute inset-x-3 bottom-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus:translate-y-0 focus:opacity-100"
         >
           <Plus size={15} /> {locale === "ar" ? "إضافة سريعة" : "Quick add"}
@@ -71,11 +73,16 @@ export function ProductCard({
           >
             {product.title[locale]}
           </Link>
-          <span
-            className="mt-1 size-3 shrink-0 rounded-full border border-black/15"
-            style={{ backgroundColor: product.color }}
-            title={product.colorName[locale]}
-          />
+          <span className="mt-1 flex max-w-24 flex-wrap justify-end gap-1">
+            {product.colors.slice(0, 8).map((colour) => (
+              <span
+                key={colour.code}
+                className={`size-3 rounded-full border border-black/15 ${colour.inStock ? "" : "opacity-25"}`}
+                style={{ backgroundColor: colour.swatch }}
+                title={colour.name[locale]}
+              />
+            ))}
+          </span>
         </div>
         <div className="flex gap-2 text-xs">
           <span>{formatMoney(product.price, locale)}</span>

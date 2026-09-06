@@ -32,10 +32,7 @@ const productSchema = z
     cost: z.union([z.literal(""), z.coerce.number().nonnegative()]),
     material: z.string().trim().max(120),
     fit: z.string().trim().max(120),
-    colorCode: z.string().trim().min(1).max(40),
-    colorEn: z.string().trim().min(1).max(60),
-    colorAr: z.string().trim().min(1).max(60),
-    swatchHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+    colours: z.string().max(4000),
     sizes: z.string().trim().min(1).max(200),
     stock: z.coerce.number().int().nonnegative().max(1_000_000),
     lowStockThreshold: z.coerce.number().int().nonnegative().max(100_000),
@@ -86,6 +83,45 @@ export async function createProductAction(
     "super_admin",
   ]);
   const data = parsed.data;
+  const colourSchema = z
+    .array(
+      z.object({
+        code: z
+          .string()
+          .trim()
+          .min(1)
+          .max(40)
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+        en: z.string().trim().min(1).max(60),
+        ar: z.string().trim().min(1).max(60),
+        hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+      }),
+    )
+    .min(1)
+    .max(12);
+  let colourInput: unknown;
+  try {
+    colourInput = JSON.parse(data.colours);
+  } catch {
+    colourInput = null;
+  }
+  const parsedColours = colourSchema.safeParse(colourInput);
+  if (
+    !parsedColours.success ||
+    new Set(
+      parsedColours.success ? parsedColours.data.map((item) => item.code) : [],
+    ).size !== (parsedColours.success ? parsedColours.data.length : 0)
+  ) {
+    return {
+      status: "error",
+      message: message(
+        locale,
+        "Add between 1 and 12 valid colours with unique codes.",
+        "أضف من لون واحد إلى ١٢ لوناً بأكواد مختلفة.",
+      ),
+      fieldErrors: { colours: ["Colour codes must be unique."] },
+    };
+  }
   const sizes = [
     ...new Set(
       data.sizes
@@ -151,7 +187,7 @@ export async function createProductAction(
       .data.publicUrl;
   }
 
-  const { error } = await supabase.rpc("admin_create_product", {
+  const { error } = await supabase.rpc("admin_create_product_with_colours", {
     p_slug: data.slug,
     p_title_en: data.titleEn,
     p_title_ar: data.titleAr,
@@ -166,10 +202,7 @@ export async function createProductAction(
     p_cost_minor: data.cost === "" ? null : Math.round(data.cost * 100),
     p_material: data.material,
     p_fit: data.fit,
-    p_color_code: data.colorCode,
-    p_color_en: data.colorEn,
-    p_color_ar: data.colorAr,
-    p_swatch_hex: data.swatchHex,
+    p_colours: parsedColours.data,
     p_sizes: sizes,
     p_stock: data.stock,
     p_low_stock_threshold: data.lowStockThreshold,

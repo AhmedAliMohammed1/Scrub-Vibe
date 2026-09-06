@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Search, SlidersHorizontal } from "lucide-react";
 import type { Locale } from "../../lib/i18n";
 import type { CatalogFilters } from "./filters";
-import type { Product } from "./types";
+import type { Product, ProductColour } from "./types";
 
 const content = {
   en: {
@@ -83,9 +83,13 @@ function uniqueSizes(products: Product[]) {
 function uniqueColors(products: Product[]) {
   return [
     ...new Map(
-      products.map((product) => [product.colorCode, product]),
+      products
+        .flatMap((product) => product.colors)
+        .map((colour) => [colour.code, colour] as const),
     ).values(),
-  ];
+  ].toSorted((a: ProductColour, b: ProductColour) =>
+    a.name.en.localeCompare(b.name.en),
+  );
 }
 
 export function CatalogFilterForm({
@@ -166,22 +170,22 @@ export function CatalogFilterForm({
               {t.color}
             </legend>
             <div className="mt-3 space-y-2">
-              {colors.map((product) => (
+              {colors.map((colour) => (
                 <label
-                  key={product.colorCode}
+                  key={colour.code}
                   className="flex cursor-pointer items-center gap-2 text-xs"
                 >
                   <input
                     type="checkbox"
                     name="color"
-                    value={product.colorCode}
-                    defaultChecked={filters.colors.includes(product.colorCode)}
+                    value={colour.code}
+                    defaultChecked={filters.colors.includes(colour.code)}
                   />
                   <span
                     className="size-3 rounded-full border border-black/15"
-                    style={{ backgroundColor: product.color }}
+                    style={{ backgroundColor: colour.swatch }}
                   />
-                  {product.colorName[locale]}
+                  {colour.name[locale]}
                 </label>
               ))}
             </div>

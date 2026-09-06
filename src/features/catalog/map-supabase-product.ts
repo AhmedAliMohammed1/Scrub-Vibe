@@ -1,5 +1,5 @@
 import type { Database } from "@/types/database";
-import type { Product } from "./types";
+import type { Product, ProductColour } from "./types";
 
 type ProductTranslation = Pick<
   Database["public"]["Tables"]["product_translations"]["Row"],
@@ -79,7 +79,6 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
   const sizeOption = row.product_options.find(
     (option) => option.code === "size",
   );
-  const color = colorOption?.product_option_values[0];
   const activeVariants = row.product_variants.filter(
     (variant) => variant.is_active,
   );
@@ -87,15 +86,50 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
     const inventory = variant.inventory;
     return inventory !== null && inventory.on_hand - inventory.reserved > 0;
   });
-  const activeValueIds = new Set(
-    inStockVariants.flatMap((variant) =>
-      variant.product_variant_values.map((value) => value.option_value_id),
-    ),
+  const sizeValues = (sizeOption?.product_option_values ?? []).toSorted(
+    (a, b) => a.position - b.position,
   );
-  const sizes = (sizeOption?.product_option_values ?? [])
-    .filter((value) => activeValueIds.has(value.id))
-    .sort((a, b) => a.position - b.position)
-    .map((value) => value.label_en);
+  const variantHasValues = (variant: ProductVariant, ...valueIds: number[]) => {
+    const variantValueIds = new Set(
+      variant.product_variant_values.map((value) => value.option_value_id),
+    );
+    return valueIds.every((id) => variantValueIds.has(id));
+  };
+  const colors: ProductColour[] = (colorOption?.product_option_values ?? [])
+    .toSorted((a, b) => a.position - b.position)
+    .map((color) => {
+      const availableSizes = sizeValues
+        .filter((size) =>
+          inStockVariants.some((variant) =>
+            variantHasValues(variant, color.id, size.id),
+          ),
+        )
+        .map((size) => size.label_en);
+
+      return {
+        id: String(color.id),
+        code: color.code,
+        swatch: color.swatch_hex ?? "#c8b298",
+        name: { en: color.label_en, ar: color.label_ar },
+        sizes: availableSizes,
+        inStock: availableSizes.length > 0,
+      };
+    });
+  const fallbackColour: ProductColour = {
+    id: "natural",
+    code: "natural",
+    swatch: "#c8b298",
+    name: { en: "Natural", ar: "طبيعي" },
+    sizes: [],
+    inStock: false,
+  };
+  const primaryColour =
+    colors.find((colour) => colour.inStock) ?? colors[0] ?? fallbackColour;
+  const sizes = [...new Set(colors.flatMap((colour) => colour.sizes))].toSorted(
+    (a, b) =>
+      sizeValues.findIndex((value) => value.label_en === a) -
+      sizeValues.findIndex((value) => value.label_en === b),
+  );
   const hasLowStockVariant = activeVariants.some((variant) => {
     const inventory = variant.inventory;
     return (
@@ -126,12 +160,10 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
     category: row.gender ?? "unisex",
     price: row.base_price_minor,
     compareAt: row.compare_at_price_minor ?? undefined,
-    color: color?.swatch_hex ?? "#c8b298",
-    colorCode: color?.code ?? "natural",
-    colorName: {
-      en: color?.label_en ?? "Natural",
-      ar: color?.label_ar ?? "طبيعي",
-    },
+    color: primaryColour.swatch,
+    colorCode: primaryColour.code,
+    colorName: primaryColour.name,
+    colors: colors.length ? colors : [fallbackColour],
     sizes,
     inStock: inStockVariants.length > 0,
     badge: row.compare_at_price_minor
@@ -139,7 +171,7 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
       : hasLowStockVariant
         ? "low"
         : "new",
-    art: artFor(color?.swatch_hex),
+    art: artFor(primaryColour.swatch),
     image: {
       src: image?.storage_path ?? "/images/scrub-vibe/female-collection.webp",
       alt: {

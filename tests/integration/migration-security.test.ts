@@ -42,6 +42,14 @@ const adminAnalytics = readFileSync(
   "utf8",
 );
 
+const multiColourVariants = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260906092933_multi_colour_variants.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -155,5 +163,18 @@ describe("foundation migration security", () => {
     );
     expect(adminAnalytics).toContain("for update;");
     expect(adminAnalytics).toContain("'Opening stock', auth.uid()");
+  });
+
+  it("creates colour-size variants through an authorized invoker function", () => {
+    expect(multiColourVariants).toMatch(
+      /create or replace function public\.admin_create_product_with_colours[\s\S]*security invoker/,
+    );
+    expect(multiColourVariants).toContain("jsonb_array_elements(p_colours)");
+    expect(multiColourVariants).toContain(
+      "private.has_any_role(array['product_manager','admin','super_admin']",
+    );
+    expect(multiColourVariants).toContain(
+      "revoke execute on function public.admin_create_product_with_colours",
+    );
   });
 });

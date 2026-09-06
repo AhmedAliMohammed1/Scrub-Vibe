@@ -664,6 +664,29 @@ export type Database = {
         };
         Returns: number;
       };
+      admin_create_product_with_colours: {
+        Args: {
+          p_base_price_minor: number;
+          p_category_id: number;
+          p_colours: Json;
+          p_compare_at_price_minor: number | null;
+          p_cost_minor: number | null;
+          p_description_ar: string;
+          p_description_en: string;
+          p_fit: string;
+          p_gender: string;
+          p_image_url: string;
+          p_low_stock_threshold: number;
+          p_material: string;
+          p_sizes: string[];
+          p_slug: string;
+          p_status: Database["public"]["Enums"]["product_status"];
+          p_stock: number;
+          p_title_ar: string;
+          p_title_en: string;
+        };
+        Returns: number;
+      };
       admin_set_product_status: {
         Args: {
           p_product_id: number;

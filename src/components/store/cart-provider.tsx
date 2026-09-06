@@ -8,54 +8,132 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import type { Product } from "@/features/catalog/types";
 import { trackStoreEvent } from "@/lib/analytics";
 
+export type CartLine = {
+  key: string;
+  productId: string;
+  slug: string;
+  title: Product["title"];
+  image: Product["image"];
+  price: number;
+  colourCode: string;
+  colourName: Product["colorName"];
+  swatch: string;
+  size: string;
+  quantity: number;
+};
+
+type ProductSelection = { colourCode?: string; size?: string };
+type StoredShop = {
+  version?: number;
+  cartItems?: CartLine[];
+  wishlist?: string[];
+};
 type ShopState = {
   cart: number;
+  cartItems: CartLine[];
   wishlist: string[];
-  addToCart: (productId?: string) => void;
+  addToCart: (product: Product, selection?: ProductSelection) => void;
+  removeCartItem: (key: string) => void;
   toggleWishlist: (id: string) => void;
 };
+
 const ShopContext = createContext<ShopState | null>(null);
 
+function storedShop(): { cartItems: CartLine[]; wishlist: string[] } {
+  if (typeof window === "undefined") return { cartItems: [], wishlist: [] };
+  try {
+    const value = JSON.parse(
+      window.localStorage.getItem("scrub-vibe-shop") ?? "{}",
+    ) as StoredShop;
+    return {
+      cartItems: Array.isArray(value.cartItems) ? value.cartItems : [],
+      wishlist: Array.isArray(value.wishlist) ? value.wishlist : [],
+    };
+  } catch {
+    return { cartItems: [], wishlist: [] };
+  }
+}
+
 export function ShopProvider({ children }: { children: React.ReactNode }) {
-  const initial =
-    typeof window === "undefined"
-      ? null
-      : window.localStorage.getItem("scrub-vibe-shop");
-  const parsed = initial
-    ? (JSON.parse(initial) as { cart: number; wishlist: string[] })
-    : { cart: 0, wishlist: [] };
-  const [cart, setCart] = useState(parsed.cart);
-  const [wishlist, setWishlist] = useState<string[]>(parsed.wishlist);
+  const [initial] = useState(storedShop);
+  const [cartItems, setCartItems] = useState<CartLine[]>(initial.cartItems);
+  const [wishlist, setWishlist] = useState<string[]>(initial.wishlist);
   const hydrated = useSyncExternalStore(
     () => () => undefined,
     () => true,
     () => false,
   );
+
   useEffect(() => {
     window.localStorage.setItem(
       "scrub-vibe-shop",
-      JSON.stringify({ cart, wishlist }),
+      JSON.stringify({ version: 2, cartItems, wishlist }),
     );
-  }, [cart, wishlist]);
-  const value = useMemo(
+  }, [cartItems, wishlist]);
+
+  const cart = cartItems.reduce((total, line) => total + line.quantity, 0);
+  const value = useMemo<ShopState>(
     () => ({
       cart: hydrated ? cart : 0,
+      cartItems: hydrated ? cartItems : [],
       wishlist: hydrated ? wishlist : [],
-      addToCart: (productId?: string) => {
-        setCart((n) => n + 1);
-        trackStoreEvent("add_to_cart", { productId });
+      addToCart: (product, selection = {}) => {
+        const colour =
+          product.colors.find(
+            (item) => item.code === selection.colourCode && item.inStock,
+          ) ?? product.colors.find((item) => item.inStock);
+        const size = colour?.sizes.includes(selection.size ?? "")
+          ? selection.size!
+          : colour?.sizes[0];
+        if (!colour || !size) return;
+
+        const key = `${product.id}:${colour.code}:${size}`;
+        setCartItems((lines) => {
+          const existing = lines.find((line) => line.key === key);
+          if (existing) {
+            return lines.map((line) =>
+              line.key === key
+                ? { ...line, quantity: line.quantity + 1 }
+                : line,
+            );
+          }
+          return [
+            ...lines,
+            {
+              key,
+              productId: product.id,
+              slug: product.slug,
+              title: product.title,
+              image: product.image,
+              price: product.price,
+              colourCode: colour.code,
+              colourName: colour.name,
+              swatch: colour.swatch,
+              size,
+              quantity: 1,
+            },
+          ];
+        });
+        trackStoreEvent("add_to_cart", {
+          productId: product.id,
+          metadata: { colour: colour.code, size },
+        });
       },
-      toggleWishlist: (id: string) =>
+      removeCartItem: (key) =>
+        setCartItems((lines) => lines.filter((line) => line.key !== key)),
+      toggleWishlist: (id) =>
         setWishlist((ids) => {
           const removing = ids.includes(id);
           if (!removing) trackStoreEvent("wishlist_add", { productId: id });
           return removing ? ids.filter((item) => item !== id) : [...ids, id];
         }),
     }),
-    [cart, hydrated, wishlist],
+    [cart, cartItems, hydrated, wishlist],
   );
+
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 }
 

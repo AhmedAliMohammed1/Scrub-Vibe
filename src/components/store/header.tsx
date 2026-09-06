@@ -123,7 +123,7 @@ export function Header({ locale }: { locale: Locale }) {
             <Link
               href={`/${locale}/cart`}
               className="relative"
-              aria-label={`Cart with ${cart} items`}
+              aria-label={`Cart with ${cart} item${cart === 1 ? "" : "s"}`}
             >
               <ShoppingBag size={19} />
               {cart > 0 && <span className="counter">{cart}</span>}

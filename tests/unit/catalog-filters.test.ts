@@ -39,7 +39,16 @@ describe("catalogue URL filters", () => {
     const filters = parseCatalogFilters({ q: "زيتوني" });
     expect(
       filterCatalog(demoProducts, filters, "ar").map((item) => item.id),
-    ).toEqual(["sv-m2"]);
+    ).toEqual([
+      "sv-f2",
+      "sv-f9",
+      "sv-f4",
+      "sv-f7",
+      "sv-f6",
+      "sv-m1",
+      "sv-m2",
+      "sv-m5",
+    ]);
   });
 
   it("combines audience, size, sale, and price filters", () => {
