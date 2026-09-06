@@ -3,7 +3,7 @@
 Scrub Vibe supports four Egypt-focused checkout methods:
 
 - Cash on delivery creates a confirmed order with payment due at delivery.
-- Vodafone Cash and InstaPay require a JPG, PNG or WebP transfer screenshot. The proof is stored in the private `payment-proofs` bucket and must be approved by staff before fulfilment.
+- Vodafone Cash and InstaPay are always available and require a JPG, PNG or WebP transfer screenshot. The proof is stored in the private `payment-proofs` bucket and must be approved by staff before fulfilment.
 - Paymob Unified Checkout is the automated option for cards and the mobile-wallet integrations enabled on the merchant account. Paymob webhook HMAC verification is the only source of truth for payment success.
 
 The server always recalculates prices from active Supabase variants, locks inventory, and reserves it in the same database transaction. Browser totals and product descriptions are never trusted.
@@ -14,7 +14,7 @@ The server always recalculates prices from active Supabase variants, locks inven
 2. Enable the card and mobile-wallet integrations required by the store. Vodafone Cash is included in Paymob's supported Egyptian mobile wallets when enabled for the account.
 3. Set `PAYMOB_SECRET_KEY`, `PAYMOB_PUBLIC_KEY`, `PAYMOB_HMAC_SECRET`, and a comma-separated `PAYMOB_INTEGRATION_ID` list in Vercel Production, Preview and Development as appropriate.
 4. Configure the Paymob processed callback as `https://scrub-vibe-tau.vercel.app/api/payments/paymob/webhook`.
-5. Set `NEXT_PUBLIC_VODAFONE_CASH_NUMBER` and `NEXT_PUBLIC_INSTAPAY_ADDRESS` to enable the manual transfer choices.
+5. Set `NEXT_PUBLIC_VODAFONE_CASH_NUMBER` and `NEXT_PUBLIC_INSTAPAY_ADDRESS` to display the transfer destinations directly. Until configured, checkout sends customers to the official Scrub Vibe WhatsApp contact to request the correct details; manual methods and protected proof review remain available.
 
 InstaPay does not expose a general merchant checkout API for this integration. It is intentionally handled as a manual bank transfer with protected proof review.
 

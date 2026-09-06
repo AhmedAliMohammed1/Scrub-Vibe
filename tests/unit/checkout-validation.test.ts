@@ -27,4 +27,17 @@ describe("Egypt checkout validation", () => {
     expect(checkoutOrderSchema.safeParse(order).success).toBe(true);
     expect(checkoutOrderSchema.safeParse({ ...order, items: [{ variantId: "42", quantity: 11 }] }).success).toBe(false);
   });
+
+  it.each(["vodafone_cash", "instapay"] as const)(
+    "accepts the %s manual proof-review method",
+    (paymentMethod) => {
+      expect(checkoutOrderSchema.safeParse({
+        verificationToken: "x".repeat(40), locale: "en", customerName: "Mona Ali", email: "",
+        phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+        streetAddress: "12 Example Street", building: "12", floor: "2", apartment: "4",
+        landmark: "", customerNotes: "", paymentMethod,
+        items: [{ variantId: "42", quantity: 1 }],
+      }).success).toBe(true);
+    },
+  );
 });

@@ -28,6 +28,9 @@ const governorates = [
 ];
 
 const inputClass = "h-12 w-full border border-black/20 bg-white px-4 text-sm outline-none focus:border-[#0e7468]";
+const paymentHelpUrl =
+  "https://wa.me/201096733209?text=" +
+  encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
 
 export function CheckoutForm({ locale, payments }: Props) {
   const ar = locale === "ar";
@@ -123,10 +126,15 @@ export function CheckoutForm({ locale, payments }: Props) {
   const paymentOptions: { id: PaymentMethod; title: string; detail: string; icon: typeof CreditCard }[] = [
     { id: "cod", title: ar ? "الدفع عند الاستلام" : "Cash on delivery", detail: ar ? "ادفع نقداً عند استلام الطلب." : "Pay in cash when your order arrives.", icon: Package },
     ...(payments.paymob ? [{ id: "paymob" as const, title: ar ? "بطاقة أو محفظة إلكترونية" : "Card or mobile wallet", detail: ar ? "دفع آمن عبر Paymob، بما في ذلك المحافظ المتاحة." : "Secure Paymob checkout for cards and enabled wallets.", icon: CreditCard }] : []),
-    ...(payments.vodafoneNumber ? [{ id: "vodafone_cash" as const, title: "Vodafone Cash", detail: ar ? `حوّل إلى ${payments.vodafoneNumber} ثم ارفع صورة الإيصال.` : `Transfer to ${payments.vodafoneNumber}, then upload the receipt.`, icon: Smartphone }] : []),
-    ...(payments.instapayAddress ? [{ id: "instapay" as const, title: "InstaPay", detail: ar ? `حوّل إلى ${payments.instapayAddress} ثم ارفع صورة الإيصال.` : `Transfer to ${payments.instapayAddress}, then upload the receipt.`, icon: Smartphone }] : []),
+    { id: "vodafone_cash", title: "Vodafone Cash", detail: payments.vodafoneNumber ? (ar ? `حوّل إلى ${payments.vodafoneNumber} ثم ارفع صورة الإيصال.` : `Transfer to ${payments.vodafoneNumber}, then upload the receipt.`) : (ar ? "اطلب بيانات التحويل عبر واتساب، ثم ارفع صورة الإيصال." : "Get the transfer details on WhatsApp, then upload the receipt."), icon: Smartphone },
+    { id: "instapay", title: "InstaPay", detail: payments.instapayAddress ? (ar ? `حوّل إلى ${payments.instapayAddress} ثم ارفع صورة الإيصال.` : `Transfer to ${payments.instapayAddress}, then upload the receipt.`) : (ar ? "اطلب بيانات التحويل عبر واتساب، ثم ارفع صورة الإيصال." : "Get the transfer details on WhatsApp, then upload the receipt."), icon: Smartphone },
   ];
   const manualPayment = paymentMethod === "vodafone_cash" || paymentMethod === "instapay";
+  const manualDestinationConfigured = paymentMethod === "vodafone_cash"
+    ? Boolean(payments.vodafoneNumber)
+    : paymentMethod === "instapay"
+      ? Boolean(payments.instapayAddress)
+      : true;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-12 md:px-10 md:py-20">
@@ -164,7 +172,7 @@ export function CheckoutForm({ locale, payments }: Props) {
           <section className="border border-black/10 bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">3</span><h2 className="font-serif text-3xl">{ar ? "طريقة الدفع" : "Payment method"}</h2></div>
             <div className="mt-6 grid gap-3">{paymentOptions.map(({ id, title, detail, icon: Icon }) => <label key={id} className={`flex cursor-pointer gap-4 border p-4 ${paymentMethod === id ? "border-[#0e7468] bg-[#dce9e5]/60" : "border-black/10"}`}><input type="radio" name="paymentMethod" value={id} checked={paymentMethod === id} onChange={() => setPaymentMethod(id)} className="mt-1 accent-[#0e7468]" /><Icon size={21} className="shrink-0" /><span><strong className="block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-neutral-600">{detail}</span></span></label>)}</div>
-            {manualPayment && <label className="mt-5 grid gap-2 text-xs font-bold">{ar ? "صورة إيصال التحويل" : "Transfer screenshot"}<input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required className="border border-dashed border-[#0e7468] bg-[#dce9e5]/30 p-5 text-xs" /><span className="font-normal text-neutral-500">{ar ? "JPG أو PNG أو WebP — بحد أقصى ٥ ميجابايت. لن يبدأ تجهيز الطلب حتى تتم مراجعة التحويل." : "JPG, PNG or WebP — maximum 5 MB. Fulfilment starts after the transfer is reviewed."}</span></label>}
+            {manualPayment && <div className="mt-5 grid gap-4">{!manualDestinationConfigured && <p className="border border-[#0e7468]/25 bg-[#dce9e5]/40 p-4 text-xs leading-5 text-neutral-700">{ar ? "قبل التحويل، احصل على بيانات الدفع الصحيحة من فريق Scrub Vibe عبر واتساب." : "Before transferring, get the correct payment details from the Scrub Vibe team on WhatsApp."} <a href={paymentHelpUrl} target="_blank" rel="noreferrer" className="font-bold text-[#0e7468] underline">{ar ? "فتح واتساب" : "Open WhatsApp"}</a></p>}<label className="grid gap-2 text-xs font-bold">{ar ? "صورة إيصال التحويل" : "Transfer screenshot"}<input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required className="border border-dashed border-[#0e7468] bg-[#dce9e5]/30 p-5 text-xs" /><span className="font-normal text-neutral-500">{ar ? "JPG أو PNG أو WebP — بحد أقصى ٥ ميجابايت. لن يبدأ تجهيز الطلب حتى تتم مراجعة التحويل." : "JPG, PNG or WebP — maximum 5 MB. Fulfilment starts after the transfer is reviewed."}</span></label></div>}
           </section>
         </div>
 

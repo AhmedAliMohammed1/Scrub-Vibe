@@ -23,13 +23,6 @@ export async function POST(request: Request) {
   if (checkout.paymentMethod === "paymob" && !hasPaymobConfiguration()) {
     return NextResponse.json({ error: "paymob_not_configured" }, { status: 503 });
   }
-  if (checkout.paymentMethod === "vodafone_cash" && !process.env.NEXT_PUBLIC_VODAFONE_CASH_NUMBER) {
-    return NextResponse.json({ error: "vodafone_cash_not_configured" }, { status: 503 });
-  }
-  if (checkout.paymentMethod === "instapay" && !process.env.NEXT_PUBLIC_INSTAPAY_ADDRESS) {
-    return NextResponse.json({ error: "instapay_not_configured" }, { status: 503 });
-  }
-
   const proof = formData.get("proof");
   const manualPayment = checkout.paymentMethod === "vodafone_cash" || checkout.paymentMethod === "instapay";
   if (manualPayment && (!(proof instanceof File) || proof.size === 0)) {

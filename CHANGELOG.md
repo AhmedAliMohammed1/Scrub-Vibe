@@ -30,3 +30,4 @@
 - Added bilingual customer order tracking with payment, fulfilment and shipment milestones.
 - Added admin order metrics, private proof review, payment decisions and fulfilment/shipment controls.
 - Added Paymob HMAC webhook processing and checkout/order security coverage.
+- Kept Vodafone Cash and InstaPay visible without deployment configuration, with a safe WhatsApp instructions fallback and mandatory private receipt review.

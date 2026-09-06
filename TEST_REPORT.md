@@ -104,7 +104,7 @@
 
 - Database: PASS — order, item, payment-proof, OTP-verification and status-history migrations recorded remotely with RLS and private proof storage
 - Transactional checkout: PASS — a live order/inventory-reservation scenario completed inside a database transaction and was rolled back, leaving no test order
-- Unit/integration: PASS — 8 files, 42 tests including Egyptian phone normalization, checkout validation, catalogue variant mapping and migration security invariants
+- Unit/integration: PASS — 8 files, 44 tests including both manual payment methods, Egyptian phone normalization, checkout validation, catalogue variant mapping and migration security invariants
 - Lint: PASS — zero warnings
 - Typecheck: PASS — strict TypeScript
 - Build: PASS — Next.js 16.3.3 production build including checkout, OTP, Paymob webhook, order tracking and admin fulfilment routes

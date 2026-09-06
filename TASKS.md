@@ -31,6 +31,6 @@
 - [x] **DONE** Rebrand the storefront and hosted catalogue to Scrub Vibe with sourced product photography, bilingual medical-apparel copy, 9 products and 53 size variants. Tests: PASS (27 total + production browser).
 - [x] **DONE** Implement admin commerce/marketing dashboard and product management. Tests: PASS.
 - [x] **DONE** Implement multi-colour products with exact colour/size inventory variants. Tests: PASS.
-- [x] **DONE** Implement Egypt checkout, phone OTP, COD, Paymob, Vodafone Cash/InstaPay proof review, orders and shipment tracking. Tests: PASS (42 total + live transactional rollback test).
+- [x] **DONE** Implement Egypt checkout, phone OTP, COD, Paymob, always-visible Vodafone Cash/InstaPay proof review, orders and shipment tracking. Tests: PASS (44 total + live transactional rollback test).
 - [ ] **TODO** Configure production Twilio, Paymob and transfer-destination environment variables and run provider sandbox acceptance tests.
 - [ ] **TODO** Implement database-backed cart/wishlist merge, shipping-zone rates, notifications, recovery automation and final production observability/risk validation.
