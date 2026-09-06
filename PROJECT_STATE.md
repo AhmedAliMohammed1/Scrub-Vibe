@@ -10,7 +10,7 @@
 - **Known bugs:** none confirmed in the implemented scope.
 - **Blocked tasks:** Live OTP and automated payment validation require Twilio Verify and Paymob merchant credentials. Email delivery requires Resend credentials.
 - **Required inputs:** Twilio Verify credentials; Paymob public/secret/HMAC/integration credentials; Vodafone Cash destination; InstaPay address; Resend key/sender domain; shipping-zone prices.
-- **Latest tests:** PASS — 8 files, 44 tests, including both manual payment methods, checkout validation, order security invariants, catalogue variants, authentication and filtering
+- **Latest tests:** PASS — 8 files, 51 tests, including OTP flag modes, both manual payment methods, checkout validation, order security invariants, catalogue variants, authentication and filtering
 - **Latest build:** PASS — Next.js 16.3.3 production build
 - **Latest local browser verification:** PASS — live Supabase catalogue, exact colour/size variant cart handoff and secure checkout navigation
 - **Latest deployment:** Checkout/payment implementation is committed on `main`; production activation awaits Vercel provider environment variables and a fresh deployment.

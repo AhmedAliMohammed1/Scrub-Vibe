@@ -26,7 +26,7 @@ export const otpVerifySchema = otpRequestSchema.extend({
 });
 
 export const checkoutOrderSchema = z.object({
-  verificationToken: z.string().min(32).max(200),
+  verificationToken: z.string().max(200),
   locale: z.enum(["en", "ar"]),
   customerName: z.string().trim().min(2).max(120),
   email: z.union([z.literal(""), z.email().max(254)]),

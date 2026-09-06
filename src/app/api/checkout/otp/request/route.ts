@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { otpRequestSchema } from "@/features/checkout/validation";
+import { isCheckoutPhoneOtpEnabled } from "@/features/checkout/config";
 import { requestIpHash } from "@/features/checkout/security";
 import { sendCheckoutOtp } from "@/features/checkout/twilio";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
+  if (!isCheckoutPhoneOtpEnabled()) {
+    return NextResponse.json({ error: "otp_disabled" }, { status: 409 });
+  }
   const parsed = otpRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "invalid_phone" }, { status: 400 });
 

@@ -104,9 +104,10 @@
 
 - Database: PASS — order, item, payment-proof, OTP-verification and status-history migrations recorded remotely with RLS and private proof storage
 - Transactional checkout: PASS — a live order/inventory-reservation scenario completed inside a database transaction and was rolled back, leaving no test order
-- Unit/integration: PASS — 8 files, 44 tests including both manual payment methods, Egyptian phone normalization, checkout validation, catalogue variant mapping and migration security invariants
+- Unit/integration: PASS — 8 files, 51 tests including enabled/disabled OTP modes, both manual payment methods, Egyptian phone normalization, checkout validation, catalogue variant mapping and migration security invariants
 - Lint: PASS — zero warnings
 - Typecheck: PASS — strict TypeScript
 - Build: PASS — Next.js 16.3.3 production build including checkout, OTP, Paymob webhook, order tracking and admin fulfilment routes
 - Local browser: PASS — live Supabase product, exact Burgundy/XS variant handoff, all Egyptian governorates, OTP gate, COD, Vodafone Cash and InstaPay checkout options
 - External providers: NOT_RUN — production Twilio Verify and Paymob credentials are not configured; no SMS or real payment was attempted
+- OTP flag browser/API: PASS — `false` hides OTP controls, removes the checkout gate, keeps Egyptian phone validation and rejects direct OTP requests without contacting Twilio

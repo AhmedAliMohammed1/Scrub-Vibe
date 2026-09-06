@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { checkoutOrderSchema, normalizeEgyptianPhone, otpRequestSchema } from "../../src/features/checkout/validation";
+import { isCheckoutPhoneOtpEnabled } from "../../src/features/checkout/config";
 
 describe("Egypt checkout validation", () => {
+  it.each([
+    [undefined, true], ["true", true], ["false", false], ["0", false], ["OFF", false], ["no", false],
+  ])("reads OTP flag %s as %s", (value, expected) => {
+    expect(isCheckoutPhoneOtpEnabled(value)).toBe(expected);
+  });
+
   it.each([
     ["01012345678", "+201012345678"],
     ["201112345678", "+201112345678"],
@@ -40,4 +47,14 @@ describe("Egypt checkout validation", () => {
       }).success).toBe(true);
     },
   );
+
+  it("accepts an empty verification token for the server-controlled disabled mode", () => {
+    expect(checkoutOrderSchema.safeParse({
+      verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
+      phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+      streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
+      landmark: "", customerNotes: "", paymentMethod: "cod",
+      items: [{ variantId: "42", quantity: 1 }],
+    }).success).toBe(true);
+  });
 });

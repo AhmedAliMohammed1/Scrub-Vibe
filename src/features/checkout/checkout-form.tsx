@@ -13,6 +13,7 @@ import { formatMoney } from "@/lib/money";
 type PaymentMethod = "cod" | "vodafone_cash" | "instapay" | "paymob";
 type Props = {
   locale: Locale;
+  otpEnabled: boolean;
   payments: {
     paymob: boolean;
     vodafoneNumber: string | null;
@@ -32,7 +33,7 @@ const paymentHelpUrl =
   "https://wa.me/201096733209?text=" +
   encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
 
-export function CheckoutForm({ locale, payments }: Props) {
+export function CheckoutForm({ locale, payments, otpEnabled }: Props) {
   const ar = locale === "ar";
   const router = useRouter();
   const { cartItems, clearCart } = useShop();
@@ -85,7 +86,7 @@ export function CheckoutForm({ locale, payments }: Props) {
 
   async function placeOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!verificationToken) { setError(ar ? "تحقق من رقم الهاتف أولاً." : "Verify your phone before placing the order."); return; }
+    if (otpEnabled && !verificationToken) { setError(ar ? "تحقق من رقم الهاتف أولاً." : "Verify your phone before placing the order."); return; }
     if (cartItems.some((line) => !line.variantId)) { setError(ar ? "حدّث حقيبتك بإزالة المنتجات القديمة وإضافتها مرة أخرى." : "Refresh your bag by removing and re-adding older items."); return; }
     setBusy("order"); setError("");
     const form = new FormData(event.currentTarget);
@@ -148,9 +149,10 @@ export function CheckoutForm({ locale, payments }: Props) {
               <label className="grid gap-2 text-xs font-bold">{ar ? "الاسم بالكامل" : "Full name"}<input name="customerName" className={inputClass} required minLength={2} autoComplete="name" /></label>
               <label className="grid gap-2 text-xs font-bold">{ar ? "البريد الإلكتروني (اختياري)" : "Email (optional)"}<input name="email" type="email" className={inputClass} autoComplete="email" /></label>
               <div className="sm:col-span-2">
-                <label className="grid gap-2 text-xs font-bold">{ar ? "رقم الموبايل المصري" : "Egyptian mobile number"}<span className="flex gap-2"><input value={phone} onChange={(event) => { setPhone(event.target.value); setVerificationToken(""); setOtpSent(false); }} className={inputClass} inputMode="tel" placeholder="01xxxxxxxxx" required autoComplete="tel" disabled={Boolean(verificationToken)} /><button type="button" onClick={requestOtp} disabled={Boolean(busy) || Boolean(verificationToken)} className="min-w-32 bg-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-white disabled:opacity-50">{busy === "otp" ? <Loader2 className="mx-auto animate-spin" size={16} /> : verificationToken ? (ar ? "تم التحقق" : "Verified") : (ar ? "إرسال الرمز" : "Send OTP")}</button></span></label>
-                {otpSent && !verificationToken && <div className="mt-3 flex gap-2"><input value={otp} onChange={(event) => setOtp(event.target.value)} className={inputClass} inputMode="numeric" placeholder={ar ? "رمز التحقق" : "Verification code"} maxLength={8} /><button type="button" onClick={verifyOtp} disabled={busy === "verify" || otp.length < 4} className="min-w-32 border border-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-[#073b36] disabled:opacity-50">{busy === "verify" ? <Loader2 className="mx-auto animate-spin" size={16} /> : (ar ? "تحقق" : "Verify")}</button></div>}
-                {verificationToken && <p className="mt-3 flex items-center gap-2 text-xs font-bold text-[#0e7468]"><CheckCircle2 size={15} />{ar ? "تم التحقق من رقم الهاتف." : "Phone number verified."}</p>}
+                <label className="grid gap-2 text-xs font-bold">{ar ? "رقم الموبايل المصري" : "Egyptian mobile number"}<span className="flex gap-2"><input value={phone} onChange={(event) => { setPhone(event.target.value); setVerificationToken(""); setOtpSent(false); }} className={inputClass} inputMode="tel" placeholder="01xxxxxxxxx" required autoComplete="tel" disabled={otpEnabled && Boolean(verificationToken)} />{otpEnabled && <button type="button" onClick={requestOtp} disabled={Boolean(busy) || Boolean(verificationToken)} className="min-w-32 bg-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-white disabled:opacity-50">{busy === "otp" ? <Loader2 className="mx-auto animate-spin" size={16} /> : verificationToken ? (ar ? "تم التحقق" : "Verified") : (ar ? "إرسال الرمز" : "Send OTP")}</button>}</span></label>
+                {otpEnabled && otpSent && !verificationToken && <div className="mt-3 flex gap-2"><input value={otp} onChange={(event) => setOtp(event.target.value)} className={inputClass} inputMode="numeric" placeholder={ar ? "رمز التحقق" : "Verification code"} maxLength={8} /><button type="button" onClick={verifyOtp} disabled={busy === "verify" || otp.length < 4} className="min-w-32 border border-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-[#073b36] disabled:opacity-50">{busy === "verify" ? <Loader2 className="mx-auto animate-spin" size={16} /> : (ar ? "تحقق" : "Verify")}</button></div>}
+                {otpEnabled && verificationToken && <p className="mt-3 flex items-center gap-2 text-xs font-bold text-[#0e7468]"><CheckCircle2 size={15} />{ar ? "تم التحقق من رقم الهاتف." : "Phone number verified."}</p>}
+                {!otpEnabled && <p className="mt-3 text-xs text-neutral-500">{ar ? "التحقق برمز الهاتف غير مطلوب حالياً." : "Phone OTP verification is not currently required."}</p>}
               </div>
             </div>
           </section>
@@ -182,7 +184,7 @@ export function CheckoutForm({ locale, payments }: Props) {
           <dl className="mt-5 border-t pt-4 text-sm"><div className="flex justify-between"><dt>{ar ? "المنتجات" : "Subtotal"}</dt><dd>{formatMoney(subtotal, locale)}</dd></div><div className="mt-2 flex justify-between"><dt>{ar ? "الشحن" : "Shipping"}</dt><dd>{ar ? "مجاني" : "Free"}</dd></div><div className="mt-4 flex justify-between border-t pt-4 font-bold"><dt>{ar ? "الإجمالي" : "Total"}</dt><dd>{formatMoney(subtotal, locale)}</dd></div></dl>
           <label className="mt-5 flex gap-3 text-[11px] leading-5 text-neutral-600"><input type="checkbox" required className="mt-1 accent-[#0e7468]" />{ar ? "أؤكد صحة البيانات وأوافق على التواصل معي بخصوص الطلب." : "I confirm these details and agree to be contacted about this order."}</label>
           {error && <p role="alert" className="mt-4 border border-[#a6432b]/30 bg-[#a6432b]/8 p-3 text-xs text-[#8c3624]">{error}</p>}
-          <button disabled={Boolean(busy) || !verificationToken} className="mt-5 flex h-14 w-full items-center justify-center gap-2 bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white disabled:cursor-not-allowed disabled:opacity-50">{busy === "order" ? <Loader2 className="animate-spin" size={17} /> : <LockKeyhole size={16} />}{ar ? "تأكيد الطلب" : "Place secure order"}</button>
+          <button disabled={Boolean(busy) || (otpEnabled && !verificationToken)} className="mt-5 flex h-14 w-full items-center justify-center gap-2 bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white disabled:cursor-not-allowed disabled:opacity-50">{busy === "order" ? <Loader2 className="animate-spin" size={17} /> : <LockKeyhole size={16} />}{ar ? "تأكيد الطلب" : "Place secure order"}</button>
           <p className="mt-3 text-center text-[10px] leading-4 text-neutral-500">{ar ? "لن نعتمد أي دفع إلكتروني إلا بعد التحقق الآمن منه." : "Electronic payments are never accepted without secure verification."}</p>
         </aside>
       </form>

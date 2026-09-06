@@ -29,4 +29,6 @@ Checkout phone verification uses Twilio Verify so it does not replace an existin
 
 The application accepts Egyptian mobile numbers only, limits OTP sends per phone and IP, and issues a single-use 15-minute checkout token after successful verification. `CHECKOUT_TEST_OTP` is available for local development only and is ignored in production.
 
+Set `CHECKOUT_PHONE_OTP_ENABLED=false` in Vercel to allow checkout without sending or entering an OTP. The flag defaults to `true`; values `false`, `0`, `off`, and `no` disable verification. Because it is server-controlled, changing it requires a new Vercel deployment. The phone number field remains required and validated as an Egyptian mobile number in either mode.
+
 Never store card data, OTP codes, Paymob secrets, Twilio secrets, or payment screenshots in public storage.

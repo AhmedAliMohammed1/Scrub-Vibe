@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkoutOrderSchema } from "@/features/checkout/validation";
+import { isCheckoutPhoneOtpEnabled } from "@/features/checkout/config";
 import { hashToken, issuePrivateToken } from "@/features/checkout/security";
 import { createPaymobIntention, hasPaymobConfiguration } from "@/features/checkout/paymob";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -20,6 +21,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_order", fields: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const checkout = parsed.data;
+  const otpEnabled = isCheckoutPhoneOtpEnabled();
+  if (otpEnabled && checkout.verificationToken.length < 32) {
+    return NextResponse.json({ error: "verification_required" }, { status: 401 });
+  }
   if (checkout.paymentMethod === "paymob" && !hasPaymobConfiguration()) {
     return NextResponse.json({ error: "paymob_not_configured" }, { status: 503 });
   }
@@ -43,6 +48,21 @@ export async function POST(request: Request) {
     if (error) return NextResponse.json({ error: "proof_upload_failed" }, { status: 503 });
   }
 
+  let effectiveVerificationToken = checkout.verificationToken;
+  let internalVerificationHash: string | null = null;
+  if (!otpEnabled) {
+    effectiveVerificationToken = issuePrivateToken();
+    internalVerificationHash = hashToken(effectiveVerificationToken);
+    const { error } = await admin.from("checkout_phone_verifications").insert({
+      phone: checkout.phone,
+      token_hash: internalVerificationHash,
+    });
+    if (error) {
+      if (proofPath) await admin.storage.from("payment-proofs").remove([proofPath]);
+      return NextResponse.json({ error: "order_failed" }, { status: 503 });
+    }
+  }
+
   const trackingToken = issuePrivateToken();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -64,7 +84,7 @@ export async function POST(request: Request) {
   };
   await admin.rpc("release_expired_order_reservations");
   const { data, error } = await admin.rpc("create_verified_order", {
-    p_verification_token_hash: hashToken(checkout.verificationToken),
+    p_verification_token_hash: hashToken(effectiveVerificationToken),
     p_tracking_token_hash: hashToken(trackingToken),
     p_user_id: userId as string,
     p_order: rpcOrder,
@@ -72,6 +92,9 @@ export async function POST(request: Request) {
   });
   if (error || !data) {
     if (proofPath) await admin.storage.from("payment-proofs").remove([proofPath]);
+    if (internalVerificationHash) {
+      await admin.from("checkout_phone_verifications").delete().eq("token_hash", internalVerificationHash);
+    }
     const code = error?.message.includes("INSUFFICIENT_STOCK") ? "insufficient_stock" :
       error?.message.includes("PHONE_VERIFICATION") ? "verification_expired" : "order_failed";
     return NextResponse.json({ error: code }, { status: code === "order_failed" ? 503 : 409 });
