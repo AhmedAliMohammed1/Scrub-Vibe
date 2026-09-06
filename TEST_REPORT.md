@@ -83,3 +83,19 @@
 - Responsive QA: PASS — full filter form and product results at 375px with no horizontal overflow
 - Browser console: PASS — fresh final session has no warnings, errors or framework overlays
 - Production deployment: PASS — commit `b716a52` serves the combined audience/size/sale filter correctly on the Vercel production alias
+
+## Scrub Vibe rebrand checkpoint — 2026-09-06
+
+- Source audit: PASS — supplied Scrub Vibe store and Instagram profile inspected for catalogue structure, brand positioning, imagery and public pricing
+- Media: PASS — approved Scrub Vibe assets copied into the application; no production hotlinks
+- Migration: PASS — `rebrand_scrub_vibe_catalogue` recorded remotely
+- Live data: PASS — 9 active Scrub Vibe products, 53 active size variants, local image paths and inventory visible through the existing RLS-backed repository
+- Pricing: PASS — scrub sets at EGP 850 with source compare-at prices; lab coat at EGP 550
+- Total: PASS — 7 files, 27 tests
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript
+- Build: PASS — Next.js 16.3.3 production build
+- Production browser: PASS — English and Arabic home, catalogue and product-detail content render from Supabase with real product photography
+- Responsive QA: PASS after correcting the tablet navigation/logo collision with a functional dropdown menu
+- Security advisor: one existing Auth warning — leaked-password protection is disabled; no catalogue/RLS regression found
+- Performance advisor: informational unused-index notices only on the low-traffic schema

@@ -28,4 +28,5 @@
 - [x] **DONE** Implement the production Supabase catalogue/inventory read repository and localized seed. Tests: PASS (live RLS + local browser).
 - [x] **DONE** Implement localized URL-addressable catalogue search, richer filtering and sorting. Tests: PASS (26 total + local browser).
 - [x] **DONE** Implement customer authentication UI against the existing SSR auth foundation. Tests: PASS (21 total + local browser).
+- [x] **DONE** Rebrand the storefront and hosted catalogue to Scrub Vibe with sourced product photography, bilingual medical-apparel copy, 9 products and 53 size variants. Tests: PASS (27 total + production browser).
 - [ ] **TODO** Implement customer, checkout, orders, admin, analytics, risk and production validation phases. Tests: NOT_RUN.

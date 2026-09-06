@@ -131,12 +131,20 @@ export default async function HomePage({
         </div>
       </section>
       <section className="trust-grid grid grid-cols-2 md:grid-cols-4">
-        {[
-          [Truck, "Egypt-wide delivery", "To every governorate"],
-          [PackageCheck, "Easy exchange", "Clear, simple policy"],
-          [ShieldCheck, "Secure checkout", "Protected payments"],
-          [Headphones, "Here to help", "Sunday–Thursday, 10–6"],
-        ].map(([Icon, title, body]) => {
+        {(locale === "ar"
+          ? [
+              [Truck, "توصيل لكل مصر", "إلى جميع المحافظات"],
+              [PackageCheck, "استبدال سهل", "سياسة واضحة وبسيطة"],
+              [ShieldCheck, "دفع آمن", "مدفوعات محمية"],
+              [Headphones, "نحن هنا لمساعدتك", "الأحد–الخميس، ١٠–٦"],
+            ]
+          : [
+              [Truck, "Egypt-wide delivery", "To every governorate"],
+              [PackageCheck, "Easy exchange", "Clear, simple policy"],
+              [ShieldCheck, "Secure checkout", "Protected payments"],
+              [Headphones, "Here to help", "Sunday–Thursday, 10–6"],
+            ]
+        ).map(([Icon, title, body]) => {
           const C = Icon as typeof Truck;
           return (
             <div key={String(title)} className="p-8 text-center md:p-12">
@@ -153,7 +161,9 @@ export default async function HomePage({
       <footer className="flex flex-col justify-between gap-8 px-6 py-10 text-[10px] font-semibold uppercase tracking-[.13em] md:flex-row md:px-10">
         <span>© 2026 SCRUB VIBE EGYPT</span>
         <div className="flex flex-wrap gap-6">
-          <Link href="mailto:scrubvibe30@gmail.com">Contact</Link>
+          <Link href="mailto:scrubvibe30@gmail.com">
+            {locale === "ar" ? "تواصل معنا" : "Contact"}
+          </Link>
           <Link href="tel:01096733209">01096733209</Link>
           <Link href="https://www.instagram.com/scrubvibe_egy/">Instagram</Link>
         </div>

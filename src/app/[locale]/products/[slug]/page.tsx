@@ -84,11 +84,18 @@ export default async function ProductPage({ params }: Props) {
           />
           <AddProduct product={p} locale={locale} />
           <div className="mt-8 divide-y divide-black/10 border-y border-black/10 text-xs">
-            {[
-              [Truck, "Delivery across Egypt"],
-              [RotateCcw, "14-day returns"],
-              [ShieldCheck, "Secure payment or cash on delivery"],
-            ].map(([Icon, text]) => {
+            {(locale === "ar"
+              ? [
+                  [Truck, "توصيل لجميع أنحاء مصر"],
+                  [RotateCcw, "استبدال واسترجاع خلال ١٤ يوماً"],
+                  [ShieldCheck, "دفع آمن أو الدفع عند الاستلام"],
+                ]
+              : [
+                  [Truck, "Delivery across Egypt"],
+                  [RotateCcw, "14-day returns"],
+                  [ShieldCheck, "Secure payment or cash on delivery"],
+                ]
+            ).map(([Icon, text]) => {
               const C = Icon as typeof Truck;
               return (
                 <div

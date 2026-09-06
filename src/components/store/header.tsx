@@ -16,11 +16,57 @@ export function Header({ locale }: { locale: Locale }) {
       </div>
       <header className="relative z-20 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
         <div className="mx-auto flex h-17 max-w-[1600px] items-center justify-between px-4 md:px-8">
-          <button className="md:hidden" aria-label="Open menu">
-            <Menu size={21} />
-          </button>
+          <details className="group xl:hidden">
+            <summary
+              className="grid size-10 list-none place-items-center marker:hidden"
+              aria-label="Open menu"
+            >
+              <Menu size={21} />
+            </summary>
+            <nav className="absolute inset-x-0 top-full border-y border-black/10 bg-[#f5f7f5] px-5 py-5 shadow-lg">
+              <div className="grid gap-4">
+                {t.nav.slice(0, 4).map((item, i) => (
+                  <Link
+                    key={item}
+                    href={
+                      i === 0
+                        ? `/${locale}/shop?category=new`
+                        : i === 1
+                          ? `/${locale}/shop?category=women`
+                          : i === 2
+                            ? `/${locale}/shop?category=men`
+                            : `/${locale}/shop?q=lab+coat`
+                    }
+                    className="text-xs font-bold uppercase tracking-[.13em]"
+                  >
+                    {item}
+                  </Link>
+                ))}
+                <Link
+                  href="https://www.instagram.com/scrubvibe_egy/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-bold uppercase tracking-[.13em]"
+                >
+                  {t.nav[4]}
+                </Link>
+                <Link
+                  href={`/${locale}#quality`}
+                  className="text-xs font-bold uppercase tracking-[.13em]"
+                >
+                  {t.nav[5]}
+                </Link>
+                <Link
+                  href={`/${locale}/shop?sale=1`}
+                  className="text-xs font-bold uppercase tracking-[.13em] text-[#0e7468]"
+                >
+                  {t.nav[6]}
+                </Link>
+              </div>
+            </nav>
+          </details>
           <nav
-            className="hidden items-center gap-6 md:flex"
+            className="hidden items-center gap-6 xl:flex"
             aria-label="Primary navigation"
           >
             {t.nav.slice(0, 4).map((item, i) => (
