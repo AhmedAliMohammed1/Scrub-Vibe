@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import { checkoutOrderSchema } from "@/features/checkout/validation";
 import { isCheckoutPhoneOtpEnabled } from "@/features/checkout/config";
+import { paymentProofExtension } from "@/features/checkout/payment-proof";
 import { hashToken, issuePrivateToken } from "@/features/checkout/security";
 import { createPaymobIntention, hasPaymobConfiguration } from "@/features/checkout/paymob";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-const allowedProofs = new Map([
-  ["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"],
-]);
 
 export async function POST(request: Request) {
   const formData = await request.formData().catch(() => null);
@@ -45,8 +42,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "checkout_configuration_error" }, { status: 503 });
   }
   if (proof instanceof File && proof.size > 0) {
-    const extension = allowedProofs.get(proof.type);
-    if (!extension || proof.size > 5 * 1024 * 1024) {
+    const extension = await paymentProofExtension(proof);
+    if (!extension) {
       return NextResponse.json({ error: "invalid_payment_proof" }, { status: 400 });
     }
     proofPath = `submissions/${crypto.randomUUID()}.${extension}`;

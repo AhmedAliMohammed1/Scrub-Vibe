@@ -31,3 +31,7 @@
 ## ADR-008 — Supabase session refresh in Next.js 16 Proxy
 
 **Status:** Accepted. **Reason:** Server Components cannot write refreshed cookies. Proxy verifies claims before rendering and propagates the cache-prevention headers supplied by the current SSR client.
+
+## ADR-009 — Explicit Paymob activation and callback source of truth
+
+**Status:** Accepted. **Reason:** Paymob stays unavailable unless `PAYMOB_ENABLED=true` and every credential/callback setting is valid. Server-to-server HMAC callbacks—not browser redirects—are authoritative. Callback identities are deduplicated in PostgreSQL, successful payments cannot be downgraded by later failures, and only payload digests plus operational identifiers are retained for audit.

@@ -13,7 +13,7 @@ const schema = z.object({
   shipmentNumber: z.string().trim().max(120),
   courier: z.string().trim().max(120),
   trackingUrl: z.union([z.literal(""), z.url().max(1000)]),
-  proofStatus: z.enum(["", "pending", "approved", "rejected"]),
+  proofStatus: z.enum(["", "approved", "rejected"]),
 });
 
 export async function updateOrderAction(formData: FormData) {

@@ -58,6 +58,14 @@ const checkoutOrders = readFileSync(
   "utf8",
 );
 
+const paymentHardening = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260907212403_harden_payment_processing.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -205,5 +213,31 @@ describe("foundation migration security", () => {
     expect(checkoutOrders).toContain("coalesce(pv.price_override_minor, p.base_price_minor)");
     expect(checkoutOrders).toContain("reserved = reserved + v_quantity");
     expect(checkoutOrders).toContain("PHONE_VERIFICATION_INVALID");
+  });
+
+  it("deduplicates Paymob callbacks and keeps their audit data staff-only", () => {
+    expect(paymentHardening).toContain(
+      "alter table public.payment_webhook_events enable row level security",
+    );
+    expect(paymentHardening).toContain(
+      "unique (provider, provider_event_id)",
+    );
+    expect(paymentHardening).toContain(
+      "on conflict (provider, provider_event_id) do nothing",
+    );
+    expect(paymentHardening).toContain(
+      "revoke execute on function public.process_paymob_callback",
+    );
+    expect(paymentHardening).toContain("to service_role");
+    expect(paymentHardening).not.toMatch(/auth\.role\s*\(/);
+  });
+
+  it("makes manual proof decisions authoritative and role-restricted", () => {
+    expect(paymentHardening).toContain("PROOF_REVIEW_FORBIDDEN");
+    expect(paymentHardening).toContain("PROOF_APPROVAL_REQUIRED");
+    expect(paymentHardening).toContain("PAYMOB_WEBHOOK_REQUIRED");
+    expect(paymentHardening).toContain(
+      "when v_previous.payment_method = 'cod' then 'cod_due'",
+    );
   });
 });

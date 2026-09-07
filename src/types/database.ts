@@ -608,6 +608,65 @@ export type Database = {
           },
         ]
       }
+      payment_webhook_events: {
+        Row: {
+          amount_minor: number | null
+          currency: string | null
+          error_code: string | null
+          external_order_id: string | null
+          id: number
+          integration_id: number | null
+          order_id: string | null
+          outcome: string
+          payload_digest: string
+          processed_at: string | null
+          provider: string
+          provider_event_id: string
+          received_at: string
+          transaction_id: string | null
+        }
+        Insert: {
+          amount_minor?: number | null
+          currency?: string | null
+          error_code?: string | null
+          external_order_id?: string | null
+          id?: number
+          integration_id?: number | null
+          order_id?: string | null
+          outcome?: string
+          payload_digest: string
+          processed_at?: string | null
+          provider: string
+          provider_event_id: string
+          received_at?: string
+          transaction_id?: string | null
+        }
+        Update: {
+          amount_minor?: number | null
+          currency?: string | null
+          error_code?: string | null
+          external_order_id?: string | null
+          id?: number
+          integration_id?: number | null
+          order_id?: string | null
+          outcome?: string
+          payload_digest?: string
+          processed_at?: string | null
+          provider?: string
+          provider_event_id?: string
+          received_at?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           alt_ar: string | null
@@ -1069,12 +1128,16 @@ export type Database = {
       process_paymob_callback: {
         Args: {
           p_amount_minor: number
+          p_currency: string
+          p_event_id: string
           p_external_order_id: string
+          p_integration_id: number
           p_order_number: string
+          p_payload_digest: string
           p_success: boolean
           p_transaction_id: string
         }
-        Returns: undefined
+        Returns: Json
       }
       release_expired_order_reservations: { Args: never; Returns: number }
       subscribe_newsletter: {

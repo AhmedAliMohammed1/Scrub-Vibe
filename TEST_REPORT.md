@@ -125,3 +125,14 @@
 - Build: PASS — Next.js 16.3.3 production build
 - Local browser: PASS — live Supabase product selection/cart handoff, branded payment icons, disabled unconfigured COD state, receipt upload and actionable invalid-phone feedback; no new application errors or framework overlay
 - Production rollout check: PASS — commit `6a9a753` is live; all 9 active products have positive deposits. A stale-cart display mismatch was found and corrected by loading current deposit values on the checkout server component.
+
+## Payment hardening checkpoint — 2026-09-08
+
+- Paymob hold: PASS — `PAYMOB_ENABLED` defaults off and checkout requires the switch plus all keys, valid integration IDs, HMAC secret and HTTPS app URL before exposing Paymob
+- Webhook security: PASS — SHA-512 HMAC, configured integration ID, positive amount, EGP currency and external/internal order correlation are enforced
+- Idempotency: PASS — provider event IDs are unique; duplicates cannot create repeated transitions and failed/additional callbacks cannot downgrade a paid order
+- Audit privacy: PASS — the staff-only RLS table stores identifiers, outcomes and SHA-256 payload digests without raw callback/card data
+- Manual proof workflow: PASS — live production data contains approved COD and Vodafone Cash proofs with consistent `cod_due`/`paid` states
+- Receipt security: PASS — JPEG, PNG and WebP MIME declarations must match their magic bytes and the existing private 5 MB bucket restrictions
+- Database: PASS — `harden_payment_processing` applied to project `iqufqtjotgpmhhtvlxwf`; event table, JSON callback function and service-role-only execution verified
+- Unit/integration: PASS — 10 files, 61 tests

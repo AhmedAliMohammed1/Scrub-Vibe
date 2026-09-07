@@ -35,3 +35,7 @@
 - Added support for both Supabase server-secret environment names and safe checkout stage diagnostics instead of masking configuration failures as invalid order data.
 - Added per-product COD deposits, admin deposit editing, Vodafone Cash/InstaPay deposit receipts, branded payment icons, clearer field/server errors, and due-on-delivery balances in customer/admin order views.
 - Checkout now refreshes COD deposit amounts from Supabase, so admin changes apply to carts saved before the deposit release instead of leaving COD incorrectly disabled.
+- Added an explicit `PAYMOB_ENABLED` activation switch; Paymob remains hidden until the switch, secret/public keys, HMAC secret, integration IDs and public app URL are all valid.
+- Hardened Paymob callbacks with integration/currency/amount/order validation, SHA-512 HMAC verification, idempotent database processing and a staff-only digest audit trail.
+- Made payment-proof decisions authoritative: approval automatically confirms full transfers or marks COD balances due, while rejection keeps the order in review and contradictory manual statuses are rejected.
+- Added payment-proof magic-byte validation and an admin Paymob readiness/callback panel without exposing credentials or raw webhook payloads.

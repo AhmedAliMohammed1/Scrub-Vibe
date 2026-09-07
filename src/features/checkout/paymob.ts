@@ -1,7 +1,12 @@
 import "server-only";
 
-import { createHmac, timingSafeEqual } from "node:crypto";
 import type { CheckoutOrderInput } from "./validation";
+import {
+  getPaymobConfigurationStatus,
+  paymobIntegrationIds,
+} from "./paymob-config";
+
+export { getPaymobConfigurationStatus, hasPaymobConfiguration } from "./paymob-config";
 
 type PaymobOrder = {
   orderNumber: string;
@@ -10,28 +15,19 @@ type PaymobOrder = {
   checkout: CheckoutOrderInput;
 };
 
-export function hasPaymobConfiguration() {
-  return Boolean(
-    process.env.PAYMOB_SECRET_KEY &&
-    process.env.PAYMOB_PUBLIC_KEY &&
-    process.env.PAYMOB_INTEGRATION_ID,
-  );
-}
-
 export async function createPaymobIntention(input: PaymobOrder) {
   const secretKey = process.env.PAYMOB_SECRET_KEY;
   const publicKey = process.env.PAYMOB_PUBLIC_KEY;
-  const integrationIds = (process.env.PAYMOB_INTEGRATION_ID ?? "")
-    .split(",")
-    .map((value) => Number(value.trim()))
-    .filter(Number.isInteger);
-  if (!secretKey || !publicKey || !integrationIds.length) throw new Error("PAYMOB_NOT_CONFIGURED");
+  const integrationIds = paymobIntegrationIds(
+    process.env.PAYMOB_INTEGRATION_ID,
+  );
+  if (!getPaymobConfigurationStatus().configured || !secretKey || !publicKey)
+    throw new Error("PAYMOB_NOT_CONFIGURED");
 
   const names = input.checkout.customerName.trim().split(/\s+/);
   const firstName = names[0] ?? "Customer";
   const lastName = names.slice(1).join(" ") || firstName;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (!appUrl) throw new Error("APP_URL_NOT_CONFIGURED");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL!.replace(/\/$/, "");
 
   const response = await fetch("https://accept.paymob.com/v1/intention/", {
     method: "POST",
@@ -79,25 +75,4 @@ export async function createPaymobIntention(input: PaymobOrder) {
     orderId: data.intention_order_id ? String(data.intention_order_id) : null,
     checkoutUrl: `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(publicKey)}&clientSecret=${encodeURIComponent(data.client_secret)}`,
   };
-}
-
-const hmacKeys = [
-  "amount_cents", "created_at", "currency", "error_occured",
-  "has_parent_transaction", "id", "integration_id", "is_3d_secure",
-  "is_auth", "is_capture", "is_refunded", "is_standalone_payment",
-  "is_voided", "order.id", "owner", "pending", "source_data.pan",
-  "source_data.sub_type", "source_data.type", "success",
-] as const;
-
-function nestedValue(value: Record<string, unknown>, path: string) {
-  return path.split(".").reduce<unknown>((current, key) =>
-    current && typeof current === "object" ? (current as Record<string, unknown>)[key] : "", value);
-}
-
-export function verifyPaymobHmac(payload: Record<string, unknown>, received: string) {
-  const secret = process.env.PAYMOB_HMAC_SECRET;
-  if (!secret || !/^[a-f0-9]{128}$/i.test(received)) return false;
-  const value = hmacKeys.map((key) => String(nestedValue(payload, key) ?? "")).join("");
-  const expected = createHmac("sha512", secret).update(value).digest("hex");
-  return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(received, "hex"));
 }

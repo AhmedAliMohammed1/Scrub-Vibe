@@ -33,6 +33,9 @@
 - [x] **DONE** Implement multi-colour products with exact colour/size inventory variants. Tests: PASS.
 - [x] **DONE** Implement Egypt checkout, optional phone OTP flag, COD, Paymob, always-visible Vodafone Cash/InstaPay proof review, orders and shipment tracking. Tests: PASS (51 total + live transactional rollback test).
 - [x] **DONE** Add per-product COD deposits, admin deposit editing, deposit-channel proof verification, branded payment icons and actionable checkout errors. Tests: PASS (52 total + live schema verification).
-- [ ] **TODO** Set business-approved COD deposits on existing products; products intentionally remain COD-disabled until configured.
-- [ ] **TODO** Configure production Twilio, Paymob and transfer-destination environment variables and run provider sandbox acceptance tests.
+- [x] **DONE** Set business-approved COD deposits on all 9 active products and verify existing-cart deposit refresh.
+- [x] **DONE** Prepare dormant Paymob integration with an explicit activation switch, strict readiness checks, idempotent callbacks, staff-only audit records and admin readiness visibility. Tests: PASS (61 total + live schema/RLS verification).
+- [x] **DONE** Verify production manual proof records for COD and Vodafone Cash reach consistent approved payment/order states.
+- [ ] **ON HOLD** Add Paymob merchant credentials, register/test the webhook, run successful/declined sandbox payments and validate duplicate/delayed callbacks. Follow `PAYMOB_ACTIVATION.md`; merchant keys required.
+- [ ] **TODO** Configure and validate production Twilio credentials if phone OTP should be enabled.
 - [ ] **TODO** Implement database-backed cart/wishlist merge, shipping-zone rates, notifications, recovery automation and final production observability/risk validation.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Banknote, CircleDollarSign, Clock3, PackageCheck, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { updateOrderAction } from "@/features/orders/admin-actions";
+import { getPaymobConfigurationStatus } from "@/features/checkout/paymob";
 import type { TrackedOrder } from "@/features/orders/types";
 import { isLocale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
@@ -16,6 +17,15 @@ type AdminOrder = TrackedOrder & {
   email: string | null; street_address: string; building: string | null; floor: string | null;
   apartment: string | null; landmark: string | null; customer_notes: string | null;
   payment_proofs: { id: string; storage_path: string; amount_minor: number; status: string; review_note: string | null; created_at: string }[];
+};
+
+type WebhookEvent = {
+  id: number;
+  provider_event_id: string;
+  transaction_id: string | null;
+  outcome: string;
+  error_code: string | null;
+  received_at: string;
 };
 
 const statuses: TrackedOrder["status"][] = ["awaiting_payment", "payment_review", "confirmed", "processing", "ready_to_ship", "shipped", "out_for_delivery", "delivered", "cancelled", "returned"];
@@ -31,9 +41,19 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
     payment_proofs(id, storage_path, amount_minor, status, review_note, created_at)
   `).order("created_at", { ascending: false }).limit(100);
   if (query.status && statuses.includes(query.status as TrackedOrder["status"])) request = request.eq("status", query.status as TrackedOrder["status"]);
-  const { data, error } = await request;
+  const [ordersResult, webhookResult] = await Promise.all([
+    request,
+    admin
+      .from("payment_webhook_events")
+      .select("id, provider_event_id, transaction_id, outcome, error_code, received_at")
+      .order("received_at", { ascending: false })
+      .limit(10),
+  ]);
+  const { data, error } = ordersResult;
   if (error) throw new Error("Orders could not be loaded.");
   const orders = data as unknown as AdminOrder[];
+  const webhookEvents = (webhookResult.data ?? []) as WebhookEvent[];
+  const paymobStatus = getPaymobConfigurationStatus();
   const proofUrls = new Map<string, string>();
   await Promise.all(orders.flatMap((order) => order.payment_proofs.map(async (proof) => {
     const { data: signed } = await admin.storage.from("payment-proofs").createSignedUrl(proof.storage_path, 900);
@@ -54,6 +74,17 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
         <Metric icon={Clock3} label={ar ? "إيصالات للمراجعة" : "Proofs to review"} value={awaitingReview.toString()} alert={awaitingReview > 0} />
         <Metric icon={PackageCheck} label={ar ? "قائمة التجهيز" : "Fulfilment queue"} value={fulfilmentQueue.toString()} />
       </section>
+      <section className={`mt-5 border p-5 ${paymobStatus.configured ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"}`}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-neutral-500">Paymob</p>
+            <h2 className="mt-2 font-serif text-3xl">{paymobStatus.configured ? (ar ? "جاهز للاختبار" : "Ready for testing") : (ar ? "متوقف بأمان" : "Safely on hold")}</h2>
+            <p className="mt-2 text-xs text-neutral-600">{paymobStatus.configured ? (ar ? "كل الإعدادات موجودة. أكمل اختبار Paymob التجريبي قبل استقبال مدفوعات حقيقية." : "All settings are present. Complete a Paymob sandbox acceptance test before taking live payments.") : (ar ? "لن يظهر Paymob للعملاء حتى تكتمل كل المفاتيح المطلوبة." : "Paymob stays hidden from customers until every required setting is present.")}</p>
+          </div>
+          {!paymobStatus.configured && <div className="max-w-xl text-xs"><strong>{ar ? "الإعدادات الناقصة" : "Missing settings"}</strong><p className="mt-1 font-mono text-[10px] leading-5">{paymobStatus.missing.join(" · ")}</p></div>}
+        </div>
+        {webhookEvents.length > 0 && <div className="mt-5 border-t border-black/10 pt-4"><p className="text-[10px] font-bold uppercase tracking-[.12em]">{ar ? "آخر إشعارات Paymob" : "Recent Paymob callbacks"}</p><div className="mt-2 grid gap-2">{webhookEvents.map((event) => <p key={event.id} className="flex flex-wrap justify-between gap-2 text-[10px]"><span className="font-mono">{event.transaction_id ?? event.provider_event_id}</span><span>{event.outcome}{event.error_code ? ` · ${event.error_code}` : ""} · {new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" }).format(new Date(event.received_at))}</span></p>)}</div></div>}
+      </section>
       <nav className="mt-8 flex flex-wrap gap-2"><Link href={`/${locale}/admin/orders` as Route} className="border border-black/10 bg-white px-3 py-2 text-[10px] font-bold uppercase">{ar ? "الكل" : "All"}</Link>{["payment_review", "confirmed", "processing", "shipped", "delivered"].map((status) => <Link key={status} href={`/${locale}/admin/orders?status=${status}` as Route} className="border border-black/10 bg-white px-3 py-2 text-[10px] font-bold uppercase">{status.replaceAll("_", " ")}</Link>)}</nav>
       <div className="mt-6 grid gap-5">{orders.map((order) => <article key={order.id} className="border border-black/10 bg-white p-5 md:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><h2 className="font-serif text-3xl">{order.order_number}</h2><Tag value={order.status} /><Tag value={order.payment_status} /></div><p className="mt-2 text-xs text-neutral-500">{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(order.created_at))} · {order.customer_name} · <a href={`tel:${order.phone}`} className="underline">{order.phone}</a></p></div><strong className="font-serif text-3xl">{formatMoney(order.total_minor, locale)}</strong></div>
@@ -64,7 +95,7 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
             <input type="hidden" name="locale" value={locale} /><input type="hidden" name="orderId" value={order.id} />
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "حالة الطلب" : "Order status"}<select name="status" defaultValue={order.status} className="h-10 border bg-white px-2 text-xs">{statuses.map((status) => <option key={status}>{status}</option>)}</select></label>
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "حالة الدفع" : "Payment status"}<select name="paymentStatus" defaultValue={order.payment_status} className="h-10 border bg-white px-2 text-xs">{paymentStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
-            <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "قرار الإيصال" : "Proof decision"}<select name="proofStatus" defaultValue="" className="h-10 border bg-white px-2 text-xs"><option value="">{ar ? "بدون تغيير" : "No change"}</option><option value="approved">approved</option><option value="rejected">rejected</option></select></label>
+            <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "قرار الإيصال" : "Proof decision"}<select name="proofStatus" defaultValue="" className="h-10 border bg-white px-2 text-xs"><option value="">{ar ? "بدون تغيير" : "No change"}</option><option value="approved">{ar ? "موافقة — تأكيد الطلب تلقائياً" : "Approve — confirm order automatically"}</option><option value="rejected">{ar ? "رفض — إبقاء الطلب للمراجعة" : "Reject — keep order in review"}</option></select><span className="normal-case leading-4 text-neutral-500">{ar ? "قرار الإيصال يحدد حالة الدفع والطلب تلقائياً لمنع التعارض." : "A proof decision sets the correct payment and order statuses automatically."}</span></label>
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "شركة الشحن" : "Courier"}<input name="courier" defaultValue={order.courier ?? ""} className="h-10 border bg-white px-2 text-xs" /></label>
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "رقم الشحنة" : "Shipment number"}<input name="shipmentNumber" defaultValue={order.shipment_number ?? ""} className="h-10 border bg-white px-2 text-xs" /></label>
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "رابط التتبع" : "Tracking URL"}<input name="trackingUrl" type="url" defaultValue={order.tracking_url ?? ""} className="h-10 border bg-white px-2 text-xs" /></label>
