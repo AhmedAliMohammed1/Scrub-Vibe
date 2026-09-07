@@ -32,3 +32,4 @@
 - Added Paymob HMAC webhook processing and checkout/order security coverage.
 - Kept Vodafone Cash and InstaPay visible without deployment configuration, with a safe WhatsApp instructions fallback and mandatory private receipt review.
 - Added a server-controlled `CHECKOUT_PHONE_OTP_ENABLED` deployment flag with secure enabled-by-default behavior.
+- Added support for both Supabase server-secret environment names and safe checkout stage diagnostics instead of masking configuration failures as invalid order data.

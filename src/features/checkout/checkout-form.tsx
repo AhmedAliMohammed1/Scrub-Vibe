@@ -58,6 +58,7 @@ export function CheckoutForm({ locale, payments, otpEnabled }: Props) {
     payment_proof_required: ["Upload your transfer screenshot.", "ارفع صورة إيصال التحويل."],
     invalid_payment_proof: ["Use a JPG, PNG or WebP image up to 5 MB.", "استخدم صورة JPG أو PNG أو WebP بحد أقصى ٥ ميجابايت."],
     paymob_not_configured: ["Online payment is not available yet. Choose another method.", "الدفع الإلكتروني غير متاح حالياً. اختر طريقة أخرى."],
+    checkout_configuration_error: ["Checkout is missing its secure server connection. Please contact us while we fix it.", "إعداد الاتصال الآمن للدفع غير مكتمل. تواصل معنا لحين إصلاحه."],
     order_failed: ["We could not place the order. Please try again.", "تعذر إنشاء الطلب. حاول مرة أخرى."],
   };
   const showError = (key: string) => setError((copy[key] ?? copy.order_failed)[ar ? 1 : 0]);
@@ -102,8 +103,16 @@ export function CheckoutForm({ locale, payments, otpEnabled }: Props) {
     body.set("order", JSON.stringify(payload));
     const proof = form.get("proof");
     if (proof instanceof File && proof.size) body.set("proof", proof);
-    const response = await fetch("/api/checkout/orders", { method: "POST", body });
-    const result = await response.json() as { error?: string; orderNumber?: string; trackingToken?: string; paymentUrl?: string | null };
+    let response: Response;
+    let result: { error?: string; orderNumber?: string; trackingToken?: string; paymentUrl?: string | null };
+    try {
+      response = await fetch("/api/checkout/orders", { method: "POST", body });
+      result = await response.json() as typeof result;
+    } catch {
+      setBusy(null);
+      showError("order_failed");
+      return;
+    }
     setBusy(null);
     if (!response.ok || !result.orderNumber || !result.trackingToken) { showError(result.error ?? "order_failed"); return; }
     try {

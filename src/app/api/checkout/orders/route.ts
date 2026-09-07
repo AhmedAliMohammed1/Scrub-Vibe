@@ -34,7 +34,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "payment_proof_required" }, { status: 400 });
   }
   let proofPath: string | null = null;
-  const admin = createAdminClient();
+  let admin: ReturnType<typeof createAdminClient>;
+  try {
+    admin = createAdminClient();
+  } catch (error) {
+    console.error("[checkout/orders] Supabase admin configuration failed", {
+      stage: "admin_client",
+      message: error instanceof Error ? error.message : "Unknown configuration error",
+    });
+    return NextResponse.json({ error: "checkout_configuration_error" }, { status: 503 });
+  }
   if (proof instanceof File && proof.size > 0) {
     const extension = allowedProofs.get(proof.type);
     if (!extension || proof.size > 5 * 1024 * 1024) {
@@ -45,7 +54,14 @@ export async function POST(request: Request) {
       contentType: proof.type,
       upsert: false,
     });
-    if (error) return NextResponse.json({ error: "proof_upload_failed" }, { status: 503 });
+    if (error) {
+      console.error("[checkout/orders] Payment proof upload failed", {
+        stage: "proof_upload",
+        code: error.statusCode,
+        message: error.message,
+      });
+      return NextResponse.json({ error: "proof_upload_failed" }, { status: 503 });
+    }
   }
 
   let effectiveVerificationToken = checkout.verificationToken;
@@ -58,8 +74,13 @@ export async function POST(request: Request) {
       token_hash: internalVerificationHash,
     });
     if (error) {
+      console.error("[checkout/orders] OTP-disabled verification bridge failed", {
+        stage: "otp_disabled_bridge",
+        code: error.code,
+        message: error.message,
+      });
       if (proofPath) await admin.storage.from("payment-proofs").remove([proofPath]);
-      return NextResponse.json({ error: "order_failed" }, { status: 503 });
+      return NextResponse.json({ error: "checkout_configuration_error" }, { status: 503 });
     }
   }
 
@@ -91,6 +112,11 @@ export async function POST(request: Request) {
     p_proof_path: proofPath ?? undefined,
   });
   if (error || !data) {
+    console.error("[checkout/orders] Transactional order creation failed", {
+      stage: "create_verified_order",
+      code: error?.code,
+      message: error?.message ?? "No order returned",
+    });
     if (proofPath) await admin.storage.from("payment-proofs").remove([proofPath]);
     if (internalVerificationHash) {
       await admin.from("checkout_phone_verifications").delete().eq("token_hash", internalVerificationHash);

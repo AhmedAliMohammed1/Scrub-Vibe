@@ -8,6 +8,8 @@ Scrub Vibe supports four Egypt-focused checkout methods:
 
 The server always recalculates prices from active Supabase variants, locks inventory, and reserves it in the same database transaction. Browser totals and product descriptions are never trusted.
 
+Checkout requires a privileged server-only Supabase key for private proof storage, the OTP-disabled verification bridge, inventory reservation and transactional order creation. Set either `SUPABASE_SECRET_KEY` (recommended for the current Supabase secret-key format) or `SUPABASE_SERVICE_ROLE_KEY` (supported alias). Never prefix either name with `NEXT_PUBLIC_`.
+
 ## Production setup
 
 1. Create and verify an Egypt Paymob merchant account.

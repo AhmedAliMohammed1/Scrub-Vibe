@@ -9,7 +9,7 @@
 - **Remaining:** persistent database-backed cart/wishlist merge, production Twilio and Paymob credential validation, shipping-zone pricing, transactional email/WhatsApp notifications, automated abandoned-cart recovery, webhook replay operations, CMS-backed merchandising and final production monitoring/security validation.
 - **Known bugs:** none confirmed in the implemented scope.
 - **Blocked tasks:** Live OTP and automated payment validation require Twilio Verify and Paymob merchant credentials. Email delivery requires Resend credentials.
-- **Required inputs:** Twilio Verify credentials; Paymob public/secret/HMAC/integration credentials; Vodafone Cash destination; InstaPay address; Resend key/sender domain; shipping-zone prices.
+- **Required inputs:** Supabase server secret (`SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`); Twilio Verify credentials; Paymob public/secret/HMAC/integration credentials; Vodafone Cash destination; InstaPay address; Resend key/sender domain; shipping-zone prices.
 - **Latest tests:** PASS — 8 files, 51 tests, including OTP flag modes, both manual payment methods, checkout validation, order security invariants, catalogue variants, authentication and filtering
 - **Latest build:** PASS — Next.js 16.3.3 production build
 - **Latest local browser verification:** PASS — live Supabase catalogue, exact colour/size variant cart handoff and secure checkout navigation
