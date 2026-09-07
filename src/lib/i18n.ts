@@ -8,7 +8,7 @@ export function isLocale(value: string): value is Locale {
 export const copy = {
   en: {
     dir: "ltr" as const,
-    freeShipping: "Delivery across Egypt · Cash on delivery available",
+    freeShipping: "Delivery across Egypt · Cash on delivery with deposit",
     nav: [
       "New in",
       "Female scrubs",
@@ -33,7 +33,7 @@ export const copy = {
   },
   ar: {
     dir: "rtl" as const,
-    freeShipping: "توصيل لجميع أنحاء مصر · الدفع عند الاستلام متاح",
+    freeShipping: "توصيل لجميع أنحاء مصر · الدفع عند الاستلام بمقدم",
     nav: [
       "وصل حديثاً",
       "سكراب حريمي",

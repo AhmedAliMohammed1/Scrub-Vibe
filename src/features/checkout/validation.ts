@@ -47,10 +47,15 @@ export const checkoutOrderSchema = z.object({
   landmark: z.string().trim().max(200),
   customerNotes: z.string().trim().max(1000),
   paymentMethod: z.enum(["cod", "vodafone_cash", "instapay", "paymob"]),
+  codDepositMethod: z.union([z.literal(""), z.enum(["vodafone_cash", "instapay"])]),
   items: z.array(z.object({
     variantId: z.string().regex(/^\d+$/),
     quantity: z.number().int().min(1).max(10),
   })).min(1).max(30),
+}).superRefine((value, context) => {
+  if (value.paymentMethod === "cod" && !value.codDepositMethod) {
+    context.addIssue({ code: "custom", path: ["codDepositMethod"], message: "Choose how the COD deposit was paid." });
+  }
 });
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;

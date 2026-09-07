@@ -28,6 +28,7 @@ const productSchema = z
     gender: z.enum(["men", "women", "boys", "girls", "unisex"]),
     status: z.enum(["draft", "active"]),
     price: z.coerce.number().nonnegative().max(1_000_000),
+    codDeposit: z.coerce.number().positive().max(1_000_000),
     compareAt: z.union([z.literal(""), z.coerce.number().nonnegative()]),
     cost: z.union([z.literal(""), z.coerce.number().nonnegative()]),
     material: z.string().trim().max(120),
@@ -44,6 +45,13 @@ const productSchema = z
         code: "custom",
         path: ["compareAt"],
         message: "Compare price must be equal to or higher than the price.",
+      });
+    }
+    if (value.codDeposit > value.price) {
+      context.addIssue({
+        code: "custom",
+        path: ["codDeposit"],
+        message: "The COD deposit cannot be higher than the product price.",
       });
     }
   });
@@ -187,7 +195,7 @@ export async function createProductAction(
       .data.publicUrl;
   }
 
-  const { error } = await supabase.rpc("admin_create_product_with_colours", {
+  const { data: productId, error } = await supabase.rpc("admin_create_product_with_colours", {
     p_slug: data.slug,
     p_title_en: data.titleEn,
     p_title_ar: data.titleAr,
@@ -231,6 +239,21 @@ export async function createProductAction(
     };
   }
 
+  const { error: depositError } = await supabase
+    .from("products")
+    .update({ cod_deposit_minor: Math.round(data.codDeposit * 100) })
+    .eq("id", productId as number);
+  if (depositError) {
+    return {
+      status: "error",
+      message: message(
+        locale,
+        "The product was created, but its COD deposit could not be saved. Set it from the product list.",
+        "تم إنشاء المنتج، لكن تعذر حفظ مقدم الدفع عند الاستلام. حدده من قائمة المنتجات.",
+      ),
+    };
+  }
+
   revalidateCatalogue(locale);
   return {
     status: "success",
@@ -240,6 +263,32 @@ export async function createProductAction(
       "تم إنشاء المنتج بنجاح.",
     ),
   };
+}
+
+export async function setProductDepositAction(formData: FormData) {
+  const locale = formData.get("locale") === "ar" ? "ar" : "en";
+  const parsed = z.object({
+    productId: z.coerce.number().int().positive(),
+    deposit: z.coerce.number().positive().max(1_000_000),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) throw new Error("Enter a valid positive COD deposit.");
+
+  const { supabase } = await requireRoles(["product_manager", "admin", "super_admin"]);
+  const { data: product, error: readError } = await supabase
+    .from("products")
+    .select("base_price_minor")
+    .eq("id", parsed.data.productId)
+    .single();
+  const depositMinor = Math.round(parsed.data.deposit * 100);
+  if (readError || !product || depositMinor > product.base_price_minor) {
+    throw new Error("The COD deposit must not exceed the product price.");
+  }
+  const { error } = await supabase
+    .from("products")
+    .update({ cod_deposit_minor: depositMinor })
+    .eq("id", parsed.data.productId);
+  if (error) throw new Error("Unable to update the COD deposit.");
+  revalidateCatalogue(locale);
 }
 
 export async function setProductStatusAction(formData: FormData) {

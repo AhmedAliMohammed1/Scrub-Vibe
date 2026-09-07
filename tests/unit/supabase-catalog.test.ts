@@ -9,6 +9,7 @@ const row: CatalogProductRow = {
   slug: "female-design-2-scrub-set",
   gender: "women",
   base_price_minor: 85000,
+  cod_deposit_minor: 10000,
   compare_at_price_minor: 100000,
   product_translations: [
     {
@@ -127,6 +128,7 @@ describe("Supabase catalogue mapping", () => {
       },
       category: "women",
       price: 85000,
+      codDeposit: 10000,
       compareAt: 100000,
       color: "#ede5d5",
       colorCode: "bone",

@@ -67,7 +67,7 @@ export function OrderTracker({ locale, orderNumber }: { locale: Locale; orderNum
   const paymentLabel: Record<TrackedOrder["payment_status"], [string, string]> = {
     pending: ["Payment in progress", "الدفع قيد التنفيذ"], proof_submitted: ["Proof under review", "إيصال الدفع قيد المراجعة"],
     paid: ["Payment successful", "تم الدفع بنجاح"], rejected: ["Payment proof rejected", "تم رفض إيصال الدفع"],
-    failed: ["Payment failed", "فشل الدفع"], cod_due: ["Cash due on delivery", "الدفع عند الاستلام"],
+    failed: ["Payment failed", "فشل الدفع"], cod_due: order.cod_deposit_minor ? ["Deposit verified · balance due on delivery", "تم تأكيد المقدم · الباقي عند الاستلام"] : ["Cash due on delivery", "الدفع عند الاستلام"],
     cod_collected: ["Cash collected", "تم تحصيل المبلغ"], refunded: ["Payment refunded", "تم رد المبلغ"],
   };
   return (
@@ -113,7 +113,7 @@ export function OrderTracker({ locale, orderNumber }: { locale: Locale; orderNum
           </section>
           <section className="border border-black/10 bg-white p-5 text-sm">
             <h2 className="font-serif text-2xl">{ar ? "الإجمالي" : "Total"}</h2>
-            <dl className="mt-4 grid gap-2"><div className="flex justify-between"><dt>{ar ? "المنتجات" : "Items"}</dt><dd>{formatMoney(order.subtotal_minor, locale)}</dd></div><div className="flex justify-between"><dt>{ar ? "الشحن" : "Shipping"}</dt><dd>{order.shipping_minor ? formatMoney(order.shipping_minor, locale) : (ar ? "مجاني" : "Free")}</dd></div><div className="mt-2 flex justify-between border-t pt-3 font-bold"><dt>{ar ? "الإجمالي" : "Total"}</dt><dd>{formatMoney(order.total_minor, locale)}</dd></div></dl>
+            <dl className="mt-4 grid gap-2"><div className="flex justify-between"><dt>{ar ? "المنتجات" : "Items"}</dt><dd>{formatMoney(order.subtotal_minor, locale)}</dd></div><div className="flex justify-between"><dt>{ar ? "الشحن" : "Shipping"}</dt><dd>{order.shipping_minor ? formatMoney(order.shipping_minor, locale) : (ar ? "مجاني" : "Free")}</dd></div>{order.payment_method === "cod" && <><div className="flex justify-between font-bold text-[#0e7468]"><dt>{ar ? "المقدم" : "Deposit"}</dt><dd>{formatMoney(order.cod_deposit_minor, locale)}</dd></div><div className="flex justify-between"><dt>{ar ? "المتبقي عند الاستلام" : "Due on delivery"}</dt><dd>{formatMoney(order.cod_balance_due_minor, locale)}</dd></div></>}<div className="mt-2 flex justify-between border-t pt-3 font-bold"><dt>{ar ? "الإجمالي" : "Total"}</dt><dd>{formatMoney(order.total_minor, locale)}</dd></div></dl>
           </section>
         </aside>
       </div>

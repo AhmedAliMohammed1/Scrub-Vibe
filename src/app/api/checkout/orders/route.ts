@@ -29,8 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "paymob_not_configured" }, { status: 503 });
   }
   const proof = formData.get("proof");
-  const manualPayment = checkout.paymentMethod === "vodafone_cash" || checkout.paymentMethod === "instapay";
-  if (manualPayment && (!(proof instanceof File) || proof.size === 0)) {
+  const proofPayment = checkout.paymentMethod === "cod" || checkout.paymentMethod === "vodafone_cash" || checkout.paymentMethod === "instapay";
+  if (proofPayment && (!(proof instanceof File) || proof.size === 0)) {
     return NextResponse.json({ error: "payment_proof_required" }, { status: 400 });
   }
   let proofPath: string | null = null;
@@ -101,6 +101,7 @@ export async function POST(request: Request) {
     landmark: checkout.landmark,
     customer_notes: checkout.customerNotes,
     payment_method: checkout.paymentMethod,
+    cod_deposit_method: checkout.codDepositMethod,
     items: checkout.items.map((item) => ({ variant_id: item.variantId, quantity: item.quantity })),
   };
   await admin.rpc("release_expired_order_reservations");
@@ -121,8 +122,13 @@ export async function POST(request: Request) {
     if (internalVerificationHash) {
       await admin.from("checkout_phone_verifications").delete().eq("token_hash", internalVerificationHash);
     }
-    const code = error?.message.includes("INSUFFICIENT_STOCK") ? "insufficient_stock" :
-      error?.message.includes("PHONE_VERIFICATION") ? "verification_expired" : "order_failed";
+    const databaseMessage = [error?.message, error?.details, error?.hint].filter(Boolean).join(" ");
+    const code = databaseMessage.includes("INSUFFICIENT_STOCK") ? "insufficient_stock" :
+      databaseMessage.includes("VARIANT_UNAVAILABLE") ? "item_unavailable" :
+      databaseMessage.includes("COD_DEPOSIT_NOT_CONFIGURED") ? "cod_deposit_not_configured" :
+      databaseMessage.includes("COD_DEPOSIT_METHOD_REQUIRED") ? "cod_deposit_method_required" :
+      databaseMessage.includes("PAYMENT_PROOF_REQUIRED") ? "payment_proof_required" :
+      databaseMessage.includes("PHONE_VERIFICATION") ? "verification_expired" : "order_failed";
     return NextResponse.json({ error: code }, { status: code === "order_failed" ? 503 : 409 });
   }
 

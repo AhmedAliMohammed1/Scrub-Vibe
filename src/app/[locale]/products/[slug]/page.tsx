@@ -87,12 +87,12 @@ export default async function ProductPage({ params }: Props) {
               ? [
                   [Truck, "توصيل لجميع أنحاء مصر"],
                   [RotateCcw, "استبدال واسترجاع خلال ١٤ يوماً"],
-                  [ShieldCheck, "دفع آمن أو الدفع عند الاستلام"],
+                  [ShieldCheck, "دفع آمن أو الدفع عند الاستلام بمقدم"],
                 ]
               : [
                   [Truck, "Delivery across Egypt"],
                   [RotateCcw, "14-day returns"],
-                  [ShieldCheck, "Secure payment or cash on delivery"],
+                  [ShieldCheck, "Secure payment or cash on delivery with deposit"],
                 ]
             ).map(([Icon, text]) => {
               const C = Icon as typeof Truck;

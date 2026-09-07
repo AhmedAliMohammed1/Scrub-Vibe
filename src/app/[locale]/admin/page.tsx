@@ -21,6 +21,7 @@ import { notFound } from "next/navigation";
 import { ProductForm } from "@/features/admin/product-form";
 import {
   adjustInventoryAction,
+  setProductDepositAction,
   setProductStatusAction,
 } from "@/features/admin/actions";
 import { formatMoney } from "@/lib/money";
@@ -68,6 +69,7 @@ type AdminProduct = {
   status: "draft" | "active" | "scheduled" | "archived";
   gender: string | null;
   base_price_minor: number;
+  cod_deposit_minor: number;
   compare_at_price_minor: number | null;
   cost_minor: number | null;
   updated_at: string;
@@ -115,6 +117,7 @@ const productSelect = `
   status,
   gender,
   base_price_minor,
+  cod_deposit_minor,
   compare_at_price_minor,
   cost_minor,
   updated_at,
@@ -583,6 +586,11 @@ function ProductRow({
       </td>
       <td className="px-4 py-4 whitespace-nowrap">
         <strong>{formatMoney(product.base_price_minor, locale)}</strong>
+        <span className={`mt-1 block text-[11px] ${product.cod_deposit_minor ? "text-[#0e7468]" : "font-bold text-amber-700"}`}>
+          {product.cod_deposit_minor
+            ? `${ar ? "مقدم COD" : "COD deposit"}: ${formatMoney(product.cod_deposit_minor, locale)}`
+            : ar ? "مقدم COD غير محدد" : "COD deposit not configured"}
+        </span>
         {product.cost_minor !== null && (
           <span className="mt-1 block text-[11px] text-neutral-500">
             {ar ? "التكلفة" : "Cost"}: {formatMoney(product.cost_minor, locale)}
@@ -642,6 +650,20 @@ function ProductRow({
             </Link>
           )}
         </div>
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[11px] font-semibold text-[#0e7468]">
+            {ar ? "تعديل مقدم الدفع" : "Edit COD deposit"}
+          </summary>
+          <form action={setProductDepositAction} className="mt-3 flex items-end gap-2 border-s-2 border-[#0e7468]/20 ps-3">
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="productId" value={product.id} />
+            <label className="text-[9px] uppercase tracking-wider text-neutral-500">
+              {ar ? "المبلغ (ج.م)" : "Amount (EGP)"}
+              <input name="deposit" type="number" min="0.01" max={product.base_price_minor / 100} step="0.01" required defaultValue={product.cod_deposit_minor / 100 || ""} className="mt-1 h-8 w-28 border border-black/15 px-2 text-xs" />
+            </label>
+            <button className="h-8 bg-[#073b36] px-3 text-[9px] font-bold uppercase text-white">{ar ? "حفظ" : "Save"}</button>
+          </form>
+        </details>
         <details className="mt-3">
           <summary className="cursor-pointer text-[11px] font-semibold text-[#0e7468]">
             {ar ? "تعديل المخزون" : "Adjust inventory"}

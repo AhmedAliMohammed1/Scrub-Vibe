@@ -28,7 +28,7 @@ describe("Egypt checkout validation", () => {
       verificationToken: "x".repeat(40), locale: "en", customerName: "Mona Ali", email: "",
       phone: "01012345678", governorate: "Cairo", city: "Nasr City",
       streetAddress: "12 Example Street", building: "12", floor: "2", apartment: "4",
-      landmark: "", customerNotes: "", paymentMethod: "cod",
+      landmark: "", customerNotes: "", paymentMethod: "cod", codDepositMethod: "vodafone_cash",
       items: [{ variantId: "42", quantity: 2 }],
     };
     expect(checkoutOrderSchema.safeParse(order).success).toBe(true);
@@ -42,7 +42,7 @@ describe("Egypt checkout validation", () => {
         verificationToken: "x".repeat(40), locale: "en", customerName: "Mona Ali", email: "",
         phone: "01012345678", governorate: "Cairo", city: "Nasr City",
         streetAddress: "12 Example Street", building: "12", floor: "2", apartment: "4",
-        landmark: "", customerNotes: "", paymentMethod,
+        landmark: "", customerNotes: "", paymentMethod, codDepositMethod: "",
         items: [{ variantId: "42", quantity: 1 }],
       }).success).toBe(true);
     },
@@ -53,8 +53,19 @@ describe("Egypt checkout validation", () => {
       verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
       phone: "01012345678", governorate: "Cairo", city: "Nasr City",
       streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
-      landmark: "", customerNotes: "", paymentMethod: "cod",
+      landmark: "", customerNotes: "", paymentMethod: "cod", codDepositMethod: "instapay",
       items: [{ variantId: "42", quantity: 1 }],
     }).success).toBe(true);
+  });
+
+  it("requires a deposit channel for cash on delivery", () => {
+    const result = checkoutOrderSchema.safeParse({
+      verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
+      phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+      streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
+      landmark: "", customerNotes: "", paymentMethod: "cod", codDepositMethod: "",
+      items: [{ variantId: "42", quantity: 1 }],
+    });
+    expect(result.success).toBe(false);
   });
 });

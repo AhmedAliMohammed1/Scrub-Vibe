@@ -60,6 +60,7 @@ const scrub = (product: ScrubInput): Product => {
 
   return {
     ...product,
+    codDeposit: 0,
     colors: palette.map((colour) => ({
       ...colour,
       id: `${product.id}-${colour.code}`,

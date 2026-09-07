@@ -311,6 +311,8 @@ export type Database = {
       }
       order_items: {
         Row: {
+          cod_deposit_line_minor: number | null
+          cod_deposit_unit_minor: number
           colour_ar: string | null
           colour_code: string | null
           colour_en: string | null
@@ -329,6 +331,8 @@ export type Database = {
           variant_id: number | null
         }
         Insert: {
+          cod_deposit_line_minor?: number | null
+          cod_deposit_unit_minor?: number
           colour_ar?: string | null
           colour_code?: string | null
           colour_en?: string | null
@@ -347,6 +351,8 @@ export type Database = {
           variant_id?: number | null
         }
         Update: {
+          cod_deposit_line_minor?: number | null
+          cod_deposit_unit_minor?: number
           colour_ar?: string | null
           colour_code?: string | null
           colour_en?: string | null
@@ -432,6 +438,9 @@ export type Database = {
           building: string | null
           cancelled_at: string | null
           city: string
+          cod_balance_due_minor: number
+          cod_deposit_method: string | null
+          cod_deposit_minor: number
           courier: string | null
           created_at: string
           currency: string
@@ -471,6 +480,9 @@ export type Database = {
           building?: string | null
           cancelled_at?: string | null
           city: string
+          cod_balance_due_minor?: number
+          cod_deposit_method?: string | null
+          cod_deposit_minor?: number
           courier?: string | null
           created_at?: string
           currency?: string
@@ -510,6 +522,9 @@ export type Database = {
           building?: string | null
           cancelled_at?: string | null
           city?: string
+          cod_balance_due_minor?: number
+          cod_deposit_method?: string | null
+          cod_deposit_minor?: number
           courier?: string | null
           created_at?: string
           currency?: string
@@ -548,6 +563,7 @@ export type Database = {
       }
       payment_proofs: {
         Row: {
+          amount_minor: number
           created_at: string
           id: string
           order_id: string
@@ -559,6 +575,7 @@ export type Database = {
           submitted_by: string | null
         }
         Insert: {
+          amount_minor?: number
           created_at?: string
           id?: string
           order_id: string
@@ -570,6 +587,7 @@ export type Database = {
           submitted_by?: string | null
         }
         Update: {
+          amount_minor?: number
           created_at?: string
           id?: string
           order_id?: string
@@ -833,6 +851,7 @@ export type Database = {
           base_price_minor: number
           brand: string
           category_id: number | null
+          cod_deposit_minor: number
           compare_at_price_minor: number | null
           cost_minor: number | null
           created_at: string
@@ -854,6 +873,7 @@ export type Database = {
           base_price_minor: number
           brand?: string
           category_id?: number | null
+          cod_deposit_minor?: number
           compare_at_price_minor?: number | null
           cost_minor?: number | null
           created_at?: string
@@ -875,6 +895,7 @@ export type Database = {
           base_price_minor?: number
           brand?: string
           category_id?: number | null
+          cod_deposit_minor?: number
           compare_at_price_minor?: number | null
           cost_minor?: number | null
           created_at?: string
@@ -1291,4 +1312,3 @@ export const Constants = {
     },
   },
 } as const
-

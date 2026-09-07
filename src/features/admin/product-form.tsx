@@ -263,6 +263,21 @@ export function ProductForm({
             />
           </Label>
           <Label
+            text={ar ? "مقدم الدفع عند الاستلام" : "COD deposit (EGP)"}
+            error={errorFor("codDeposit")}
+            hint={ar ? "مطلوب قبل تأكيد الطلب" : "Required before order confirmation"}
+          >
+            <input
+              name="codDeposit"
+              type="number"
+              min="0.01"
+              step="0.01"
+              required
+              className={input}
+              placeholder="100"
+            />
+          </Label>
+          <Label
             text={ar ? "التكلفة" : "Unit cost"}
             error={errorFor("cost")}
             hint={ar ? "لتحليل هامش الربح" : "For margin analysis"}

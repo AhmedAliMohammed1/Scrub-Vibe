@@ -19,6 +19,7 @@ export type CartLine = {
   title: Product["title"];
   image: Product["image"];
   price: number;
+  codDeposit: number;
   colourCode: string;
   colourName: Product["colorName"];
   swatch: string;
@@ -114,6 +115,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
               title: product.title,
               image: product.image,
               price: product.price,
+              codDeposit: product.codDeposit,
               colourCode: colour.code,
               colourName: colour.name,
               swatch: colour.swatch,

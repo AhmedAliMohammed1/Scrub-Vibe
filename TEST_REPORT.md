@@ -111,3 +111,16 @@
 - Local browser: PASS — live Supabase product, exact Burgundy/XS variant handoff, all Egyptian governorates, OTP gate, COD, Vodafone Cash and InstaPay checkout options
 - External providers: NOT_RUN — production Twilio Verify and Paymob credentials are not configured; no SMS or real payment was attempted
 - OTP flag browser/API: PASS — `false` hides OTP controls, removes the checkout gate, keeps Egyptian phone validation and rejects direct OTP requests without contacting Twilio
+
+## Per-product COD deposit checkpoint — 2026-09-07
+
+- Database: PASS — live products, orders, order items and payment proofs have deposit fields; the production order transaction was replaced and its definition verified
+- Deposit safety: PASS — COD is rejected server-side unless every ordered product has a positive configured deposit not exceeding its current price
+- Payment proof: PASS — COD requires a Vodafone Cash or InstaPay channel and a private receipt; the order stores the paid deposit and remaining balance separately
+- Admin: PASS — new products require a deposit and existing product deposits can be edited without changing catalogue pricing
+- Checkout UI: PASS — custom Vodafone Cash/InstaPay icons, deposit/balance summary, disabled unconfigured COD option and bilingual field/server errors are implemented
+- Unit/integration: PASS — 8 files, 52 tests
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript
+- Build: PASS — Next.js 16.3.3 production build
+- Local browser: PASS — live Supabase product selection/cart handoff, branded payment icons, disabled unconfigured COD state, receipt upload and actionable invalid-phone feedback; no new application errors or framework overlay

@@ -41,7 +41,7 @@ type ProductVariant = Pick<
 
 export type CatalogProductRow = Pick<
   Database["public"]["Tables"]["products"]["Row"],
-  "id" | "slug" | "gender" | "base_price_minor" | "compare_at_price_minor"
+  "id" | "slug" | "gender" | "base_price_minor" | "compare_at_price_minor" | "cod_deposit_minor"
 > & {
   product_translations: ProductTranslation[];
   product_images: ProductImage[];
@@ -169,6 +169,7 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
     },
     category: row.gender ?? "unisex",
     price: row.base_price_minor,
+    codDeposit: row.cod_deposit_minor,
     compareAt: row.compare_at_price_minor ?? undefined,
     color: primaryColour.swatch,
     colorCode: primaryColour.code,

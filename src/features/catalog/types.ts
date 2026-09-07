@@ -15,6 +15,7 @@ export type Product = {
   description: { en: string; ar: string };
   category: string;
   price: number;
+  codDeposit: number;
   compareAt?: number;
   color: string;
   colorCode: string;
