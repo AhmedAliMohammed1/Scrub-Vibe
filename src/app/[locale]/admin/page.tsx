@@ -214,6 +214,12 @@ export default async function AdminPage({
             </div>
             <div className="flex gap-2">
               <Link
+                href={`/${locale}/admin/shipping` as Route}
+                className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
+              >
+                {ar ? "التوصيل" : "Delivery"}
+              </Link>
+              <Link
                 href={`/${locale}/admin/orders` as Route}
                 className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
               >

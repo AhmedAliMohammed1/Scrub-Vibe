@@ -26,7 +26,7 @@ describe("Egypt checkout validation", () => {
   it("accepts a complete order and rejects excessive quantities", () => {
     const order = {
       verificationToken: "x".repeat(40), locale: "en", customerName: "Mona Ali", email: "",
-      phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+      phone: "01012345678", governorateCode: "cairo", cityCode: "nasr_city", city: "",
       streetAddress: "12 Example Street", building: "12", floor: "2", apartment: "4",
       landmark: "", customerNotes: "", paymentMethod: "cod", codDepositMethod: "vodafone_cash",
       items: [{ variantId: "42", quantity: 2 }],
@@ -40,7 +40,7 @@ describe("Egypt checkout validation", () => {
     (paymentMethod) => {
       expect(checkoutOrderSchema.safeParse({
         verificationToken: "x".repeat(40), locale: "en", customerName: "Mona Ali", email: "",
-        phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+        phone: "01012345678", governorateCode: "cairo", cityCode: "nasr_city", city: "",
         streetAddress: "12 Example Street", building: "12", floor: "2", apartment: "4",
         landmark: "", customerNotes: "", paymentMethod, codDepositMethod: "",
         items: [{ variantId: "42", quantity: 1 }],
@@ -51,7 +51,7 @@ describe("Egypt checkout validation", () => {
   it("accepts an empty verification token for the server-controlled disabled mode", () => {
     expect(checkoutOrderSchema.safeParse({
       verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
-      phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+      phone: "01012345678", governorateCode: "cairo", cityCode: "nasr_city", city: "",
       streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
       landmark: "", customerNotes: "", paymentMethod: "cod", codDepositMethod: "instapay",
       items: [{ variantId: "42", quantity: 1 }],
@@ -61,11 +61,23 @@ describe("Egypt checkout validation", () => {
   it("requires a deposit channel for cash on delivery", () => {
     const result = checkoutOrderSchema.safeParse({
       verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
-      phone: "01012345678", governorate: "Cairo", city: "Nasr City",
+      phone: "01012345678", governorateCode: "cairo", cityCode: "nasr_city", city: "",
       streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
       landmark: "", customerNotes: "", paymentMethod: "cod", codDepositMethod: "",
       items: [{ variantId: "42", quantity: 1 }],
     });
     expect(result.success).toBe(false);
+  });
+
+  it("requires a typed district when Other area is selected", () => {
+    const base = {
+      verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
+      phone: "01012345678", governorateCode: "aswan", cityCode: "other",
+      streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
+      landmark: "", customerNotes: "", paymentMethod: "instapay", codDepositMethod: "",
+      items: [{ variantId: "42", quantity: 1 }],
+    };
+    expect(checkoutOrderSchema.safeParse({ ...base, city: "" }).success).toBe(false);
+    expect(checkoutOrderSchema.safeParse({ ...base, city: "Daraw" }).success).toBe(true);
   });
 });

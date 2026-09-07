@@ -9,6 +9,10 @@ import { useState } from "react";
 import { useShop } from "@/components/store/cart-provider";
 import type { Locale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
+import {
+  calculateShippingQuote,
+  type ShippingGovernorateOption,
+} from "@/features/shipping/types";
 
 type PaymentMethod = "cod" | "vodafone_cash" | "instapay" | "paymob";
 type DepositMethod = "vodafone_cash" | "instapay";
@@ -17,6 +21,7 @@ type Props = {
   locale: Locale;
   otpEnabled: boolean;
   codDeposits: Record<string, number> | null;
+  shippingLocations: ShippingGovernorateOption[];
   payments: {
     paymob: boolean;
     vodafoneNumber: string | null;
@@ -24,19 +29,12 @@ type Props = {
   };
 };
 
-const governorates = [
-  "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira", "Fayoum",
-  "Gharbia", "Ismailia", "Monufia", "Minya", "Qalyubia", "New Valley", "Suez",
-  "Aswan", "Assiut", "Beni Suef", "Port Said", "Damietta", "Sharqia",
-  "South Sinai", "Kafr El Sheikh", "Matrouh", "Luxor", "Qena", "North Sinai", "Sohag",
-];
-
 const inputClass = "h-12 w-full border border-black/20 bg-white px-4 text-sm outline-none focus:border-[#0e7468]";
 const paymentHelpUrl =
   "https://wa.me/201096733209?text=" +
   encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
 
-export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Props) {
+export function CheckoutForm({ locale, payments, otpEnabled, codDeposits, shippingLocations }: Props) {
   const ar = locale === "ar";
   const router = useRouter();
   const { cartItems, clearCart } = useShop();
@@ -46,9 +44,19 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
   const [verificationToken, setVerificationToken] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("vodafone_cash");
   const [codDepositMethod, setCodDepositMethod] = useState<DepositMethod>("vodafone_cash");
+  const [governorateCode, setGovernorateCode] = useState("");
+  const [cityCode, setCityCode] = useState("");
+  const [customCity, setCustomCity] = useState("");
   const [busy, setBusy] = useState<"otp" | "verify" | "order" | null>(null);
   const [error, setError] = useState("");
   const subtotal = cartItems.reduce((sum, line) => sum + line.price * line.quantity, 0);
+  const selectedGovernorate =
+    shippingLocations.find((item) => item.code === governorateCode) ?? null;
+  const shippingQuote = calculateShippingQuote(
+    subtotal,
+    paymentMethod,
+    selectedGovernorate?.zone ?? null,
+  );
   const depositFor = (productId: string, cartDeposit: number | undefined) =>
     codDeposits === null
       ? (cartDeposit ?? 0)
@@ -58,17 +66,20 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
       sum + depositFor(line.productId, line.codDeposit) * line.quantity,
     0,
   );
-  const codAvailable =
+  const productCodAvailable =
     cartItems.length > 0 &&
     cartItems.every(
       (line) => depositFor(line.productId, line.codDeposit) > 0,
     );
+  const codAvailable =
+    productCodAvailable && Boolean(selectedGovernorate?.zone.codEnabled);
 
   const copy: Record<string, [string, string]> = {
     invalid_phone: ["Enter a valid Egyptian mobile number.", "أدخل رقم موبايل مصري صحيح."],
     invalid_customerName: ["Enter your full name (at least 2 characters).", "أدخل الاسم بالكامل (حرفان على الأقل)."],
     invalid_email: ["Enter a valid email address or leave it empty.", "أدخل بريداً إلكترونياً صحيحاً أو اتركه فارغاً."],
-    invalid_governorate: ["Choose your delivery governorate.", "اختر محافظة التوصيل."],
+    invalid_governorateCode: ["Choose an available delivery governorate.", "اختر محافظة توصيل متاحة."],
+    invalid_cityCode: ["Choose your city or select Other area.", "اختر المدينة أو اختر منطقة أخرى."],
     invalid_city: ["Enter your city or district.", "أدخل المدينة أو المنطقة."],
     invalid_streetAddress: ["Enter a complete street address (at least 5 characters).", "أدخل عنوان شارع كامل (٥ أحرف على الأقل)."],
     invalid_codDepositMethod: ["Choose Vodafone Cash or InstaPay for the COD deposit.", "اختر فودافون كاش أو إنستاباي لدفع مقدم الطلب."],
@@ -86,6 +97,8 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
     payment_proof_required: ["Upload your transfer screenshot.", "ارفع صورة إيصال التحويل."],
     invalid_payment_proof: ["Use a JPG, PNG or WebP image up to 5 MB.", "استخدم صورة JPG أو PNG أو WebP بحد أقصى ٥ ميجابايت."],
     paymob_not_configured: ["Online payment is not available yet. Choose another method.", "الدفع الإلكتروني غير متاح حالياً. اختر طريقة أخرى."],
+    shipping_area_unavailable: ["That delivery area is unavailable. Choose another area.", "منطقة التوصيل غير متاحة. اختر منطقة أخرى."],
+    cod_unavailable_for_zone: ["Cash on delivery is unavailable for this delivery area.", "الدفع عند الاستلام غير متاح في منطقة التوصيل هذه."],
     checkout_configuration_error: ["Checkout is missing its secure server connection. Please contact us while we fix it.", "إعداد الاتصال الآمن للدفع غير مكتمل. تواصل معنا لحين إصلاحه."],
     invalid_order: ["Review the highlighted checkout details.", "راجع بيانات الطلب المحددة."],
     proof_upload_failed: ["The receipt could not be uploaded. Please try again.", "تعذر رفع الإيصال. حاول مرة أخرى."],
@@ -132,7 +145,11 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
     const payload = {
       verificationToken, locale, phone,
       customerName: form.get("customerName"), email: form.get("email"),
-      governorate: form.get("governorate"), city: form.get("city"), streetAddress: form.get("streetAddress"),
+      governorateCode, cityCode,
+      city: cityCode === "other"
+        ? customCity
+        : (selectedGovernorate?.cities.find((item) => item.code === cityCode)?.nameEn ?? ""),
+      streetAddress: form.get("streetAddress"),
       building: form.get("building"), floor: form.get("floor"), apartment: form.get("apartment"),
       landmark: form.get("landmark"), customerNotes: form.get("customerNotes"), paymentMethod,
       codDepositMethod: paymentMethod === "cod" ? codDepositMethod : "",
@@ -173,7 +190,7 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
   );
 
   const paymentOptions: { id: PaymentMethod; title: string; detail: string; icon: React.ComponentType<PaymentIconProps>; disabled?: boolean }[] = [
-    { id: "cod", title: ar ? "الدفع عند الاستلام" : "Cash on delivery", detail: codAvailable ? (ar ? `ادفع مقدماً ${formatMoney(codDeposit, locale)} والباقي عند الاستلام.` : `Pay a ${formatMoney(codDeposit, locale)} deposit, then the balance on delivery.`) : (ar ? "غير متاح حتى يحدد المسؤول مقدم كل منتج." : "Unavailable until every product has a deposit configured."), icon: Package, disabled: !codAvailable },
+    { id: "cod", title: ar ? "الدفع عند الاستلام" : "Cash on delivery", detail: codAvailable ? (ar ? `ادفع مقدماً ${formatMoney(codDeposit, locale)} والباقي عند الاستلام.` : `Pay a ${formatMoney(codDeposit, locale)} deposit, then the balance on delivery.`) : !selectedGovernorate ? (ar ? "اختر المحافظة أولاً للتحقق من الإتاحة." : "Choose a governorate to check availability.") : !selectedGovernorate.zone.codEnabled ? (ar ? "غير متاح في منطقة التوصيل المحددة." : "Unavailable in the selected delivery zone.") : (ar ? "غير متاح حتى يحدد المسؤول مقدم كل منتج." : "Unavailable until every product has a deposit configured."), icon: Package, disabled: !codAvailable },
     ...(payments.paymob ? [{ id: "paymob" as const, title: ar ? "بطاقة أو محفظة إلكترونية" : "Card or mobile wallet", detail: ar ? "دفع آمن عبر Paymob، بما في ذلك المحافظ المتاحة." : "Secure Paymob checkout for cards and enabled wallets.", icon: CreditCard }] : []),
     { id: "vodafone_cash", title: "Vodafone Cash", detail: payments.vodafoneNumber ? (ar ? `حوّل إلى ${payments.vodafoneNumber} ثم ارفع صورة الإيصال.` : `Transfer to ${payments.vodafoneNumber}, then upload the receipt.`) : (ar ? "اطلب بيانات التحويل عبر واتساب، ثم ارفع صورة الإيصال." : "Get the transfer details on WhatsApp, then upload the receipt."), icon: VodafoneCashIcon },
     { id: "instapay", title: "InstaPay", detail: payments.instapayAddress ? (ar ? `حوّل إلى ${payments.instapayAddress} ثم ارفع صورة الإيصال.` : `Transfer to ${payments.instapayAddress}, then upload the receipt.`) : (ar ? "اطلب بيانات التحويل عبر واتساب، ثم ارفع صورة الإيصال." : "Get the transfer details on WhatsApp, then upload the receipt."), icon: InstaPayIcon },
@@ -215,8 +232,10 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
           <section className="border border-black/10 bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">2</span><h2 className="font-serif text-3xl">{ar ? "عنوان التوصيل" : "Delivery address"}</h2></div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-xs font-bold">{ar ? "المحافظة" : "Governorate"}<select name="governorate" className={inputClass} required defaultValue=""><option value="" disabled>{ar ? "اختر المحافظة" : "Choose governorate"}</option>{governorates.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "المدينة / المنطقة" : "City / district"}<input name="city" className={inputClass} required /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "المحافظة" : "Governorate"}<select name="governorateCode" className={inputClass} required value={governorateCode} onChange={(event) => { const next = shippingLocations.find((item) => item.code === event.target.value); setGovernorateCode(event.target.value); setCityCode(""); setCustomCity(""); if (paymentMethod === "cod" && !next?.zone.codEnabled) setPaymentMethod("vodafone_cash"); }}><option value="" disabled>{ar ? "اختر المحافظة" : "Choose governorate"}</option>{shippingLocations.map((item) => <option key={item.code} value={item.code}>{ar ? item.nameAr : item.nameEn}</option>)}</select></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "المدينة / المنطقة" : "City / district"}<select name="cityCode" className={inputClass} required value={cityCode} disabled={!selectedGovernorate} onChange={(event) => { setCityCode(event.target.value); setCustomCity(""); }}><option value="" disabled>{ar ? "اختر المدينة" : "Choose city"}</option>{selectedGovernorate?.cities.map((city) => <option key={city.code} value={city.code}>{ar ? city.nameAr : city.nameEn}</option>)}<option value="other">{ar ? "منطقة أخرى" : "Other area"}</option></select></label>
+              {cityCode === "other" && <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اكتب المدينة أو المنطقة" : "Enter city or district"}<input name="city" className={inputClass} required minLength={2} maxLength={100} value={customCity} onChange={(event) => setCustomCity(event.target.value)} /></label>}
+              {selectedGovernorate && <div className="border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4 text-xs leading-5 text-neutral-700 sm:col-span-2"><strong>{ar ? selectedGovernorate.zone.nameAr : selectedGovernorate.zone.nameEn}</strong><span className="ms-2">{ar ? `التوصيل المتوقع خلال ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} أيام عمل.` : `Estimated delivery in ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} business days.`}</span>{selectedGovernorate.zone.freeShippingThresholdMinor !== null && <span className="mt-1 block text-[#0e7468]">{ar ? `شحن أساسي مجاني للطلبات من ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.` : `Free base shipping from ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.`}</span>}</div>}
               <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اسم الشارع والعنوان" : "Street address"}<input name="streetAddress" className={inputClass} required minLength={5} autoComplete="street-address" /></label>
               <label className="grid gap-2 text-xs font-bold">{ar ? "المبنى" : "Building"}<input name="building" className={inputClass} /></label>
               <label className="grid gap-2 text-xs font-bold">{ar ? "الدور" : "Floor"}<input name="floor" className={inputClass} /></label>
@@ -229,7 +248,7 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
           <section className="border border-black/10 bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">3</span><h2 className="font-serif text-3xl">{ar ? "طريقة الدفع" : "Payment method"}</h2></div>
             <div className="mt-6 grid gap-3">{paymentOptions.map(({ id, title, detail, icon: Icon, disabled }) => <label key={id} className={`flex gap-4 border p-4 ${disabled ? "cursor-not-allowed bg-neutral-50 opacity-55" : "cursor-pointer"} ${paymentMethod === id ? "border-[#0e7468] bg-[#dce9e5]/60" : "border-black/10"}`}><input type="radio" name="paymentMethod" value={id} checked={paymentMethod === id} disabled={disabled} onChange={() => setPaymentMethod(id)} className="mt-1 accent-[#0e7468]" /><Icon size={24} className="shrink-0" /><span><strong className="block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-neutral-600">{detail}</span></span></label>)}</div>
-            {paymentMethod === "cod" && codAvailable && <div className="mt-5 border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4"><strong className="text-sm">{ar ? `مقدم مطلوب: ${formatMoney(codDeposit, locale)}` : `Required deposit: ${formatMoney(codDeposit, locale)}`}</strong><p className="mt-1 text-xs text-neutral-600">{ar ? `المتبقي عند الاستلام: ${formatMoney(subtotal - codDeposit, locale)}` : `Balance due on delivery: ${formatMoney(subtotal - codDeposit, locale)}`}</p><p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-neutral-600">{ar ? "طريقة دفع المقدم" : "Deposit payment method"}</p><div className="mt-2 grid grid-cols-2 gap-2"><DepositMethodButton selected={codDepositMethod === "vodafone_cash"} onClick={() => setCodDepositMethod("vodafone_cash")} label="Vodafone Cash" icon={VodafoneCashIcon} /><DepositMethodButton selected={codDepositMethod === "instapay"} onClick={() => setCodDepositMethod("instapay")} label="InstaPay" icon={InstaPayIcon} /></div>{transferDestination && <p className="mt-3 text-xs font-semibold text-[#073b36]">{ar ? `حوّل المقدم إلى ${transferDestination}` : `Transfer the deposit to ${transferDestination}`}</p>}</div>}
+            {paymentMethod === "cod" && codAvailable && <div className="mt-5 border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4"><strong className="text-sm">{ar ? `مقدم مطلوب: ${formatMoney(codDeposit, locale)}` : `Required deposit: ${formatMoney(codDeposit, locale)}`}</strong><p className="mt-1 text-xs text-neutral-600">{ar ? `المتبقي عند الاستلام: ${formatMoney((shippingQuote?.totalMinor ?? subtotal) - codDeposit, locale)}` : `Balance due on delivery: ${formatMoney((shippingQuote?.totalMinor ?? subtotal) - codDeposit, locale)}`}</p><p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-neutral-600">{ar ? "طريقة دفع المقدم" : "Deposit payment method"}</p><div className="mt-2 grid grid-cols-2 gap-2"><DepositMethodButton selected={codDepositMethod === "vodafone_cash"} onClick={() => setCodDepositMethod("vodafone_cash")} label="Vodafone Cash" icon={VodafoneCashIcon} /><DepositMethodButton selected={codDepositMethod === "instapay"} onClick={() => setCodDepositMethod("instapay")} label="InstaPay" icon={InstaPayIcon} /></div>{transferDestination && <p className="mt-3 text-xs font-semibold text-[#073b36]">{ar ? `حوّل المقدم إلى ${transferDestination}` : `Transfer the deposit to ${transferDestination}`}</p>}</div>}
             {proofRequired && <div className="mt-5 grid gap-4">{!manualDestinationConfigured && <p className="border border-[#0e7468]/25 bg-[#dce9e5]/40 p-4 text-xs leading-5 text-neutral-700">{ar ? "قبل التحويل، احصل على بيانات الدفع الصحيحة من فريق Scrub Vibe عبر واتساب." : "Before transferring, get the correct payment details from the Scrub Vibe team on WhatsApp."} <a href={paymentHelpUrl} target="_blank" rel="noreferrer" className="font-bold text-[#0e7468] underline">{ar ? "فتح واتساب" : "Open WhatsApp"}</a></p>}<label className="grid gap-2 text-xs font-bold">{paymentMethod === "cod" ? (ar ? "صورة إيصال المقدم" : "Deposit receipt screenshot") : (ar ? "صورة إيصال التحويل" : "Transfer screenshot")}<input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required className="border border-dashed border-[#0e7468] bg-[#dce9e5]/30 p-5 text-xs" /><span className="font-normal text-neutral-500">{ar ? "JPG أو PNG أو WebP — بحد أقصى ٥ ميجابايت. لن يبدأ تجهيز الطلب حتى تتم مراجعة التحويل." : "JPG, PNG or WebP — maximum 5 MB. Fulfilment starts after the transfer is reviewed."}</span></label></div>}
           </section>
         </div>
@@ -237,10 +256,10 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Prop
         <aside className="h-fit border border-black/10 bg-white p-5 lg:sticky lg:top-24">
           <h2 className="font-serif text-3xl">{ar ? "ملخص الطلب" : "Order summary"}</h2>
           <div className="mt-5 max-h-80 divide-y divide-black/10 overflow-auto">{cartItems.map((line) => <div key={line.key} className="grid grid-cols-[56px_1fr_auto] gap-3 py-3"><div className="relative aspect-[3/4] overflow-hidden bg-[#ebe9e4]"><Image src={line.image.src} alt={line.image.alt[locale]} fill sizes="56px" className="object-cover" /></div><div><strong className="text-xs">{line.title[locale]}</strong><p className="mt-1 text-[10px] text-neutral-500">{line.colourName[locale]} · {line.size} · ×{line.quantity}</p></div><strong className="text-[11px]">{formatMoney(line.price * line.quantity, locale)}</strong></div>)}</div>
-          <dl className="mt-5 border-t pt-4 text-sm"><div className="flex justify-between"><dt>{ar ? "المنتجات" : "Subtotal"}</dt><dd>{formatMoney(subtotal, locale)}</dd></div><div className="mt-2 flex justify-between"><dt>{ar ? "الشحن" : "Shipping"}</dt><dd>{ar ? "مجاني" : "Free"}</dd></div>{paymentMethod === "cod" && codAvailable && <><div className="mt-3 flex justify-between font-bold text-[#0e7468]"><dt>{ar ? "المقدم الآن" : "Deposit now"}</dt><dd>{formatMoney(codDeposit, locale)}</dd></div><div className="mt-2 flex justify-between"><dt>{ar ? "المتبقي عند الاستلام" : "Due on delivery"}</dt><dd>{formatMoney(subtotal - codDeposit, locale)}</dd></div></>}<div className="mt-4 flex justify-between border-t pt-4 font-bold"><dt>{ar ? "الإجمالي" : "Total"}</dt><dd>{formatMoney(subtotal, locale)}</dd></div></dl>
+          <dl className="mt-5 border-t pt-4 text-sm"><div className="flex justify-between"><dt>{ar ? "المنتجات" : "Subtotal"}</dt><dd>{formatMoney(subtotal, locale)}</dd></div><div className="mt-2 flex justify-between"><dt>{ar ? "الشحن الأساسي" : "Base shipping"}</dt><dd>{shippingQuote ? shippingQuote.baseMinor ? formatMoney(shippingQuote.baseMinor, locale) : (ar ? "مجاني" : "Free") : (ar ? "اختر المنطقة" : "Choose area")}</dd></div>{shippingQuote?.discountMinor ? <div className="mt-2 flex justify-between text-[#0e7468]"><dt>{ar ? "خصم الشحن" : "Shipping discount"}</dt><dd>−{formatMoney(shippingQuote.discountMinor, locale)}</dd></div> : null}{shippingQuote?.codSurchargeMinor ? <div className="mt-2 flex justify-between"><dt>{ar ? "رسوم الدفع عند الاستلام" : "COD service fee"}</dt><dd>{formatMoney(shippingQuote.codSurchargeMinor, locale)}</dd></div> : null}{paymentMethod === "cod" && codAvailable && <><div className="mt-3 flex justify-between font-bold text-[#0e7468]"><dt>{ar ? "المقدم الآن" : "Deposit now"}</dt><dd>{formatMoney(codDeposit, locale)}</dd></div><div className="mt-2 flex justify-between"><dt>{ar ? "المتبقي عند الاستلام" : "Due on delivery"}</dt><dd>{formatMoney((shippingQuote?.totalMinor ?? subtotal) - codDeposit, locale)}</dd></div></>}<div className="mt-4 flex justify-between border-t pt-4 font-bold"><dt>{ar ? "الإجمالي" : "Total"}</dt><dd>{formatMoney(shippingQuote?.totalMinor ?? subtotal, locale)}</dd></div></dl>
           <label className="mt-5 flex gap-3 text-[11px] leading-5 text-neutral-600"><input type="checkbox" required className="mt-1 accent-[#0e7468]" />{ar ? "أؤكد صحة البيانات وأوافق على التواصل معي بخصوص الطلب." : "I confirm these details and agree to be contacted about this order."}</label>
           {error && <p role="alert" className="mt-4 border border-[#a6432b]/30 bg-[#a6432b]/8 p-3 text-xs text-[#8c3624]">{error}</p>}
-          <button disabled={Boolean(busy) || (otpEnabled && !verificationToken)} className="mt-5 flex h-14 w-full items-center justify-center gap-2 bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white disabled:cursor-not-allowed disabled:opacity-50">{busy === "order" ? <Loader2 className="animate-spin" size={17} /> : <LockKeyhole size={16} />}{ar ? "تأكيد الطلب" : "Place secure order"}</button>
+          <button disabled={Boolean(busy) || (otpEnabled && !verificationToken) || !shippingQuote || !cityCode || (paymentMethod === "cod" && !codAvailable)} className="mt-5 flex h-14 w-full items-center justify-center gap-2 bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white disabled:cursor-not-allowed disabled:opacity-50">{busy === "order" ? <Loader2 className="animate-spin" size={17} /> : <LockKeyhole size={16} />}{ar ? "تأكيد الطلب" : "Place secure order"}</button>
           <p className="mt-3 text-center text-[10px] leading-4 text-neutral-500">{ar ? "لن نعتمد أي دفع إلكتروني إلا بعد التحقق الآمن منه." : "Electronic payments are never accepted without secure verification."}</p>
         </aside>
       </form>

@@ -55,7 +55,7 @@ export async function createPaymobIntention(input: PaymobOrder) {
         country: "EG",
         email: input.checkout.email || "orders@scrubvibe.store",
         floor: input.checkout.floor || "NA",
-        state: input.checkout.governorate,
+        state: input.checkout.governorateCode,
       },
       special_reference: input.orderNumber,
       notification_url: `${appUrl}/api/payments/paymob/webhook`,

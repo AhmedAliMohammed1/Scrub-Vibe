@@ -441,12 +441,15 @@ export type Database = {
           cod_balance_due_minor: number
           cod_deposit_method: string | null
           cod_deposit_minor: number
+          cod_surcharge_minor: number
           courier: string | null
           created_at: string
           currency: string
           customer_name: string
           customer_notes: string | null
           delivered_at: string | null
+          delivery_max_days: number | null
+          delivery_min_days: number | null
           discount_minor: number
           email: string | null
           floor: string | null
@@ -465,7 +468,19 @@ export type Database = {
           reservation_expires_at: string | null
           shipment_number: string | null
           shipped_at: string | null
+          shipping_base_minor: number
+          shipping_city_code: string | null
+          shipping_city_name_ar: string | null
+          shipping_city_name_en: string | null
+          shipping_discount_minor: number
+          shipping_governorate_code: string | null
+          shipping_governorate_name_ar: string | null
+          shipping_governorate_name_en: string | null
           shipping_minor: number
+          shipping_zone_code: string | null
+          shipping_zone_id: number | null
+          shipping_zone_name_ar: string | null
+          shipping_zone_name_en: string | null
           status: Database["public"]["Enums"]["order_status"]
           street_address: string
           subtotal_minor: number
@@ -483,12 +498,15 @@ export type Database = {
           cod_balance_due_minor?: number
           cod_deposit_method?: string | null
           cod_deposit_minor?: number
+          cod_surcharge_minor?: number
           courier?: string | null
           created_at?: string
           currency?: string
           customer_name: string
           customer_notes?: string | null
           delivered_at?: string | null
+          delivery_max_days?: number | null
+          delivery_min_days?: number | null
           discount_minor?: number
           email?: string | null
           floor?: string | null
@@ -507,7 +525,19 @@ export type Database = {
           reservation_expires_at?: string | null
           shipment_number?: string | null
           shipped_at?: string | null
+          shipping_base_minor?: number
+          shipping_city_code?: string | null
+          shipping_city_name_ar?: string | null
+          shipping_city_name_en?: string | null
+          shipping_discount_minor?: number
+          shipping_governorate_code?: string | null
+          shipping_governorate_name_ar?: string | null
+          shipping_governorate_name_en?: string | null
           shipping_minor?: number
+          shipping_zone_code?: string | null
+          shipping_zone_id?: number | null
+          shipping_zone_name_ar?: string | null
+          shipping_zone_name_en?: string | null
           status: Database["public"]["Enums"]["order_status"]
           street_address: string
           subtotal_minor?: number
@@ -525,12 +555,15 @@ export type Database = {
           cod_balance_due_minor?: number
           cod_deposit_method?: string | null
           cod_deposit_minor?: number
+          cod_surcharge_minor?: number
           courier?: string | null
           created_at?: string
           currency?: string
           customer_name?: string
           customer_notes?: string | null
           delivered_at?: string | null
+          delivery_max_days?: number | null
+          delivery_min_days?: number | null
           discount_minor?: number
           email?: string | null
           floor?: string | null
@@ -549,7 +582,19 @@ export type Database = {
           reservation_expires_at?: string | null
           shipment_number?: string | null
           shipped_at?: string | null
+          shipping_base_minor?: number
+          shipping_city_code?: string | null
+          shipping_city_name_ar?: string | null
+          shipping_city_name_en?: string | null
+          shipping_discount_minor?: number
+          shipping_governorate_code?: string | null
+          shipping_governorate_name_ar?: string | null
+          shipping_governorate_name_en?: string | null
           shipping_minor?: number
+          shipping_zone_code?: string | null
+          shipping_zone_id?: number | null
+          shipping_zone_name_ar?: string | null
+          shipping_zone_name_en?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           street_address?: string
           subtotal_minor?: number
@@ -559,7 +604,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_shipping_zone_id_fkey"
+            columns: ["shipping_zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_proofs: {
         Row: {
@@ -1011,6 +1064,130 @@ export type Database = {
           marketing_consent?: boolean
           phone?: string | null
           preferred_locale?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shipping_cities: {
+        Row: {
+          code: string
+          governorate_code: string
+          id: number
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          position: number
+        }
+        Insert: {
+          code: string
+          governorate_code: string
+          id?: never
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          position?: number
+        }
+        Update: {
+          code?: string
+          governorate_code?: string
+          id?: never
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_cities_governorate_code_fkey"
+            columns: ["governorate_code"]
+            isOneToOne: false
+            referencedRelation: "shipping_governorates"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      shipping_governorates: {
+        Row: {
+          code: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          position: number
+          zone_id: number
+        }
+        Insert: {
+          code: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          position?: number
+          zone_id: number
+        }
+        Update: {
+          code?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          position?: number
+          zone_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_governorates_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_zones: {
+        Row: {
+          cod_enabled: boolean
+          cod_surcharge_minor: number
+          code: string
+          created_at: string
+          delivery_max_days: number
+          delivery_min_days: number
+          free_shipping_threshold_minor: number | null
+          id: number
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          position: number
+          shipping_fee_minor: number
+          updated_at: string
+        }
+        Insert: {
+          cod_enabled?: boolean
+          cod_surcharge_minor?: number
+          code: string
+          created_at?: string
+          delivery_max_days: number
+          delivery_min_days: number
+          free_shipping_threshold_minor?: number | null
+          id?: never
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          position?: number
+          shipping_fee_minor: number
+          updated_at?: string
+        }
+        Update: {
+          cod_enabled?: boolean
+          cod_surcharge_minor?: number
+          code?: string
+          created_at?: string
+          delivery_max_days?: number
+          delivery_min_days?: number
+          free_shipping_threshold_minor?: number | null
+          id?: never
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          position?: number
+          shipping_fee_minor?: number
           updated_at?: string
         }
         Relationships: []

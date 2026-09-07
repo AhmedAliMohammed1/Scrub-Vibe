@@ -66,6 +66,14 @@ const paymentHardening = readFileSync(
   "utf8",
 );
 
+const shippingZones = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260907220250_shipping_zone_pricing.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -239,5 +247,26 @@ describe("foundation migration security", () => {
     expect(paymentHardening).toContain(
       "when v_previous.payment_method = 'cod' then 'cod_due'",
     );
+  });
+
+  it("protects delivery configuration and prices shipping in the order transaction", () => {
+    for (const table of [
+      "shipping_zones",
+      "shipping_governorates",
+      "shipping_cities",
+    ]) {
+      expect(shippingZones).toContain(
+        `alter table public.${table} enable row level security`,
+      );
+    }
+    expect(shippingZones).not.toMatch(/auth\.role\s*\(/);
+    expect(shippingZones).toContain("shipping_zones_admin_update");
+    expect(shippingZones).toContain("shipping_area_unavailable");
+    expect(shippingZones).toContain("cod_unavailable_for_zone");
+    expect(shippingZones).toContain(
+      "v_shipping := v_shipping_base - v_shipping_discount + v_cod_surcharge",
+    );
+    expect(shippingZones).toContain("shipping_zone_name_en");
+    expect(shippingZones).toContain("shipping_city_name_ar");
   });
 });

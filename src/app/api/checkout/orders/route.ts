@@ -89,7 +89,8 @@ export async function POST(request: Request) {
     customer_name: checkout.customerName,
     email: checkout.email,
     phone: checkout.phone,
-    governorate: checkout.governorate,
+    governorate_code: checkout.governorateCode,
+    city_code: checkout.cityCode,
     city: checkout.city,
     street_address: checkout.streetAddress,
     building: checkout.building,
@@ -124,6 +125,9 @@ export async function POST(request: Request) {
       databaseMessage.includes("VARIANT_UNAVAILABLE") ? "item_unavailable" :
       databaseMessage.includes("COD_DEPOSIT_NOT_CONFIGURED") ? "cod_deposit_not_configured" :
       databaseMessage.includes("COD_DEPOSIT_METHOD_REQUIRED") ? "cod_deposit_method_required" :
+      databaseMessage.includes("COD_UNAVAILABLE_FOR_ZONE") ? "cod_unavailable_for_zone" :
+      databaseMessage.includes("SHIPPING_AREA_UNAVAILABLE") ? "shipping_area_unavailable" :
+      databaseMessage.includes("INVALID_CITY") ? "invalid_city" :
       databaseMessage.includes("PAYMENT_PROOF_REQUIRED") ? "payment_proof_required" :
       databaseMessage.includes("PHONE_VERIFICATION") ? "verification_expired" : "order_failed";
     return NextResponse.json({ error: code }, { status: code === "order_failed" ? 503 : 409 });

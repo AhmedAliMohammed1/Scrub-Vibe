@@ -5,6 +5,17 @@ export type TrackedOrder = {
   phone: string;
   governorate: string;
   city: string;
+  shipping_zone_name_en: string | null;
+  shipping_zone_name_ar: string | null;
+  shipping_governorate_name_en: string | null;
+  shipping_governorate_name_ar: string | null;
+  shipping_city_name_en: string | null;
+  shipping_city_name_ar: string | null;
+  shipping_base_minor: number;
+  shipping_discount_minor: number;
+  cod_surcharge_minor: number;
+  delivery_min_days: number | null;
+  delivery_max_days: number | null;
   status: "awaiting_payment" | "payment_review" | "confirmed" | "processing" | "ready_to_ship" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
   payment_status: "pending" | "proof_submitted" | "paid" | "rejected" | "failed" | "cod_due" | "cod_collected" | "refunded";
   payment_method: "cod" | "vodafone_cash" | "instapay" | "paymob";

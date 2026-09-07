@@ -17,8 +17,12 @@ export async function GET(request: Request, context: { params: Promise<{ orderNu
     .from("orders")
     .select(`
       id, order_number, user_id, tracking_token_hash, customer_name, phone,
-      governorate, city, status, payment_status, payment_method, subtotal_minor,
+      governorate, city, shipping_zone_name_en, shipping_zone_name_ar,
+      shipping_governorate_name_en, shipping_governorate_name_ar,
+      shipping_city_name_en, shipping_city_name_ar, delivery_min_days, delivery_max_days,
+      status, payment_status, payment_method, subtotal_minor,
       cod_deposit_minor, cod_balance_due_minor, cod_deposit_method,
+      shipping_base_minor, shipping_discount_minor, cod_surcharge_minor,
       shipping_minor, discount_minor, total_minor, currency, shipment_number,
       courier, tracking_url, created_at, paid_at, shipped_at, delivered_at,
       order_items(id, sku, title_en, title_ar, colour_en, colour_ar, size, image_url, unit_price_minor, quantity, line_total_minor, cod_deposit_unit_minor, cod_deposit_line_minor),

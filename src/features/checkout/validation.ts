@@ -38,8 +38,9 @@ export const checkoutOrderSchema = z.object({
     }
     return normalized;
   }),
-  governorate: z.string().trim().min(2).max(80),
-  city: z.string().trim().min(2).max(100),
+  governorateCode: z.string().trim().regex(/^[a-z0-9_]+$/).max(80),
+  cityCode: z.string().trim().regex(/^[a-z0-9_]+$/).max(100),
+  city: z.string().trim().max(100),
   streetAddress: z.string().trim().min(5).max(300),
   building: z.string().trim().max(50),
   floor: z.string().trim().max(30),
@@ -55,6 +56,9 @@ export const checkoutOrderSchema = z.object({
 }).superRefine((value, context) => {
   if (value.paymentMethod === "cod" && !value.codDepositMethod) {
     context.addIssue({ code: "custom", path: ["codDepositMethod"], message: "Choose how the COD deposit was paid." });
+  }
+  if (value.cityCode === "other" && value.city.length < 2) {
+    context.addIssue({ code: "custom", path: ["city"], message: "Enter the city or district." });
   }
 });
 
