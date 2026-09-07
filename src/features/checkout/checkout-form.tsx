@@ -16,6 +16,7 @@ type PaymentIconProps = { size?: number; className?: string };
 type Props = {
   locale: Locale;
   otpEnabled: boolean;
+  codDeposits: Record<string, number> | null;
   payments: {
     paymob: boolean;
     vodafoneNumber: string | null;
@@ -35,7 +36,7 @@ const paymentHelpUrl =
   "https://wa.me/201096733209?text=" +
   encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
 
-export function CheckoutForm({ locale, payments, otpEnabled }: Props) {
+export function CheckoutForm({ locale, payments, otpEnabled, codDeposits }: Props) {
   const ar = locale === "ar";
   const router = useRouter();
   const { cartItems, clearCart } = useShop();
@@ -48,8 +49,20 @@ export function CheckoutForm({ locale, payments, otpEnabled }: Props) {
   const [busy, setBusy] = useState<"otp" | "verify" | "order" | null>(null);
   const [error, setError] = useState("");
   const subtotal = cartItems.reduce((sum, line) => sum + line.price * line.quantity, 0);
-  const codDeposit = cartItems.reduce((sum, line) => sum + (line.codDeposit ?? 0) * line.quantity, 0);
-  const codAvailable = cartItems.length > 0 && cartItems.every((line) => (line.codDeposit ?? 0) > 0);
+  const depositFor = (productId: string, cartDeposit: number | undefined) =>
+    codDeposits === null
+      ? (cartDeposit ?? 0)
+      : (codDeposits[productId] ?? 0);
+  const codDeposit = cartItems.reduce(
+    (sum, line) =>
+      sum + depositFor(line.productId, line.codDeposit) * line.quantity,
+    0,
+  );
+  const codAvailable =
+    cartItems.length > 0 &&
+    cartItems.every(
+      (line) => depositFor(line.productId, line.codDeposit) > 0,
+    );
 
   const copy: Record<string, [string, string]> = {
     invalid_phone: ["Enter a valid Egyptian mobile number.", "أدخل رقم موبايل مصري صحيح."],

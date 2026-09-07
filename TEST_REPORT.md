@@ -124,3 +124,4 @@
 - Typecheck: PASS — strict TypeScript
 - Build: PASS — Next.js 16.3.3 production build
 - Local browser: PASS — live Supabase product selection/cart handoff, branded payment icons, disabled unconfigured COD state, receipt upload and actionable invalid-phone feedback; no new application errors or framework overlay
+- Production rollout check: PASS — commit `6a9a753` is live; all 9 active products have positive deposits. A stale-cart display mismatch was found and corrected by loading current deposit values on the checkout server component.

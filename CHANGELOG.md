@@ -34,3 +34,4 @@
 - Added a server-controlled `CHECKOUT_PHONE_OTP_ENABLED` deployment flag with secure enabled-by-default behavior.
 - Added support for both Supabase server-secret environment names and safe checkout stage diagnostics instead of masking configuration failures as invalid order data.
 - Added per-product COD deposits, admin deposit editing, Vodafone Cash/InstaPay deposit receipts, branded payment icons, clearer field/server errors, and due-on-delivery balances in customer/admin order views.
+- Checkout now refreshes COD deposit amounts from Supabase, so admin changes apply to carts saved before the deposit release instead of leaving COD incorrectly disabled.

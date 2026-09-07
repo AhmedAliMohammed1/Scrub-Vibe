@@ -101,7 +101,14 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
           if (existing) {
             return lines.map((line) =>
               line.key === key
-                ? { ...line, quantity: line.quantity + 1 }
+                ? {
+                    ...line,
+                    quantity: line.quantity + 1,
+                    price: product.price,
+                    codDeposit: product.codDeposit,
+                    title: product.title,
+                    image: product.image,
+                  }
                 : line,
             );
           }
