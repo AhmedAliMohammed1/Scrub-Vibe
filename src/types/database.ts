@@ -12,6 +12,26 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  private: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      has_any_role: {
+        Args: { required_roles: Database["public"]["Enums"]["app_role"][] }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       analytics_events: {
@@ -72,6 +92,41 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: number
+          quantity: number
+          updated_at: string
+          user_id: string
+          variant_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          quantity?: number
+          updated_at?: string
+          user_id: string
+          variant_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+          variant_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1213,6 +1268,35 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist_items: {
+        Row: {
+          created_at: string
+          id: number
+          product_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          product_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          product_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1320,6 +1404,10 @@ export type Database = {
       subscribe_newsletter: {
         Args: { p_email: string; p_locale?: string }
         Returns: undefined
+      }
+      sync_customer_cart_and_wishlist: {
+        Args: { p_cart?: Json; p_wishlist?: number[] }
+        Returns: Json
       }
       track_store_event: {
         Args: {
@@ -1504,6 +1592,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  private: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: [

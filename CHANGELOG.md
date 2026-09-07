@@ -39,3 +39,9 @@
 - Hardened Paymob callbacks with integration/currency/amount/order validation, SHA-512 HMAC verification, idempotent database processing and a staff-only digest audit trail.
 - Made payment-proof decisions authoritative: approval automatically confirms full transfers or marks COD balances due, while rejection keeps the order in review and contradictory manual statuses are rejected.
 - Added payment-proof magic-byte validation and an admin Paymob readiness/callback panel without exposing credentials or raw webhook payloads.
+- Added shipping-zone pricing migration, delivery day ranges, free-shipping thresholds, COD surcharges, cascading governorate and city selects, and admin shipping rate management.
+- Added database-backed persistent cart and wishlist tables (`cart_items`, `wishlist_items`) with owner-scoped Row Level Security and transactional `sync_customer_cart_and_wishlist` function.
+- Connected frontend `ShopProvider` to Supabase auth for automatic guest-to-authenticated cart and wishlist merging with optimistic UI updates.
+- Added line item quantity modifier buttons (`+` and `-`) to the cart page.
+- Upgraded the wishlist page from a static counter to a full product gallery view with real product cards, live pricing, direct shopping actions, and an empty state.
+- Added automated unit and migration-security tests covering cart merging, quantity clamping, wishlist deduplication, and RLS invariants.

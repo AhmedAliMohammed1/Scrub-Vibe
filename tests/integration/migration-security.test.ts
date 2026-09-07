@@ -74,6 +74,14 @@ const shippingZones = readFileSync(
   "utf8",
 ).toLowerCase();
 
+const customerCartWishlist = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908023000_customer_cart_wishlist.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -268,5 +276,26 @@ describe("foundation migration security", () => {
     );
     expect(shippingZones).toContain("shipping_zone_name_en");
     expect(shippingZones).toContain("shipping_city_name_ar");
+  });
+
+  it("protects customer cart and wishlist tables with owner-restricted RLS", () => {
+    for (const table of ["cart_items", "wishlist_items"]) {
+      expect(customerCartWishlist).toContain(
+        `alter table public.${table} enable row level security;`,
+      );
+    }
+    expect(customerCartWishlist).not.toMatch(/auth\.role\s*\(/);
+    expect(customerCartWishlist).toContain(
+      "revoke all on public.cart_items, public.wishlist_items from anon, authenticated;",
+    );
+    expect(customerCartWishlist).toContain("create policy cart_items_owner_select");
+    expect(customerCartWishlist).toContain("create policy wishlist_items_owner_select");
+    expect(customerCartWishlist).toContain("auth.uid() = user_id");
+    expect(customerCartWishlist).toMatch(
+      /create or replace function public\.sync_customer_cart_and_wishlist[\s\S]*security invoker[\s\S]*set search_path = ''/,
+    );
+    expect(customerCartWishlist).toContain(
+      "grant execute on function public.sync_customer_cart_and_wishlist",
+    );
   });
 });

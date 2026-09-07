@@ -36,6 +36,8 @@
 - [x] **DONE** Set business-approved COD deposits on all 9 active products and verify existing-cart deposit refresh.
 - [x] **DONE** Prepare dormant Paymob integration with an explicit activation switch, strict readiness checks, idempotent callbacks, staff-only audit records and admin readiness visibility. Tests: PASS (61 total + live schema/RLS verification).
 - [x] **DONE** Verify production manual proof records for COD and Vodafone Cash reach consistent approved payment/order states.
+- [x] **DONE** Add shipping-zone pricing, delivery windows, governorate/city cascading selects and admin zone rate management. Tests: PASS (66 total).
+- [x] **DONE** Implement database-backed persistent cart and wishlist synchronization with owner-scoped RLS, automatic sign-in merge, optimistic updates, quantity modifiers and rich wishlist view. Tests: PASS (72 total + live Supabase verification).
 - [ ] **ON HOLD** Add Paymob merchant credentials, register/test the webhook, run successful/declined sandbox payments and validate duplicate/delayed callbacks. Follow `PAYMOB_ACTIVATION.md`; merchant keys required.
 - [ ] **TODO** Configure and validate production Twilio credentials if phone OTP should be enabled.
-- [ ] **TODO** Implement database-backed cart/wishlist merge, shipping-zone rates, notifications, recovery automation and final production observability/risk validation.
+- [ ] **TODO** Implement transactional notifications (email via Resend / WhatsApp), abandoned-cart recovery automation, and production observability/monitoring.

@@ -4,7 +4,7 @@ import { use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useShop } from "@/components/store/cart-provider";
 import { isLocale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
@@ -16,7 +16,7 @@ export default function CartPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = use(params);
-  const { cart, cartItems, removeCartItem } = useShop();
+  const { cart, cartItems, removeCartItem, updateQuantity } = useShop();
   if (!isLocale(locale)) return null;
 
   const orderLines = cartItems.map(
@@ -67,12 +67,34 @@ export default function CartPage({
                     style={{ backgroundColor: line.swatch }}
                   />
                   {line.colourName[locale]} ·{" "}
-                  {locale === "ar" ? "مقاس" : "Size"} {line.size} ·{" "}
-                  {locale === "ar" ? "الكمية" : "Qty"} {line.quantity}
+                  {locale === "ar" ? "مقاس" : "Size"} {line.size}
                 </p>
-                <strong className="mt-3 block text-xs">
-                  {formatMoney(line.price * line.quantity, locale)}
-                </strong>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex items-center rounded border border-black/15 bg-white">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(line.key, -1)}
+                      disabled={line.quantity <= 1}
+                      aria-label={locale === "ar" ? "تقليل الكمية" : "Decrease quantity"}
+                      className="flex size-7 items-center justify-center text-xs font-bold hover:bg-black/5 disabled:opacity-30"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-8 text-center text-xs font-medium">{line.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(line.key, 1)}
+                      disabled={line.quantity >= 10}
+                      aria-label={locale === "ar" ? "زيادة الكمية" : "Increase quantity"}
+                      className="flex size-7 items-center justify-center text-xs font-bold hover:bg-black/5 disabled:opacity-30"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                  <strong className="block text-xs">
+                    {formatMoney(line.price * line.quantity, locale)}
+                  </strong>
+                </div>
               </div>
               <button
                 type="button"

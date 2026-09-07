@@ -136,3 +136,13 @@
 - Receipt security: PASS — JPEG, PNG and WebP MIME declarations must match their magic bytes and the existing private 5 MB bucket restrictions
 - Database: PASS — `harden_payment_processing` applied to project `iqufqtjotgpmhhtvlxwf`; event table, JSON callback function and service-role-only execution verified
 - Unit/integration: PASS — 10 files, 61 tests
+
+## Persistent cart and wishlist synchronization checkpoint — 2026-09-08
+
+- Database: PASS — `cart_items` and `wishlist_items` tables created with owner-scoped RLS, least-privilege grants and transactional `sync_customer_cart_and_wishlist` function verified on project `iqufqtjotgpmhhtvlxwf`
+- Client integration: PASS — `ShopProvider` wired to Supabase auth events; optimistic UI updates with automatic guest cart/wishlist merge upon customer login
+- UI updates: PASS — cart line item quantity increment/decrement controls with 1–10 boundary limits; rich wishlist gallery view rendering product cards, pricing, and direct add-to-bag actions
+- Unit/integration tests: PASS — 12 files, 72 tests including cart line merge, quantity summation and clamping, wishlist deduplication, and static migration security invariants
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`) with live-generated database types
+- Build: PASS — Next.js 16.3.3 production build (`npm run build`)
