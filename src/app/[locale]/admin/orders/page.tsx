@@ -31,7 +31,7 @@ type WebhookEvent = {
 const statuses: TrackedOrder["status"][] = ["awaiting_payment", "payment_review", "confirmed", "processing", "ready_to_ship", "shipped", "out_for_delivery", "delivered", "cancelled", "returned"];
 const paymentStatuses: TrackedOrder["payment_status"][] = ["pending", "proof_submitted", "paid", "rejected", "failed", "cod_due", "cod_collected", "refunded"];
 
-export default async function AdminOrdersPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ status?: string }> }) {
+export default async function AdminOrdersPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ status?: string; error?: string; success?: string }> }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
   await requireRoles(["support", "warehouse", "admin", "super_admin"]);
@@ -68,6 +68,16 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
   return <main className="min-h-screen bg-[#eef2ef]">
     <header className="bg-[#062f2b] text-white"><div className="mx-auto max-w-[1500px] px-5 py-10 md:px-10"><div className="flex flex-wrap items-end justify-between gap-5"><div><p className="eyebrow text-[#81c5b8]">SCRUB VIBE · OPERATIONS</p><h1 className="mt-3 font-serif text-5xl md:text-7xl">{ar ? "الطلبات والمدفوعات" : "Orders & payments"}</h1></div><Link href={`/${locale}/admin` as Route} className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]">{ar ? "لوحة التحكم" : "Dashboard"}</Link></div></div></header>
     <div className="mx-auto max-w-[1500px] px-5 py-8 md:px-10 md:py-12">
+      {query.error && (
+        <aside className="mb-6 border border-rose-300 bg-rose-50 p-4 text-xs font-semibold text-rose-900">
+          ⚠️ {query.error}
+        </aside>
+      )}
+      {query.success && (
+        <aside className="mb-6 border border-emerald-300 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900">
+          ✓ {query.success}
+        </aside>
+      )}
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={CircleDollarSign} label={ar ? "الإيراد المحصل" : "Collected revenue"} value={formatMoney(revenue, locale)} />
         <Metric icon={Banknote} label={ar ? "متوسط الطلب المدفوع" : "Paid average order"} value={formatMoney(paidOrders.length ? Math.round(revenue / paidOrders.length) : 0, locale)} />

@@ -154,6 +154,7 @@
 - Triggers: PASS — Order Placed + New Order staff alert fire non-blocking after `create_verified_order` RPC in `src/app/api/checkout/orders/route.ts`; Payment Approved + Order Shipped fire non-blocking after `admin_update_order` RPC in `src/features/orders/admin-actions.ts`
 - Sender Domain Guard: PASS — `getFromAddress` detects unverified public webmail domains (e.g. `@gmail.com`, `@yahoo.com`) and automatically falls back to `Scrub Vibe <onboarding@resend.dev>` to avoid Resend 403 errors
 - Supabase Cart Sync Fix: PASS — resolved `column pov.metadata does not exist` by migrating `sync_customer_cart_and_wishlist` to query `pov.swatch_hex` on `iqufqtjotgpmhhtvlxwf`
+- Admin Order Hardening: PASS — auto-promotes pending proof status to approved when admin selects paid/cod_due, and replaces unhandled 500 error throws with localized query param alerts
 - Unit tests: PASS — 43 tests in `tests/unit/email-notifications.test.ts` covering templates, RTL flag, `formatPriceMajor`, sender domain fallback, and dev-preview fallback behaviour
 - Total: PASS — 13 files, 115 tests
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)

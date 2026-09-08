@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRoles } from "@/server/auth/roles";
 import type { Locale } from "@/lib/i18n";
@@ -24,11 +25,77 @@ const schema = z.object({
   proofStatus: z.enum(["", "approved", "rejected"]),
 });
 
+function formatOrderErrorMessage(raw: string, locale: Locale): string {
+  const isAr = locale === "ar";
+  if (raw.includes("PROOF_APPROVAL_REQUIRED")) {
+    return isAr
+      ? "يرجى تحديد قرار الإيصال (موافقة أو رفض) لتحديث حالة الدفع."
+      : "Please approve or reject the payment proof to update the payment status.";
+  }
+  if (raw.includes("SHIPMENT_NUMBER_REQUIRED")) {
+    return isAr
+      ? "رقم الشحنة مطلوب عند تغيير حالة الطلب إلى تم الشحن."
+      : "A shipment number is required when marking the order as shipped.";
+  }
+  if (raw.includes("NO_PENDING_PAYMENT_PROOF")) {
+    return isAr
+      ? "لا يوجد إيصال دفع قيد المراجعة لهذا الطلب."
+      : "There is no pending payment proof for this order.";
+  }
+  if (raw.includes("PAYMOB_WEBHOOK_REQUIRED")) {
+    return isAr
+      ? "طلبات Paymob تُحدث تلقائياً عبر الإشعار ولا يمكن تأكيدها يدوياً."
+      : "Paymob orders update automatically and cannot be confirmed manually.";
+  }
+  if (raw.includes("INSUFFICIENT_STOCK_AT_FULFILMENT")) {
+    return isAr
+      ? "المخزون المتوفر غير كافٍ لإتمام التوصيل."
+      : "Insufficient stock available to deliver this order.";
+  }
+  return raw;
+}
+
 export async function updateOrderAction(formData: FormData) {
   const parsed = schema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) throw new Error("Invalid order update.");
+  if (!parsed.success) {
+    const locale = formData.get("locale") === "ar" ? "ar" : "en";
+    const msg = locale === "ar" ? "بيانات تحديث الطلب غير صالحة." : "Invalid order update details.";
+    redirect(`/${locale}/admin/orders?error=${encodeURIComponent(msg)}`);
+  }
   const { supabase } = await requireRoles(["support", "warehouse", "admin", "super_admin"]);
   const value = parsed.data;
+
+  // Auto-resolve proof decision if admin changed payment to paid/cod_due or status to confirmed
+  let effectiveProofStatus = value.proofStatus || undefined;
+  if (
+    !effectiveProofStatus &&
+    (value.paymentStatus === "paid" || value.paymentStatus === "cod_due" || value.status === "confirmed")
+  ) {
+    const { data: pendingProof } = await supabase
+      .from("payment_proofs")
+      .select("id")
+      .eq("order_id", value.orderId)
+      .eq("status", "submitted")
+      .limit(1)
+      .maybeSingle();
+
+    if (pendingProof) {
+      effectiveProofStatus = "approved";
+    }
+  } else if (!effectiveProofStatus && value.paymentStatus === "rejected") {
+    const { data: pendingProof } = await supabase
+      .from("payment_proofs")
+      .select("id")
+      .eq("order_id", value.orderId)
+      .eq("status", "submitted")
+      .limit(1)
+      .maybeSingle();
+
+    if (pendingProof) {
+      effectiveProofStatus = "rejected";
+    }
+  }
+
   const { error } = await supabase.rpc("admin_update_order", {
     p_order_id: value.orderId,
     p_status: value.status,
@@ -37,13 +104,18 @@ export async function updateOrderAction(formData: FormData) {
     p_shipment_number: value.shipmentNumber || undefined,
     p_courier: value.courier || undefined,
     p_tracking_url: value.trackingUrl || undefined,
-    p_proof_status: value.proofStatus || undefined,
+    p_proof_status: effectiveProofStatus,
   });
-  if (error) throw new Error(error.message);
+
+  if (error) {
+    const friendly = formatOrderErrorMessage(error.message, value.locale);
+    redirect(`/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}`);
+  }
+
   revalidatePath(`/${value.locale}/admin/orders`);
 
   // ── Transactional emails (non-blocking) ──────────────────────────────────
-  const shouldEmailProofApproved = value.proofStatus === "approved";
+  const shouldEmailProofApproved = effectiveProofStatus === "approved";
   const shouldEmailShipped = value.status === "shipped";
   if (shouldEmailProofApproved || shouldEmailShipped) {
     void (async () => {

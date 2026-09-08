@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Auto-promoted pending payment proofs to `approved` in `updateOrderAction` when an admin marks payment status as `paid` or `cod_due`, preventing `PROOF_APPROVAL_REQUIRED` database exceptions.
+- Replaced unhandled 500 error throws in `updateOrderAction` with graceful redirects displaying localized banner alerts for validation and database constraints.
+- Added visual error and success banners to `/[locale]/admin/orders` based on redirect query parameters.
 - Added automatic sender domain fallback in `getFromAddress` preventing Resend 403 errors when public webmail addresses (e.g. `@gmail.com`) are configured as `RESEND_FROM_EMAIL`.
 - Fixed `column pov.metadata does not exist` in `sync_customer_cart_and_wishlist` database function by querying `pov.swatch_hex`.
 - Expanded `tests/unit/email-notifications.test.ts` to 43 tests covering sender domain fallback and staff email resolution.
