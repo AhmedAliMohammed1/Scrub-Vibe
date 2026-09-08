@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       analytics_events: {
@@ -237,6 +262,74 @@ export type Database = {
           verified_at?: string
         }
         Relationships: []
+      }
+      customer_addresses: {
+        Row: {
+          apartment: string | null
+          building: string | null
+          city: string
+          city_code: string
+          created_at: string
+          custom_label: string | null
+          floor: string | null
+          governorate_code: string
+          id: number
+          is_default: boolean
+          label: string
+          landmark: string | null
+          phone: string
+          recipient_name: string
+          street_address: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          apartment?: string | null
+          building?: string | null
+          city: string
+          city_code: string
+          created_at?: string
+          custom_label?: string | null
+          floor?: string | null
+          governorate_code: string
+          id?: never
+          is_default?: boolean
+          label?: string
+          landmark?: string | null
+          phone: string
+          recipient_name: string
+          street_address: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          apartment?: string | null
+          building?: string | null
+          city?: string
+          city_code?: string
+          created_at?: string
+          custom_label?: string | null
+          floor?: string | null
+          governorate_code?: string
+          id?: never
+          is_default?: boolean
+          label?: string
+          landmark?: string | null
+          phone?: string
+          recipient_name?: string
+          street_address?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_addresses_governorate_code_fkey"
+            columns: ["governorate_code"]
+            isOneToOne: false
+            referencedRelation: "shipping_governorates"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       discount_campaigns: {
         Row: {
@@ -1857,6 +1950,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: [

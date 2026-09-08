@@ -98,6 +98,14 @@ const discountIndexes = readFileSync(
   "utf8",
 ).toLowerCase();
 
+const customerAddresses = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908064000_customer_addresses.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -330,5 +338,29 @@ describe("foundation migration security", () => {
     expect(discountCampaigns).toContain("to service_role");
     expect(discountIndexes).toContain("orders_discount_code_created_idx");
     expect(discountIndexes).toContain("orders_discount_campaign_created_idx");
+  });
+
+  it("secures customer delivery addresses with owner-scoped RLS and secure triggers", () => {
+    expect(customerAddresses).toContain(
+      "alter table public.customer_addresses enable row level security;",
+    );
+    expect(customerAddresses).toContain(
+      "revoke all on public.customer_addresses from anon, authenticated;",
+    );
+    expect(customerAddresses).toContain(
+      "grant select, insert, update, delete on public.customer_addresses to authenticated;",
+    );
+    expect(customerAddresses).toContain("create policy customer_addresses_owner_select");
+    expect(customerAddresses).toContain("create policy customer_addresses_owner_insert");
+    expect(customerAddresses).toContain("create policy customer_addresses_owner_update");
+    expect(customerAddresses).toContain("create policy customer_addresses_owner_delete");
+    expect(customerAddresses).toContain("auth.uid() = user_id");
+    expect(customerAddresses).not.toMatch(/auth\.role\s*\(/);
+    expect(customerAddresses).toMatch(
+      /create or replace function public\.handle_customer_address_defaults[\s\S]*security definer[\s\S]*set search_path = ''/,
+    );
+    expect(customerAddresses).toMatch(
+      /create or replace function public\.handle_customer_address_delete[\s\S]*security definer[\s\S]*set search_path = ''/,
+    );
   });
 });

@@ -14,6 +14,9 @@ import {
   type ShippingGovernorateOption,
 } from "@/features/shipping/types";
 import { normalizeDiscountCode, type DiscountPreview } from "@/features/promotions/types";
+import type { CustomerAddress, AddressLabel } from "@/features/addresses/types";
+import { CheckoutAddressSelector } from "@/features/addresses/checkout-address-selector";
+import { createCustomerAddressAction } from "@/features/addresses/actions";
 
 type PaymentMethod = "cod" | "vodafone_cash" | "instapay" | "paymob";
 type DepositMethod = "vodafone_cash" | "instapay";
@@ -23,6 +26,9 @@ type Props = {
   otpEnabled: boolean;
   codDeposits: Record<string, number> | null;
   shippingLocations: ShippingGovernorateOption[];
+  savedAddresses?: CustomerAddress[];
+  isAuthenticated?: boolean;
+  customerProfile?: { full_name: string | null; email: string | null } | null;
   payments: {
     paymob: boolean;
     vodafoneNumber: string | null;
@@ -35,19 +41,81 @@ const paymentHelpUrl =
   "https://wa.me/201096733209?text=" +
   encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
 
-export function CheckoutForm({ locale, payments, otpEnabled, codDeposits, shippingLocations }: Props) {
+export function CheckoutForm({
+  locale,
+  payments,
+  otpEnabled,
+  codDeposits,
+  shippingLocations,
+  savedAddresses = [],
+  isAuthenticated = false,
+  customerProfile,
+}: Props) {
   const ar = locale === "ar";
   const router = useRouter();
   const { cartItems, clearCart } = useShop();
-  const [phone, setPhone] = useState("");
+
+  const defaultAddress = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0] ?? null;
+
+  const [selectedAddressId, setSelectedAddressId] = useState<number | "new">(
+    defaultAddress ? defaultAddress.id : "new",
+  );
+  const [saveNewAddress, setSaveNewAddress] = useState(false);
+  const [newAddressLabel, setNewAddressLabel] = useState<AddressLabel>("clinic");
+
+  const [customerName, setCustomerName] = useState(
+    defaultAddress?.recipientName ?? customerProfile?.full_name ?? "",
+  );
+  const [email, setEmail] = useState(customerProfile?.email ?? "");
+  const [phone, setPhone] = useState(defaultAddress?.phone ?? "");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [verificationToken, setVerificationToken] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("vodafone_cash");
   const [codDepositMethod, setCodDepositMethod] = useState<DepositMethod>("vodafone_cash");
-  const [governorateCode, setGovernorateCode] = useState("");
-  const [cityCode, setCityCode] = useState("");
-  const [customCity, setCustomCity] = useState("");
+  const [streetAddress, setStreetAddress] = useState(defaultAddress?.streetAddress ?? "");
+  const [building, setBuilding] = useState(defaultAddress?.building ?? "");
+  const [floor, setFloor] = useState(defaultAddress?.floor ?? "");
+  const [apartment, setApartment] = useState(defaultAddress?.apartment ?? "");
+  const [landmark, setLandmark] = useState(defaultAddress?.landmark ?? "");
+  const [customerNotes, setCustomerNotes] = useState("");
+
+  const [governorateCode, setGovernorateCode] = useState(defaultAddress?.governorateCode ?? "");
+  const [cityCode, setCityCode] = useState(defaultAddress?.cityCode ?? "");
+  const [customCity, setCustomCity] = useState(
+    defaultAddress && defaultAddress.cityCode === "other" ? defaultAddress.city : "",
+  );
+
+  const handleSelectSavedAddress = (addr: CustomerAddress | "new") => {
+    if (addr === "new") {
+      setSelectedAddressId("new");
+      setStreetAddress("");
+      setBuilding("");
+      setFloor("");
+      setApartment("");
+      setLandmark("");
+    } else {
+      setSelectedAddressId(addr.id);
+      setCustomerName(addr.recipientName);
+      setPhone(addr.phone);
+      setGovernorateCode(addr.governorateCode);
+      setCityCode(addr.cityCode);
+      setCustomCity(addr.cityCode === "other" ? addr.city : "");
+      setStreetAddress(addr.streetAddress);
+      setBuilding(addr.building ?? "");
+      setFloor(addr.floor ?? "");
+      setApartment(addr.apartment ?? "");
+      setLandmark(addr.landmark ?? "");
+      setVerificationToken("");
+      setOtpSent(false);
+
+      const nextGov = shippingLocations.find((item) => item.code === addr.governorateCode);
+      if (paymentMethod === "cod" && !nextGov?.zone.codEnabled) {
+        setPaymentMethod("vodafone_cash");
+      }
+    }
+  };
+
   const [busy, setBusy] = useState<"otp" | "verify" | "order" | null>(null);
   const [discountInput, setDiscountInput] = useState("");
   const [discountResult, setDiscountResult] = useState<{ preview: DiscountPreview; fingerprint: string } | null>(null);
@@ -225,6 +293,27 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits, shippi
     }
     setBusy(null);
     if (!response.ok || !result.orderNumber || !result.trackingToken) { showResponseError(result); return; }
+    if (saveNewAddress && isAuthenticated) {
+      const targetGov = shippingLocations.find((item) => item.code === governorateCode);
+      const targetCity =
+        cityCode === "other"
+          ? customCity
+          : (targetGov?.cities.find((item) => item.code === cityCode)?.nameEn ?? "");
+      createCustomerAddressAction({
+        label: newAddressLabel,
+        recipientName: customerName.trim(),
+        phone: phone.trim(),
+        governorateCode,
+        cityCode,
+        city: targetCity,
+        streetAddress: streetAddress.trim(),
+        building: building.trim() || null,
+        floor: floor.trim() || null,
+        apartment: apartment.trim() || null,
+        landmark: landmark.trim() || null,
+        isDefault: (savedAddresses?.length ?? 0) === 0,
+      }).catch((err) => console.warn("[checkout] Failed to auto-save address", err));
+    }
     try {
       const saved = JSON.parse(localStorage.getItem("scrub-vibe-order-tokens") ?? "{}") as Record<string, string>;
       saved[result.orderNumber] = result.trackingToken;
@@ -272,8 +361,8 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits, shippi
           <section className="border border-black/10 bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">1</span><h2 className="font-serif text-3xl">{ar ? "بيانات التواصل" : "Contact details"}</h2></div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-xs font-bold">{ar ? "الاسم بالكامل" : "Full name"}<input name="customerName" className={inputClass} required minLength={2} autoComplete="name" /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "البريد الإلكتروني (اختياري)" : "Email (optional)"}<input name="email" type="email" className={inputClass} autoComplete="email" /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "الاسم بالكامل" : "Full name"}<input name="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} required minLength={2} autoComplete="name" /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "البريد الإلكتروني (اختياري)" : "Email (optional)"}<input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} autoComplete="email" /></label>
               <div className="sm:col-span-2">
                 <label className="grid gap-2 text-xs font-bold">{ar ? "رقم الموبايل المصري" : "Egyptian mobile number"}<span className="flex gap-2"><input name="phone" value={phone} onChange={(event) => { setPhone(event.target.value); setVerificationToken(""); setOtpSent(false); }} className={inputClass} inputMode="tel" placeholder="01xxxxxxxxx" required autoComplete="tel" disabled={otpEnabled && Boolean(verificationToken)} />{otpEnabled && <button type="button" onClick={requestOtp} disabled={Boolean(busy) || Boolean(verificationToken)} className="min-w-32 bg-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-white disabled:opacity-50">{busy === "otp" ? <Loader2 className="mx-auto animate-spin" size={16} /> : verificationToken ? (ar ? "تم التحقق" : "Verified") : (ar ? "إرسال الرمز" : "Send OTP")}</button>}</span></label>
                 {otpEnabled && otpSent && !verificationToken && <div className="mt-3 flex gap-2"><input value={otp} onChange={(event) => setOtp(event.target.value)} className={inputClass} inputMode="numeric" placeholder={ar ? "رمز التحقق" : "Verification code"} maxLength={8} /><button type="button" onClick={verifyOtp} disabled={busy === "verify" || otp.length < 4} className="min-w-32 border border-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-[#073b36] disabled:opacity-50">{busy === "verify" ? <Loader2 className="mx-auto animate-spin" size={16} /> : (ar ? "تحقق" : "Verify")}</button></div>}
@@ -286,16 +375,29 @@ export function CheckoutForm({ locale, payments, otpEnabled, codDeposits, shippi
           <section className="border border-black/10 bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">2</span><h2 className="font-serif text-3xl">{ar ? "عنوان التوصيل" : "Delivery address"}</h2></div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {isAuthenticated && (
+                <CheckoutAddressSelector
+                  savedAddresses={savedAddresses}
+                  selectedAddressId={selectedAddressId}
+                  onSelectAddress={handleSelectSavedAddress}
+                  shippingLocations={shippingLocations}
+                  locale={locale}
+                  saveNewAddress={saveNewAddress}
+                  onToggleSaveNewAddress={setSaveNewAddress}
+                  newAddressLabel={newAddressLabel}
+                  onSelectNewAddressLabel={setNewAddressLabel}
+                />
+              )}
               <label className="grid gap-2 text-xs font-bold">{ar ? "المحافظة" : "Governorate"}<select name="governorateCode" className={inputClass} required value={governorateCode} onChange={(event) => { const next = shippingLocations.find((item) => item.code === event.target.value); setGovernorateCode(event.target.value); setCityCode(""); setCustomCity(""); if (paymentMethod === "cod" && !next?.zone.codEnabled) setPaymentMethod("vodafone_cash"); }}><option value="" disabled>{ar ? "اختر المحافظة" : "Choose governorate"}</option>{shippingLocations.map((item) => <option key={item.code} value={item.code}>{ar ? item.nameAr : item.nameEn}</option>)}</select></label>
               <label className="grid gap-2 text-xs font-bold">{ar ? "المدينة / المنطقة" : "City / district"}<select name="cityCode" className={inputClass} required value={cityCode} disabled={!selectedGovernorate} onChange={(event) => { setCityCode(event.target.value); setCustomCity(""); }}><option value="" disabled>{ar ? "اختر المدينة" : "Choose city"}</option>{selectedGovernorate?.cities.map((city) => <option key={city.code} value={city.code}>{ar ? city.nameAr : city.nameEn}</option>)}<option value="other">{ar ? "منطقة أخرى" : "Other area"}</option></select></label>
               {cityCode === "other" && <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اكتب المدينة أو المنطقة" : "Enter city or district"}<input name="city" className={inputClass} required minLength={2} maxLength={100} value={customCity} onChange={(event) => setCustomCity(event.target.value)} /></label>}
               {selectedGovernorate && <div className="border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4 text-xs leading-5 text-neutral-700 sm:col-span-2"><strong>{ar ? selectedGovernorate.zone.nameAr : selectedGovernorate.zone.nameEn}</strong><span className="ms-2">{ar ? `التوصيل المتوقع خلال ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} أيام عمل.` : `Estimated delivery in ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} business days.`}</span>{selectedGovernorate.zone.freeShippingThresholdMinor !== null && <span className="mt-1 block text-[#0e7468]">{ar ? `شحن أساسي مجاني للطلبات من ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.` : `Free base shipping from ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.`}</span>}</div>}
-              <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اسم الشارع والعنوان" : "Street address"}<input name="streetAddress" className={inputClass} required minLength={5} autoComplete="street-address" /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "المبنى" : "Building"}<input name="building" className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "الدور" : "Floor"}<input name="floor" className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "الشقة" : "Apartment"}<input name="apartment" className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "علامة مميزة" : "Landmark"}<input name="landmark" className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "ملاحظات الطلب" : "Order notes"}<textarea name="customerNotes" className="min-h-24 border border-black/20 bg-white p-4 text-sm" maxLength={1000} /></label>
+              <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اسم الشارع والعنوان" : "Street address"}<input name="streetAddress" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} className={inputClass} required minLength={5} autoComplete="street-address" /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "المبنى" : "Building"}<input name="building" value={building} onChange={(e) => setBuilding(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "الدور" : "Floor"}<input name="floor" value={floor} onChange={(e) => setFloor(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "العيادة / الشقة" : "Clinic / Apt"}<input name="apartment" value={apartment} onChange={(e) => setApartment(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold">{ar ? "علامة مميزة" : "Landmark"}<input name="landmark" value={landmark} onChange={(e) => setLandmark(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "ملاحظات الطلب" : "Order notes"}<textarea name="customerNotes" value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} className="min-h-24 border border-black/20 bg-white p-4 text-sm" maxLength={1000} /></label>
             </div>
           </section>
 

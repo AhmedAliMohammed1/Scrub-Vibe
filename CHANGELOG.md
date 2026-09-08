@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Implemented Customer Saved Addresses & Address Book with database-backed `customer_addresses` table, owner-scoped RLS policies, and automated single-default triggers (`handle_customer_address_defaults`, `handle_customer_address_delete`).
+- Added customer Address Book management interface in `/[locale]/account` allowing healthcare professionals to save, edit, delete, and designate default delivery addresses with clinical location presets (Clinic / Hospital, Home, Work / Office, Other).
+- Added interactive `CheckoutAddressSelector` component at checkout prefilling recipient name, mobile number, governorate, city, street, and clinic/building details with automatic shipping zone, delivery estimate, and COD eligibility recalculation.
+- Added "Save this address to my account" checkbox for authenticated customers entering a new address during checkout.
+- Added comprehensive unit tests in `tests/unit/address-validation.test.ts` (6 tests) and migration security assertions in `tests/integration/migration-security.test.ts`.
 - Added a bilingual growth-control page at `/[locale]/admin/discounts` where admins can create and edit marketing campaigns and percentage/fixed discount codes, activation windows, channels, UTM labels, minimum spends, discount caps, total/per-customer limits and campaign budgets.
 - Added server-authoritative promotion preview and atomic order redemption RPCs. Prices, eligibility, shipping, COD deposits, usage limits and budgets are revalidated in PostgreSQL, with service-role-only execution and immutable campaign/code snapshots on orders.
 - Added checkout apply/remove-code interactions, bilingual actionable errors, discounted shipping/total/COD calculations, discount details in customer tracking, admin orders and confirmation emails, plus campaign/code performance reporting.

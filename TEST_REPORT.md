@@ -198,3 +198,16 @@
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)
+
+## Customer Saved Addresses and Address Book checkpoint — 2026-09-08
+
+- Database: PASS — `customer_addresses` table created with owner-scoped RLS (`auth.uid() = user_id`), least-privilege grants, foreign key references to `shipping_governorates(code)`, and automatic single-default triggers (`handle_customer_address_defaults`, `handle_customer_address_delete`) applied live to Supabase project `iqufqtjotgpmhhtvlxwf`
+- Customer Account UI: PASS — `AddressBook` and `AddressDialog` components in `/[locale]/account` supporting add, edit, delete, and default toggling with clinical location presets (Clinic/Hospital, Home, Work, Other) and dynamic governorate/city selects
+- Checkout Integration: PASS — `CheckoutAddressSelector` component at checkout with 1-click address prefill (name, phone, governorate, city, street, and building/clinic details), real-time shipping zone/fee recalculation, and "Save to account" checkbox on new addresses
+- Unit tests: PASS — 6 tests in `tests/unit/address-validation.test.ts` covering Egyptian phone normalization, label validation, custom place name constraints, database mapping, and bilingual address formatting
+- Integration tests: PASS — `tests/integration/migration-security.test.ts` asserting RLS, owner isolation, grant revocation, and security-definer triggers
+- Total: PASS — 16 files, 150 tests (100% passing)
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
+- Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)
+

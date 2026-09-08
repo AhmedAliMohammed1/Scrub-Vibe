@@ -51,3 +51,8 @@
 ## ADR-013 — Server-authoritative promotions with immutable redemption snapshots
 
 **Status:** Accepted. **Reason:** Discount eligibility and amounts must never trust browser totals. PostgreSQL locks and revalidates the code, campaign, live variant prices, schedules, usage limits, customer limits and budgets in the same transaction that reserves inventory and creates the order. Orders and redemptions retain code/campaign names and monetary snapshots so later campaign edits cannot rewrite historical commercial terms. Promotion RPCs are executable only by the server service role, while RLS limits campaign management and reporting to authorized staff.
+
+## ADR-014 — Customer Saved Addresses & Checkout Prefill Architecture
+
+**Status:** Accepted. **Reason:** Healthcare professionals frequently purchase scrubs for delivery to specialized clinical locations (hospitals, clinics, surgery centers) or home. Customer delivery addresses are stored in `customer_addresses` with owner-scoped RLS and foreign-key constraints to Egyptian `shipping_governorates`. A PostgreSQL trigger transparently enforces single-default logic on insert, update, and delete. At checkout, registered customers can 1-click apply saved addresses—which instantly updates delivery zones, shipping rates, and COD rules without manual re-entry—or choose to save new delivery destinations directly from the checkout form.
+

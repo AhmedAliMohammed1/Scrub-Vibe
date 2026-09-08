@@ -7,6 +7,9 @@ import { AuthShell } from "@/features/auth/auth-shell";
 import { isLocale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
+import { getCustomerAddresses } from "@/features/addresses/repository";
+import { AddressBook } from "@/features/addresses/address-book";
+import { getShippingLocations } from "@/features/shipping/repository";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -44,20 +47,30 @@ export default async function AccountPage({ params, searchParams }: Props) {
     );
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("email, full_name, preferred_locale")
-    .eq("id", userId)
-    .maybeSingle();
-  const { data: roleRows } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-  const { data: orderRows } = await supabase
-    .from("orders")
-    .select("id, order_number, status, payment_status, total_minor, created_at")
-    .order("created_at", { ascending: false })
-    .limit(8);
+  const [
+    { data: profile },
+    { data: roleRows },
+    { data: orderRows },
+    addresses,
+    shippingLocations,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("email, full_name, preferred_locale")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId),
+    supabase
+      .from("orders")
+      .select("id, order_number, status, payment_status, total_minor, created_at")
+      .order("created_at", { ascending: false })
+      .limit(8),
+    getCustomerAddresses(supabase, userId),
+    getShippingLocations(supabase).catch(() => []),
+  ]);
   const canAdmin = roleRows?.some(
     ({ role }) => role === "admin" || role === "super_admin",
   );
@@ -117,6 +130,12 @@ export default async function AccountPage({ params, searchParams }: Props) {
               </p>
             )}
           </div>
+
+          <AddressBook
+            initialAddresses={addresses}
+            shippingLocations={shippingLocations}
+            locale={locale}
+          />
         </section>
         <aside className="border border-black/10 bg-white/35 p-6 md:p-8">
           <h2 className="font-serif text-3xl">
