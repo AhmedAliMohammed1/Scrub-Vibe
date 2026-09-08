@@ -107,10 +107,11 @@ export async function POST(request: Request) {
     customer_notes: checkout.customerNotes,
     payment_method: checkout.paymentMethod,
     cod_deposit_method: checkout.codDepositMethod,
+    discount_code: checkout.discountCode,
     items: checkout.items.map((item) => ({ variant_id: item.variantId, quantity: item.quantity })),
   };
   await admin.rpc("release_expired_order_reservations");
-  const { data, error } = await admin.rpc("create_verified_order", {
+  const { data, error } = await admin.rpc("create_promotional_order", {
     p_verification_token_hash: hashToken(effectiveVerificationToken),
     p_tracking_token_hash: hashToken(trackingToken),
     p_user_id: userId as string,
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
   });
   if (error || !data) {
     console.error("[checkout/orders] Transactional order creation failed", {
-      stage: "create_verified_order",
+      stage: "create_promotional_order",
       code: error?.code,
       message: error?.message ?? "No order returned",
     });
@@ -135,13 +136,21 @@ export async function POST(request: Request) {
       databaseMessage.includes("COD_UNAVAILABLE_FOR_ZONE") ? "cod_unavailable_for_zone" :
       databaseMessage.includes("SHIPPING_AREA_UNAVAILABLE") ? "shipping_area_unavailable" :
       databaseMessage.includes("INVALID_CITY") ? "invalid_city" :
+      databaseMessage.includes("DISCOUNT_CODE_INVALID") ? "discount_invalid" :
+      databaseMessage.includes("DISCOUNT_CODE_INACTIVE") || databaseMessage.includes("DISCOUNT_CAMPAIGN_INACTIVE") ? "discount_inactive" :
+      databaseMessage.includes("DISCOUNT_CODE_EXPIRED") ? "discount_expired" :
+      databaseMessage.includes("DISCOUNT_MINIMUM_NOT_MET") ? "discount_minimum_not_met" :
+      databaseMessage.includes("DISCOUNT_USAGE_LIMIT_REACHED") ? "discount_usage_limit" :
+      databaseMessage.includes("DISCOUNT_CUSTOMER_LIMIT_REACHED") ? "discount_customer_limit" :
+      databaseMessage.includes("DISCOUNT_CAMPAIGN_BUDGET_EXHAUSTED") ? "discount_budget_exhausted" :
+      databaseMessage.includes("DISCOUNT_NOT_APPLICABLE") ? "discount_not_applicable" :
       databaseMessage.includes("PAYMENT_PROOF_REQUIRED") ? "payment_proof_required" :
       databaseMessage.includes("PHONE_VERIFICATION") ? "verification_expired" : "order_failed";
     return NextResponse.json({ error: code }, { status: code === "order_failed" ? 503 : 409 });
   }
 
   const order = data as unknown as {
-    id: string; order_number: string; subtotal_minor: number; shipping_minor: number; total_minor: number;
+    id: string; order_number: string; subtotal_minor: number; shipping_minor: number; discount_minor: number; discount_code?: string; total_minor: number;
   };
   let paymentUrl: string | null = null;
   let paymentWarning: string | null = null;
@@ -171,6 +180,8 @@ export async function POST(request: Request) {
     email: checkout.email,
     subtotal_minor: order.subtotal_minor,
     shipping_minor: order.shipping_minor,
+    discount_minor: order.discount_minor,
+    discount_code: order.discount_code ?? null,
     total_minor: order.total_minor,
     payment_method: checkout.paymentMethod,
     items: checkout.items.map((item) => ({
@@ -185,7 +196,7 @@ export async function POST(request: Request) {
   };
   try {
     await Promise.allSettled([
-      sendEmail(renderOrderPlaced(emailOrder, "en")),
+      sendEmail(renderOrderPlaced(emailOrder, checkout.locale)),
       sendStaffEmail(
         `[Scrub Vibe] New order #${order.order_number} — EGP ${(order.total_minor / 100).toFixed(2)}`,
         renderStaffNewOrder(emailOrder).html,

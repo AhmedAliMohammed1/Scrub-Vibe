@@ -1,16 +1,27 @@
 "use client";
+
 import { useState } from "react";
+import { Ruler } from "lucide-react";
 import type { Product } from "@/features/catalog/types";
 import type { Locale } from "@/lib/i18n";
+import type {
+  SizeCategory,
+  SizeChartEntry,
+} from "@/features/catalog/size-guide-types";
 import { Button } from "@/components/ui/button";
 import { useShop } from "./cart-provider";
+import { SizeGuideDialog } from "./size-guide-dialog";
 
 export function AddProduct({
   product,
   locale,
+  sizeChartEntries = [],
+  isProductOverride = false,
 }: {
   product: Product;
   locale: Locale;
+  sizeChartEntries?: SizeChartEntry[];
+  isProductOverride?: boolean;
 }) {
   const initialColour =
     product.colors.find((colour) => colour.inStock) ?? product.colors[0];
@@ -19,6 +30,7 @@ export function AddProduct({
     product.colors.find((colour) => colour.code === colourCode) ??
     initialColour;
   const [size, setSize] = useState(initialColour?.sizes[0] ?? "");
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const { addToCart } = useShop();
   return (
     <div className="mt-8">
@@ -58,7 +70,12 @@ export function AddProduct({
         <strong className="uppercase tracking-[.12em]">
           {locale === "ar" ? "المقاس" : "Size"}: {size}
         </strong>
-        <button className="underline">
+        <button
+          type="button"
+          onClick={() => setIsSizeGuideOpen(true)}
+          className="flex items-center gap-1.5 underline transition hover:text-[#0e7468]"
+        >
+          <Ruler size={13} />
           {locale === "ar" ? "دليل المقاسات" : "Size guide"}
         </button>
       </div>
@@ -83,6 +100,19 @@ export function AddProduct({
       >
         {locale === "ar" ? "أضف إلى الحقيبة" : "Add to bag"}
       </Button>
+
+      <SizeGuideDialog
+        isOpen={isSizeGuideOpen}
+        onClose={() => setIsSizeGuideOpen(false)}
+        entries={sizeChartEntries}
+        category={(product.category as SizeCategory) || "unisex"}
+        productTitle={product.title[locale]}
+        isProductOverride={isProductOverride}
+        availableSizes={selectedColour?.sizes ?? product.sizes}
+        locale={locale}
+        currentSize={size}
+        onSelectSize={(newSize) => setSize(newSize)}
+      />
     </div>
   );
 }

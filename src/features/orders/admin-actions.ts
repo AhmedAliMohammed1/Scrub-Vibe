@@ -135,7 +135,7 @@ export async function updateOrderAction(formData: FormData) {
   const admin = createAdminClient();
   const { data: orderData } = await admin
     .from("orders")
-    .select("order_number, customer_name, email, subtotal_minor, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
+    .select("order_number, customer_name, email, subtotal_minor, discount_minor, discount_code, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
     .eq("id", value.orderId)
     .single();
 
@@ -154,6 +154,8 @@ export async function updateOrderAction(formData: FormData) {
         customer_name: orderData.customer_name,
         email: orderData.email,
         subtotal_minor: orderData.subtotal_minor,
+        discount_minor: orderData.discount_minor,
+        discount_code: orderData.discount_code,
         shipping_minor: orderData.shipping_minor,
         total_minor: orderData.total_minor,
         payment_method: orderData.payment_method,

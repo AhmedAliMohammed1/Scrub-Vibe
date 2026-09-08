@@ -157,6 +157,17 @@ describe("renderOrderPlaced", () => {
     expect(html).toContain("EGP 397.00");
   });
 
+  it("shows an applied discount code and amount", () => {
+    const { html } = renderOrderPlaced({
+      ...ORDER,
+      discount_code: "SCRUB10",
+      discount_minor: 3470,
+      total_minor: 36230,
+    }, "en");
+    expect(html).toContain("SCRUB10");
+    expect(html).toContain("EGP 34.70");
+  });
+
   it("EN: HTML contains item title", () => {
     const { html } = renderOrderPlaced(ORDER, "en");
     expect(html).toContain("Classic Scrub Top");

@@ -161,6 +161,18 @@
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`) with live-generated database types
 - Build: PASS — Next.js 16.3.3 production build (`npm run build`)
 
+## Discount codes and marketing campaigns checkpoint — 2026-09-08
+
+- Database: PASS — campaign, code and redemption tables plus order snapshots are live on `iqufqtjotgpmhhtvlxwf`; all three tables have RLS and the two promotion RPCs are executable only by `service_role`
+- Checkout integrity: PASS — live variant prices, schedules, minimum spend, usage/customer limits, campaign budget, shipping and COD deposit floors are validated server-side and redemption is atomic with order creation
+- Admin: PASS — bilingual campaign/code creation and editing, activation controls, marketing attribution and performance reporting are available at `/[locale]/admin/discounts`
+- Customer experience: PASS — apply/remove code, localized eligibility feedback, discounted totals and stored discount details in tracking and email are implemented
+- Live safety: PASS — no sample production campaign/code/order was inserted; the live schema starts with zero promotions and can be populated deliberately by an admin
+- Unit/integration: PASS — 15 files, 143 tests
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
+- Build: PASS — Next.js 16.3.3 production build including `/[locale]/admin/discounts` and `/api/checkout/discounts/validate`
+
 ## Transactional email notifications checkpoint — 2026-09-08
 
 - Email module: PASS — `src/features/notifications/email.ts` wraps Resend SDK; dev-preview fallback logs to console when `RESEND_API_KEY` is absent or `[SENSITIVE]`
@@ -175,3 +187,14 @@
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 production build (`npm run build`)
+
+## Interactive Size Guide and Measurement Management checkpoint — 2026-09-08
+
+- Database: PASS — `size_chart_entries` table created with RLS, least-privilege grants, category defaults and per-product overrides applied to live Supabase project `iqufqtjotgpmhhtvlxwf`
+- Storefront UI: PASS — `SizeGuideDialog` integrated into `AddProduct` on product pages with Size Chart, Find My Size calculator, How to Measure guide, and 1-click size selection
+- Admin Management: PASS — `/[locale]/admin/sizes` route created with category tabs (Women, Men, Unisex) and Product Override selection with 1-click reset to collection defaults
+- Unit tests: PASS — 12 tests in `tests/unit/size-guide.test.ts` covering recommendation engine, unit conversions (cm/in), boundary between-sizes matching, in-stock availability constraints, and database row mapping
+- Total: PASS — 15 files, 143 tests (100% passing)
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
+- Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)

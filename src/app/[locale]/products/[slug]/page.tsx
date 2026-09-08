@@ -6,6 +6,8 @@ import { AddProduct } from "@/components/store/add-product";
 import { catalog } from "@/lib/catalog";
 import { discountPercent, formatMoney } from "@/lib/money";
 import { isLocale } from "@/lib/i18n";
+import { getSizeChartForProduct } from "@/features/catalog/size-guide-repository";
+import type { SizeCategory } from "@/features/catalog/size-guide-types";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,6 +26,10 @@ export default async function ProductPage({ params }: Props) {
   if (!isLocale(locale)) notFound();
   const p = await catalog.bySlug(slug);
   if (!p) notFound();
+  const sizeChartResult = await getSizeChartForProduct({
+    productId: Number(p.id) || null,
+    category: (p.category as SizeCategory) || "unisex",
+  });
   const sale = discountPercent(p.price, p.compareAt);
   const jsonLd = {
     "@context": "https://schema.org",
@@ -81,7 +87,12 @@ export default async function ProductPage({ params }: Props) {
           <p className="mt-7 max-w-lg text-sm leading-7 text-neutral-600">
             {p.description[locale]}
           </p>
-          <AddProduct product={p} locale={locale} />
+          <AddProduct
+            product={p}
+            locale={locale}
+            sizeChartEntries={sizeChartResult.entries}
+            isProductOverride={sizeChartResult.isProductOverride}
+          />
           <div className="mt-8 divide-y divide-black/10 border-y border-black/10 text-xs">
             {(locale === "ar"
               ? [

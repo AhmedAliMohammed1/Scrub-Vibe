@@ -39,6 +39,8 @@
 - [x] **DONE** Add shipping-zone pricing, delivery windows, governorate/city cascading selects and admin zone rate management. Tests: PASS (66 total).
 - [x] **DONE** Implement database-backed persistent cart and wishlist synchronization with owner-scoped RLS, automatic sign-in merge, optimistic updates, quantity modifiers and rich wishlist view. Tests: PASS (72 total + live Supabase verification).
 - [x] **DONE** Implement transactional email notifications via Resend — bilingual (EN/AR) HTML emails for Order Placed, Payment Approved and Order Shipped; staff alert emails for new orders and payment proof submissions; dev-preview console fallback when `RESEND_API_KEY` is absent. Tests: PASS (109 total).
+- [x] **DONE** Implement Interactive Medical Scrub Size Guide and "Find My Size" measurement calculator on product pages with database-backed `size_chart_entries`, category defaults (Women/Men/Unisex), per-product overrides, unit toggling (cm/in), and full admin management in `/[locale]/admin/sizes`. Tests: PASS (143 total).
+- [x] **DONE** Implement end-to-end discount codes and marketing campaigns with admin creation/editing, server-authoritative checkout validation, usage/budget limits, immutable order snapshots and campaign performance reporting. Tests: PASS (143 total + live Supabase RLS/grant/index verification).
 - [ ] **ON HOLD** Add Paymob merchant credentials, register/test the webhook, run successful/declined sandbox payments and validate duplicate/delayed callbacks. Follow `PAYMOB_ACTIVATION.md`; merchant keys required.
 - [ ] **TODO** Configure and validate production Twilio credentials if phone OTP should be enabled.
 - [ ] **TODO** Implement WhatsApp notifications via Twilio/WhatsApp Business API.

@@ -49,6 +49,10 @@ export const checkoutOrderSchema = z.object({
   customerNotes: z.string().trim().max(1000),
   paymentMethod: z.enum(["cod", "vodafone_cash", "instapay", "paymob"]),
   codDepositMethod: z.union([z.literal(""), z.enum(["vodafone_cash", "instapay"])]),
+  discountCode: z.union([
+    z.literal(""),
+    z.string().trim().toUpperCase().min(3).max(32).regex(/^[A-Z0-9][A-Z0-9_-]*$/),
+  ]).default(""),
   items: z.array(z.object({
     variantId: z.string().regex(/^\d+$/),
     quantity: z.number().int().min(1).max(10),

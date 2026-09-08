@@ -43,3 +43,11 @@
 ## ADR-011 — Multi-stage transactional order lifecycle notifications
 
 **Status:** Accepted. **Reason:** Customers receive real-time, non-blocking bilingual (Arabic/English) email notifications throughout their entire order lifecycle (Order Placed, Payment Approved, In Preparation, Shipped with Tracking, Out for Delivery, Delivered, and Cancelled), as well as on any staff update note. Sending failures never abort administrative or customer transactions, and sandbox/unverified sender domains safely fall back to Resend's onboarding domain to avoid delivery disruptions.
+
+## ADR-012 — Hybrid size chart architecture with client-side recommendation engine
+
+**Status:** Accepted. **Reason:** Medical scrub sizing requires standard collection measurements (Women, Men, Unisex) for baseline consistency, while allowing granular per-product overrides for specialized cuts (joggers, lab coats, slim-fit sets). The database stores measurements in `size_chart_entries` with public read RLS and role-restricted admin management. On the storefront, pure client calculation evaluates multi-dimensional body measurements (Chest, Waist, Hips) with configurable units (cm/inches) and recommends optimal sizes restricted to the product's actual stock inventory without leaking network latency.
+
+## ADR-013 — Server-authoritative promotions with immutable redemption snapshots
+
+**Status:** Accepted. **Reason:** Discount eligibility and amounts must never trust browser totals. PostgreSQL locks and revalidates the code, campaign, live variant prices, schedules, usage limits, customer limits and budgets in the same transaction that reserves inventory and creates the order. Orders and redemptions retain code/campaign names and monetary snapshots so later campaign edits cannot rewrite historical commercial terms. Promotion RPCs are executable only by the server service role, while RLS limits campaign management and reporting to authorized staff.

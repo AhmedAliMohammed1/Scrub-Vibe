@@ -3,6 +3,18 @@ import { checkoutOrderSchema, normalizeEgyptianPhone, otpRequestSchema } from ".
 import { isCheckoutPhoneOtpEnabled } from "../../src/features/checkout/config";
 
 describe("Egypt checkout validation", () => {
+  it("accepts safe discount codes and rejects unsafe values", () => {
+    const valid = checkoutOrderSchema.safeParse({
+      verificationToken: "", locale: "en", customerName: "Mona Ali", email: "",
+      phone: "01012345678", governorateCode: "cairo", cityCode: "nasr_city", city: "Nasr City",
+      streetAddress: "12 Example Street", building: "", floor: "", apartment: "",
+      landmark: "", customerNotes: "", paymentMethod: "instapay", codDepositMethod: "",
+      discountCode: "SAVE_10", items: [{ variantId: "1", quantity: 1 }],
+    });
+    expect(valid.success).toBe(true);
+    expect(valid.success && valid.data.discountCode).toBe("SAVE_10");
+    expect(valid.success && checkoutOrderSchema.safeParse({ ...valid.data, discountCode: "BAD CODE!" }).success).toBe(false);
+  });
   it.each([
     [undefined, true], ["true", true], ["false", false], ["0", false], ["OFF", false], ["no", false],
   ])("reads OTP flag %s as %s", (value, expected) => {

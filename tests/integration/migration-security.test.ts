@@ -82,6 +82,22 @@ const customerCartWishlist = readFileSync(
   "utf8",
 );
 
+const discountCampaigns = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908022202_discount_campaigns.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
+const discountIndexes = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908024439_optimize_discount_foreign_keys.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -297,5 +313,22 @@ describe("foundation migration security", () => {
     expect(customerCartWishlist).toContain(
       "grant execute on function public.sync_customer_cart_and_wishlist",
     );
+  });
+
+  it("protects discount management and redeems codes transactionally", () => {
+    for (const table of ["discount_campaigns", "discount_codes", "discount_redemptions"]) {
+      expect(discountCampaigns).toContain(`alter table public.${table} enable row level security`);
+    }
+    expect(discountCampaigns).toContain("discount_campaigns_admin_all");
+    expect(discountCampaigns).toContain("discount_codes_admin_all");
+    expect(discountCampaigns).toContain("discount_redemptions_staff_select");
+    expect(discountCampaigns).not.toMatch(/auth\.role\s*\(/);
+    expect(discountCampaigns).toMatch(/create or replace function public\.create_promotional_order[\s\S]*for update/);
+    expect(discountCampaigns).toContain("discount_customer_limit_reached");
+    expect(discountCampaigns).toContain("discount_campaign_budget_exhausted");
+    expect(discountCampaigns).toContain("grant execute on function public.create_promotional_order");
+    expect(discountCampaigns).toContain("to service_role");
+    expect(discountIndexes).toContain("orders_discount_code_created_idx");
+    expect(discountIndexes).toContain("orders_discount_campaign_created_idx");
   });
 });

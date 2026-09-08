@@ -12,26 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  private: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      has_any_role: {
-        Args: { required_roles: Database["public"]["Enums"]["app_role"][] }
-        Returns: boolean
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       analytics_events: {
@@ -257,6 +237,174 @@ export type Database = {
           verified_at?: string
         }
         Relationships: []
+      }
+      discount_campaigns: {
+        Row: {
+          budget_minor: number | null
+          channel: string
+          created_at: string
+          created_by: string | null
+          description_ar: string | null
+          description_en: string | null
+          ends_on: string
+          id: number
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          starts_on: string
+          updated_at: string
+          utm_campaign: string | null
+        }
+        Insert: {
+          budget_minor?: number | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          ends_on: string
+          id?: never
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          starts_on: string
+          updated_at?: string
+          utm_campaign?: string | null
+        }
+        Update: {
+          budget_minor?: number | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          ends_on?: string
+          id?: never
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          starts_on?: string
+          updated_at?: string
+          utm_campaign?: string | null
+        }
+        Relationships: []
+      }
+      discount_codes: {
+        Row: {
+          campaign_id: number | null
+          code: string
+          created_at: string
+          created_by: string | null
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          ends_on: string | null
+          id: number
+          is_active: boolean
+          maximum_discount_minor: number | null
+          minimum_subtotal_minor: number
+          per_customer_limit: number
+          starts_on: string | null
+          updated_at: string
+          usage_limit: number | null
+          value: number
+        }
+        Insert: {
+          campaign_id?: number | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          ends_on?: string | null
+          id?: never
+          is_active?: boolean
+          maximum_discount_minor?: number | null
+          minimum_subtotal_minor?: number
+          per_customer_limit?: number
+          starts_on?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+          value: number
+        }
+        Update: {
+          campaign_id?: number | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          discount_type?: Database["public"]["Enums"]["discount_type"]
+          ends_on?: string | null
+          id?: never
+          is_active?: boolean
+          maximum_discount_minor?: number | null
+          minimum_subtotal_minor?: number
+          per_customer_limit?: number
+          starts_on?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_codes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "discount_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_redemptions: {
+        Row: {
+          campaign_id: number | null
+          discount_code_id: number
+          discount_minor: number
+          id: number
+          order_id: string
+          redeemed_at: string
+          subtotal_minor: number
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id?: number | null
+          discount_code_id: number
+          discount_minor: number
+          id?: never
+          order_id: string
+          redeemed_at?: string
+          subtotal_minor: number
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: number | null
+          discount_code_id?: number
+          discount_minor?: number
+          id?: never
+          order_id?: string
+          redeemed_at?: string
+          subtotal_minor?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "discount_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_redemptions_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory: {
         Row: {
@@ -505,6 +653,11 @@ export type Database = {
           delivered_at: string | null
           delivery_max_days: number | null
           delivery_min_days: number | null
+          discount_campaign_id: number | null
+          discount_campaign_name_ar: string | null
+          discount_campaign_name_en: string | null
+          discount_code: string | null
+          discount_code_id: number | null
           discount_minor: number
           email: string | null
           floor: string | null
@@ -562,6 +715,11 @@ export type Database = {
           delivered_at?: string | null
           delivery_max_days?: number | null
           delivery_min_days?: number | null
+          discount_campaign_id?: number | null
+          discount_campaign_name_ar?: string | null
+          discount_campaign_name_en?: string | null
+          discount_code?: string | null
+          discount_code_id?: number | null
           discount_minor?: number
           email?: string | null
           floor?: string | null
@@ -619,6 +777,11 @@ export type Database = {
           delivered_at?: string | null
           delivery_max_days?: number | null
           delivery_min_days?: number | null
+          discount_campaign_id?: number | null
+          discount_campaign_name_ar?: string | null
+          discount_campaign_name_en?: string | null
+          discount_code?: string | null
+          discount_code_id?: number | null
           discount_minor?: number
           email?: string | null
           floor?: string | null
@@ -660,6 +823,20 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_discount_campaign_id_fkey"
+            columns: ["discount_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "discount_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_shipping_zone_id_fkey"
             columns: ["shipping_zone_id"]
@@ -1247,6 +1424,74 @@ export type Database = {
         }
         Relationships: []
       }
+      size_chart_entries: {
+        Row: {
+          category: string
+          chest_max_cm: number
+          chest_min_cm: number
+          created_at: string
+          garment_length_cm: number | null
+          hip_max_cm: number
+          hip_min_cm: number
+          id: string
+          inseam_cm: number | null
+          note_ar: string | null
+          note_en: string | null
+          product_id: number | null
+          size: string
+          sort_order: number
+          updated_at: string
+          waist_max_cm: number
+          waist_min_cm: number
+        }
+        Insert: {
+          category: string
+          chest_max_cm: number
+          chest_min_cm: number
+          created_at?: string
+          garment_length_cm?: number | null
+          hip_max_cm: number
+          hip_min_cm: number
+          id?: string
+          inseam_cm?: number | null
+          note_ar?: string | null
+          note_en?: string | null
+          product_id?: number | null
+          size: string
+          sort_order?: number
+          updated_at?: string
+          waist_max_cm: number
+          waist_min_cm: number
+        }
+        Update: {
+          category?: string
+          chest_max_cm?: number
+          chest_min_cm?: number
+          created_at?: string
+          garment_length_cm?: number | null
+          hip_max_cm?: number
+          hip_min_cm?: number
+          id?: string
+          inseam_cm?: number | null
+          note_ar?: string | null
+          note_en?: string | null
+          product_id?: number | null
+          size?: string
+          sort_order?: number
+          updated_at?: string
+          waist_max_cm?: number
+          waist_min_cm?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "size_chart_entries_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           granted_at: string
@@ -1376,6 +1621,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_promotional_order: {
+        Args: {
+          p_order: Json
+          p_proof_path?: string
+          p_tracking_token_hash: string
+          p_user_id: string
+          p_verification_token_hash: string
+        }
+        Returns: Json
+      }
       create_verified_order: {
         Args: {
           p_order: Json
@@ -1383,6 +1638,15 @@ export type Database = {
           p_tracking_token_hash: string
           p_user_id: string
           p_verification_token_hash: string
+        }
+        Returns: Json
+      }
+      preview_discount_code: {
+        Args: {
+          p_code: string
+          p_items: Json
+          p_payment_method?: string
+          p_phone?: string
         }
         Returns: Json
       }
@@ -1437,6 +1701,7 @@ export type Database = {
         | "analyst"
         | "admin"
         | "super_admin"
+      discount_type: "percentage" | "fixed"
       inventory_movement_type:
         | "receipt"
         | "reservation"
@@ -1592,9 +1857,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  private: {
-    Enums: {},
-  },
   public: {
     Enums: {
       app_role: [
@@ -1607,6 +1869,7 @@ export const Constants = {
         "admin",
         "super_admin",
       ],
+      discount_type: ["percentage", "fixed"],
       inventory_movement_type: [
         "receipt",
         "reservation",

@@ -14,6 +14,8 @@ import {
   Package,
   ShoppingBag,
   Sparkles,
+  BadgePercent,
+  Ruler,
   TriangleAlert,
   Users,
 } from "lucide-react";
@@ -213,6 +215,18 @@ export default async function AdminPage({
               </p>
             </div>
             <div className="flex gap-2">
+              <Link
+                href={`/${locale}/admin/discounts` as Route}
+                className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
+              >
+                <span className="flex items-center gap-2"><BadgePercent size={14} />{ar ? "الخصومات" : "Discounts"}</span>
+              </Link>
+              <Link
+                href={`/${locale}/admin/sizes` as Route}
+                className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
+              >
+                <span className="flex items-center gap-2"><Ruler size={14} />{ar ? "المقاسات" : "Sizes"}</span>
+              </Link>
               <Link
                 href={`/${locale}/admin/shipping` as Route}
                 className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"

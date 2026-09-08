@@ -25,6 +25,9 @@ export type TrackedOrder = {
   subtotal_minor: number;
   shipping_minor: number;
   discount_minor: number;
+  discount_code: string | null;
+  discount_campaign_name_en: string | null;
+  discount_campaign_name_ar: string | null;
   total_minor: number;
   currency: "EGP";
   shipment_number: string | null;

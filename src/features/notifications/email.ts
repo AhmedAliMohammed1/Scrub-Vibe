@@ -167,6 +167,8 @@ export type OrderEmailData = {
   total_minor: number;
   shipping_minor: number;
   subtotal_minor: number;
+  discount_minor?: number;
+  discount_code?: string | null;
   payment_method: string;
   courier?: string | null;
   shipment_number?: string | null;
@@ -207,6 +209,7 @@ export function renderOrderPlaced(
   const methodValue = order.payment_method.replaceAll("_", " ").toUpperCase();
 
   const shippingLabel = isAr ? "الشحن" : "Shipping";
+  const discountLabel = isAr ? "الخصم" : "Discount";
   const totalLabel = isAr ? "الإجمالي" : "Order total";
 
   const content = `
@@ -223,6 +226,7 @@ export function renderOrderPlaced(
     ${itemsTable(order.items, locale)}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="font-size:12px;color:#555;margin:8px 0 24px;">
+      ${order.discount_minor ? `<tr><td style="padding:4px 0;color:#0e7468;">${discountLabel}${order.discount_code ? ` (${order.discount_code})` : ""}</td><td style="padding:4px 0;color:#0e7468;text-align:${isAr ? "left" : "right"};">−${formatPriceMajor(order.discount_minor)}</td></tr>` : ""}
       <tr>
         <td style="padding:4px 0;">${shippingLabel}</td>
         <td style="padding:4px 0;text-align:${isAr ? "left" : "right"};">${formatPriceMajor(order.shipping_minor)}</td>

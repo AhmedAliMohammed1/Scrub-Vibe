@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added a bilingual growth-control page at `/[locale]/admin/discounts` where admins can create and edit marketing campaigns and percentage/fixed discount codes, activation windows, channels, UTM labels, minimum spends, discount caps, total/per-customer limits and campaign budgets.
+- Added server-authoritative promotion preview and atomic order redemption RPCs. Prices, eligibility, shipping, COD deposits, usage limits and budgets are revalidated in PostgreSQL, with service-role-only execution and immutable campaign/code snapshots on orders.
+- Added checkout apply/remove-code interactions, bilingual actionable errors, discounted shipping/total/COD calculations, discount details in customer tracking, admin orders and confirmation emails, plus campaign/code performance reporting.
+- Added promotion RLS, least-privilege grants, supporting indexes, live-generated database types and automated promotion/checkout/migration/email coverage.
+- Implemented the Interactive Medical Scrub Size Guide and "Find My Size" measurement calculator on product detail pages, featuring unit conversion (cm/inches), real-time body measurement matching, fit badges, and 1-click size application.
+- Added database-backed `size_chart_entries` table with Row Level Security supporting standard category baselines (Women, Men, Unisex) and granular per-product overrides.
+- Created Admin Dashboard size management interface at `/[locale]/admin/sizes` enabling operations staff to edit dimensions (Chest, Waist, Hips, Inseam, Garment Length, fit notes) for collections or customize individual products with 1-click reset to defaults.
+- Added pure recommendation calculation engine in `src/features/catalog/size-guide.ts` and automated test suite in `tests/unit/size-guide.test.ts` (12 tests).
 - Added clear locked UI state and friendly bilingual error messages for terminal orders (`cancelled`, `returned`) preventing invalid attempts to reopen orders after inventory release.
 - Added complete order status transition emails (`renderOrderProcessing`, `renderOrderOutForDelivery`, `renderOrderDelivered`, `renderOrderCancelled`, and `renderOrderStatusNote`) ensuring customers receive tailored notifications on every order status change in the admin panel.
 - Fixed admin order status update requiring manual page refresh (F5) by adding dynamic form remount keys (`key={`${order.id}-${order.status}...`}`), dual path revalidation (`revalidatePath`), and immediate navigation redirects preserving active filter parameters.
