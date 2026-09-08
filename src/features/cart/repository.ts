@@ -23,8 +23,11 @@ export function mapSyncCartLine(raw: Record<string, unknown>): CartLine {
       src: String(raw.image_url ?? "/images/scrub-vibe/logo.png"),
       alt: { en: titleEn, ar: titleAr },
     },
-    price: priceMinor / 100,
-    codDeposit: depositMinor / 100,
+    // CartLine follows the catalogue/order convention: all money stays in
+    // integer minor units until formatMoney renders it. The RPC already
+    // returns *_minor values, so converting here would divide prices twice.
+    price: priceMinor,
+    codDeposit: depositMinor,
     colourCode,
     colourName: {
       en: String(raw.colour_en ?? "Default"),
@@ -51,7 +54,10 @@ export function mergeCartLines(
   for (const incoming of incomingLines) {
     const existing = lineMap.get(incoming.key);
     if (existing) {
-      existing.quantity = Math.min(10, existing.quantity + incoming.quantity);
+      // A synced/server line is authoritative. Adding both quantities makes
+      // repeated reconciliation non-idempotent and can inflate a single item
+      // all the way to the cart limit.
+      existing.quantity = incoming.quantity;
       existing.price = incoming.price;
       existing.codDeposit = incoming.codDeposit;
       existing.title = incoming.title;

@@ -17,8 +17,8 @@ describe("cart-sync unit tests", () => {
       src: "/images/scrub-vibe/female-design-2.webp",
       alt: { en: "Scrub", ar: "سكراب" },
     },
-    price: 850,
-    codDeposit: 150,
+    price: 85000,
+    codDeposit: 15000,
     colourCode: "burgundy",
     colourName: { en: "Burgundy", ar: "بورجوندي" },
     swatch: "#5a1827",
@@ -37,8 +37,8 @@ describe("cart-sync unit tests", () => {
       src: "/images/scrub-vibe/male-design-1.jpg",
       alt: { en: "Navy Scrub", ar: "سكراب كحلي" },
     },
-    price: 850,
-    codDeposit: 150,
+    price: 85000,
+    codDeposit: 15000,
     colourCode: "navy",
     colourName: { en: "Navy", ar: "كحلي" },
     swatch: "#1b2a4a",
@@ -47,7 +47,7 @@ describe("cart-sync unit tests", () => {
     availableStock: 8,
   };
 
-  it("maps raw database RPC row into typed CartLine with minor currency conversion", () => {
+  it("keeps database RPC money values in integer minor units", () => {
     const raw = {
       product_id: 1,
       variant_id: 101,
@@ -70,8 +70,8 @@ describe("cart-sync unit tests", () => {
     expect(mapped.key).toBe("1:burgundy:M");
     expect(mapped.productId).toBe("1");
     expect(mapped.variantId).toBe("101");
-    expect(mapped.price).toBe(850);
-    expect(mapped.codDeposit).toBe(150);
+    expect(mapped.price).toBe(85000);
+    expect(mapped.codDeposit).toBe(15000);
     expect(mapped.quantity).toBe(3);
     expect(mapped.colourCode).toBe("burgundy");
     expect(mapped.size).toBe("M");
@@ -87,17 +87,17 @@ describe("cart-sync unit tests", () => {
     expect(merged.map((l) => l.key)).toEqual(["1:burgundy:M", "2:navy:L"]);
   });
 
-  it("sums quantities on duplicate keys and clamps at maximum 10", () => {
+  it("uses the authoritative synced quantity on duplicate keys", () => {
     const duplicateIncoming: CartLine = {
       ...sampleLine1,
-      quantity: 9, // 2 + 9 = 11 -> clamped to 10
-      price: 890,
+      quantity: 9,
+      price: 89000,
     };
 
     const merged = mergeCartLines([sampleLine1], [duplicateIncoming]);
     expect(merged).toHaveLength(1);
-    expect(merged[0].quantity).toBe(10);
-    expect(merged[0].price).toBe(890);
+    expect(merged[0].quantity).toBe(9);
+    expect(merged[0].price).toBe(89000);
   });
 
   it("merges and deduplicates wishlist product IDs", () => {
@@ -131,8 +131,17 @@ describe("cart-sync unit tests", () => {
     }
 
     // Subtotal remains constant across 10 tab switches
-    const price = 850;
+    const price = 85000;
     const subtotal = quantity * price;
-    expect(subtotal).toBe(1700);
+    expect(subtotal).toBe(170000);
+  });
+
+  it("does not inflate quantity when the same synced line is reconciled repeatedly", () => {
+    let lines = [sampleLine1];
+
+    for (let i = 0; i < 10; i++) {
+      lines = mergeCartLines(lines, [sampleLine1]);
+      expect(lines[0].quantity).toBe(2);
+    }
   });
 });

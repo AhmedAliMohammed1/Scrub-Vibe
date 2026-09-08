@@ -434,9 +434,40 @@ function DepositMethodButton({ selected, onClick, label, icon: Icon }: {
 }
 
 function VodafoneCashIcon({ size = 24, className }: PaymentIconProps) {
-  return <svg aria-hidden="true" viewBox="0 0 32 32" width={size} height={size} className={className}><circle cx="16" cy="16" r="15" fill="#e60000"/><path d="M7.5 13.1c5.9-4.2 13.5-4.5 17-1.2-5.1-1-9.9.4-12.6 3.2 2.5-.6 5.2-.3 7 1-3.9.1-7.3 2-8.8 5.1-1.7-2.1-2.6-5-2.6-8.1Z" fill="#fff"/><circle cx="21.7" cy="9" r="2" fill="#fff"/></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 36 36"
+      width={size}
+      height={size}
+      className={`shrink-0 rounded-full shadow-xs ${className ?? ""}`}
+    >
+      <circle cx="18" cy="18" r="18" fill="#ffffff" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M36 18c0 9.941-8.059 18-18 18S0 27.941 0 18 8.059 0 18 0c2.746 0 5.35.615 7.678 1.715-.31-.097-.796-.133-1.262-.133-3.746.013-7.877 1.615-10.892 4.112-3.09 2.565-5.509 6.88-5.497 11.361.021 6.778 5.167 11 10.113 10.983 6.11-.02 9.722-5.04 9.706-9.615-.015-4.576-2.503-7.883-7.984-9.218a1.871 1.871 0 0 1-.022-.293c-.011-3.456 2.592-6.502 5.864-7.185C31.791 4.614 36 10.816 36 18z"
+        fill="#e60000"
+      />
+    </svg>
+  );
 }
 
 function InstaPayIcon({ size = 24, className }: PaymentIconProps) {
-  return <svg aria-hidden="true" viewBox="0 0 32 32" width={size} height={size} className={className}><defs><linearGradient id="instapay-mark" x1="3" y1="29" x2="29" y2="3"><stop stopColor="#5b2a86"/><stop offset="1" stopColor="#e52b78"/></linearGradient></defs><rect x="1" y="1" width="30" height="30" rx="8" fill="url(#instapay-mark)"/><path d="M8 10h5v12H8zm7 0h4.8c3.2 0 5.2 1.7 5.2 4.5S22.9 19 19.8 19H19v3h-4zm4 3v3h.7c.9 0 1.4-.5 1.4-1.5S20.6 13 19.7 13z" fill="#fff"/></svg>;
+  return (
+    <span
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-white p-0.5 shadow-xs ${className ?? ""}`}
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src="/images/payments/instapay.png"
+        alt="InstaPay"
+        width={size}
+        height={size}
+        className="size-full object-contain"
+        unoptimized
+      />
+    </span>
+  );
 }
+

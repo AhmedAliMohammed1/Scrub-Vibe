@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Integrated official original brand icons for Vodafone Cash and InstaPay Egypt in the checkout payment and deposit selection interfaces:
+  - Vodafone Cash now uses the official circular Vodafone speechmark vector extracted directly from `web.vodafone.com.eg` with Vodafone Red (`#e60000`) and pure white teardrop speechmark cutout.
+  - InstaPay now uses the authentic Egyptian Banks Company (EBC) / Central Bank of Egypt (CBE) InstaPay logo mark (`public/images/payments/instapay.png`), cropped and centered for crisp display across all device displays.
 - Fixed Arabic document semantics so `/ar` now renders the root `<html>` element with `lang="ar"` and `dir="rtl"` while English remains `lang="en"` and `dir="ltr"`.
 - Fixed production metadata URLs by using Vercel's production deployment hostname when `NEXT_PUBLIC_APP_URL` is absent, preventing `robots.txt`, `sitemap.xml`, and metadata from advertising localhost.
 - Fixed the mobile header wordmark/action collision at 390px, including correct physical centering in RTL layouts and localized Arabic accessibility labels.

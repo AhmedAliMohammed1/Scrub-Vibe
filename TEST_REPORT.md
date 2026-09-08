@@ -237,3 +237,14 @@
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)
 
+## Official Payment Brand Icons Checkpoint — 2026-09-08
+
+- Asset Acquisition: PASS — Extracted official Vodafone circular speechmark vector from `web.vodafone.com.eg` (`public/images/payments/vodafone-cash.svg`), and authentic Egyptian Banks Company / Central Bank of Egypt InstaPay logo from Wikimedia Commons, cropped and centered to 348x348 (`public/images/payments/instapay.png`).
+- Component Integration: PASS — Updated `VodafoneCashIcon` and `InstaPayIcon` in `src/features/checkout/checkout-form.tsx` across primary payment method radio cards and COD deposit channel selectors.
+- Contrast & Visual QA: PASS — Vodafone speechmark uses exact brand `#e60000` with solid `#ffffff` cutout; InstaPay uses high-density PNG inside a rounded white badge container ensuring optimal contrast in both active, hover, and disabled button states across LTR and RTL.
+- Total Tests: PASS — 17 files, 155 tests (100% passing).
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`).
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`).
+- Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`).
+
+
