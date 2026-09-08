@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fixed checkout subtotal continuously increasing / multiplying when switching browser tabs by making `public.sync_customer_cart_and_wishlist` database function strictly idempotent using `greatest(public.cart_items.quantity, excluded.quantity)` and clamping between 1 and 10.
+- Hardened client-side `ShopProvider` in `src/components/store/cart-provider.tsx` with user ID tracking (`lastSyncedUserIdRef`) and concurrency mutex (`isSyncingRef`), preventing duplicate syncs on tab focus / `visibilitychange` events and passing empty arrays for routine token refresh events.
+- Added automated idempotency unit tests in `tests/unit/cart-sync.test.ts` and database migration security assertions in `tests/integration/migration-security.test.ts`.
+- Applied migration `20260908073000_idempotent_cart_sync.sql` to live hosted Supabase database (`iqufqtjotgpmhhtvlxwf`).
 - Implemented Customer Saved Addresses & Address Book with database-backed `customer_addresses` table, owner-scoped RLS policies, and automated single-default triggers (`handle_customer_address_defaults`, `handle_customer_address_delete`).
 - Added customer Address Book management interface in `/[locale]/account` allowing healthcare professionals to save, edit, delete, and designate default delivery addresses with clinical location presets (Clinic / Hospital, Home, Work / Office, Other).
 - Added interactive `CheckoutAddressSelector` component at checkout prefilling recipient name, mobile number, governorate, city, street, and clinic/building details with automatic shipping zone, delivery estimate, and COD eligibility recalculation.

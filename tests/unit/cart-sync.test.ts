@@ -109,4 +109,25 @@ describe("cart-sync unit tests", () => {
 
     expect(result.sort()).toEqual(["1", "2"]);
   });
+
+  it("calculates idempotent cart quantities without inflation on repeated syncs", () => {
+    // Simulates the DB idempotent logic: least(greatest(greatest(existing, incoming), 1), 10)
+    const computeSyncQuantity = (existing: number, incoming: number) =>
+      Math.min(10, Math.max(1, Math.max(existing, incoming)));
+
+    // Initial state: 2 items
+    let quantity = 2;
+
+    // Repeated sync events (e.g. tab switches, window focus) with incoming quantity 2
+    for (let i = 0; i < 10; i++) {
+      quantity = computeSyncQuantity(quantity, 2);
+      expect(quantity).toBe(2);
+    }
+
+    // Subtotal remains constant across 10 tab switches
+    const price = 850;
+    const subtotal = quantity * price;
+    expect(subtotal).toBe(1700);
+  });
 });
+

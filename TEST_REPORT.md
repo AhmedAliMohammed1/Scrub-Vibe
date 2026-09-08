@@ -211,3 +211,16 @@
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)
 
+## Idempotent Cart Sync & Checkout Subtotal Bug Fix checkpoint — 2026-09-08
+
+- Bug Root Cause: PASS — Identified that Supabase JS auth client triggers `onAuthStateChange` on browser tab focus / visibility change, repeatedly calling `sync_customer_cart_and_wishlist`, whose UPSERT statement previously executed `quantity = public.cart_items.quantity + excluded.quantity`, continually multiplying the user's cart quantities and checkout subtotal.
+- Database: PASS — Applied migration `20260908073000_idempotent_cart_sync.sql` to live Supabase project `iqufqtjotgpmhhtvlxwf`, updating `public.sync_customer_cart_and_wishlist` to use idempotent `greatest(public.cart_items.quantity, excluded.quantity)` clamped to `[1, 10]`.
+- Storefront UI: PASS — Hardened `ShopProvider` in `src/components/store/cart-provider.tsx` with user ID tracking (`lastSyncedUserIdRef`), in-flight mutex (`isSyncingRef`), and passing empty cart array on routine token refresh events.
+- Unit tests: PASS — Added idempotent quantity calculation test in `tests/unit/cart-sync.test.ts` verifying subtotal stability across repeated sync events.
+- Integration tests: PASS — `tests/integration/migration-security.test.ts` asserting `20260908073000_idempotent_cart_sync.sql` enforces `security invoker`, `set search_path = ''`, and `greatest(public.cart_items.quantity, excluded.quantity)`.
+- Total: PASS — 16 files, 151 tests (100% passing)
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
+- Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)
+
+

@@ -82,6 +82,14 @@ const customerCartWishlist = readFileSync(
   "utf8",
 );
 
+const idempotentCartSync = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908073000_idempotent_cart_sync.sql",
+  ),
+  "utf8",
+);
+
 const discountCampaigns = readFileSync(
   resolve(
     process.cwd(),
@@ -320,6 +328,14 @@ describe("foundation migration security", () => {
     );
     expect(customerCartWishlist).toContain(
       "grant execute on function public.sync_customer_cart_and_wishlist",
+    );
+    expect(idempotentCartSync).toContain(
+      "create or replace function public.sync_customer_cart_and_wishlist",
+    );
+    expect(idempotentCartSync).toContain("security invoker");
+    expect(idempotentCartSync).toContain("set search_path = ''");
+    expect(idempotentCartSync).toContain(
+      "greatest(public.cart_items.quantity, excluded.quantity)",
     );
   });
 

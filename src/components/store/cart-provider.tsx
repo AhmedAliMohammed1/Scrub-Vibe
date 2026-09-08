@@ -67,6 +67,8 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
 
   const cartItemsRef = useRef(cartItems);
   const wishlistRef = useRef(wishlist);
+  const lastSyncedUserIdRef = useRef<string | null>(null);
+  const isSyncingRef = useRef<boolean>(false);
 
   useEffect(() => {
     cartItemsRef.current = cartItems;
@@ -99,31 +101,47 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     const supabase = createClient();
 
-    const doSync = async () => {
+    const doSync = async (userId: string, isInitialMerge: boolean) => {
+      if (isSyncingRef.current) return;
+      isSyncingRef.current = true;
       try {
-        const localCart = cartItemsRef.current.map((item) => ({
-          variantId: item.variantId,
-          quantity: item.quantity,
-        }));
-        const localWishlist = wishlistRef.current;
+        // Only ingest local cart lines on initial transition from guest -> authenticated
+        const localCart = isInitialMerge
+          ? cartItemsRef.current.map((item) => ({
+              variantId: item.variantId,
+              quantity: item.quantity,
+            }))
+          : [];
+        const localWishlist = isInitialMerge ? wishlistRef.current : [];
 
         const res = await syncCartAndWishlistAction(localCart, localWishlist);
         if (res && active) {
+          lastSyncedUserIdRef.current = userId;
           setCartItems(res.cart);
           setWishlist(res.wishlist);
         }
       } catch (err) {
         console.error("[cart/sync] Synchronization failed", err);
+      } finally {
+        isSyncingRef.current = false;
+      }
+    };
+
+    const handleAuthUser = (userId: string) => {
+      setIsAuthenticated(true);
+      const isNewUser = lastSyncedUserIdRef.current !== userId;
+      if (isNewUser) {
+        doSync(userId, true);
       }
     };
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!active) return;
       if (session?.user) {
-        setIsAuthenticated(true);
-        doSync();
+        handleAuthUser(session.user.id);
       } else {
         setIsAuthenticated(false);
+        lastSyncedUserIdRef.current = null;
       }
     });
 
@@ -135,10 +153,10 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
         session?.user
       ) {
-        setIsAuthenticated(true);
-        doSync();
+        handleAuthUser(session.user.id);
       } else if (event === "SIGNED_OUT") {
         setIsAuthenticated(false);
+        lastSyncedUserIdRef.current = null;
         setCartItems([]);
         setWishlist([]);
         try {
