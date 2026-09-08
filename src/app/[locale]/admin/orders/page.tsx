@@ -105,7 +105,21 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="orderId" value={order.id} />
             <input type="hidden" name="currentFilter" value={query.status ?? ""} />
-            <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "حالة الطلب" : "Order status"}<select name="status" defaultValue={order.status} className="h-10 border bg-white px-2 text-xs">{statuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+            {["cancelled", "returned"].includes(order.status) ? (
+              <div className="grid gap-1">
+                <span className="text-[10px] font-bold uppercase">{ar ? "حالة الطلب" : "Order status"}</span>
+                <input type="hidden" name="status" value={order.status} />
+                <div className="flex h-10 items-center justify-between border border-neutral-300 bg-neutral-200/60 px-2 text-xs font-semibold text-neutral-700">
+                  <span>{order.status}</span>
+                  <span className="text-[10px] font-bold uppercase text-amber-800">{ar ? "حالة نهائية (مغلق)" : "Terminal (Locked)"}</span>
+                </div>
+                <span className="text-[10px] leading-3 text-neutral-500">
+                  {ar ? "تم تحرير المخزون تلقائياً. لا يمكن إعادة فتح الطلب الملغى." : "Stock was released to inventory. This order cannot be reopened."}
+                </span>
+              </div>
+            ) : (
+              <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "حالة الطلب" : "Order status"}<select name="status" defaultValue={order.status} className="h-10 border bg-white px-2 text-xs">{statuses.map((status) => <option key={status}>{status}</option>)}</select></label>
+            )}
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "حالة الدفع" : "Payment status"}<select name="paymentStatus" defaultValue={order.payment_status} className="h-10 border bg-white px-2 text-xs">{paymentStatuses.map((status) => <option key={status}>{status}</option>)}</select></label>
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "قرار الإيصال" : "Proof decision"}<select name="proofStatus" defaultValue="" className="h-10 border bg-white px-2 text-xs"><option value="">{ar ? "بدون تغيير" : "No change"}</option><option value="approved">{ar ? "موافقة — تأكيد الطلب تلقائياً" : "Approve — confirm order automatically"}</option><option value="rejected">{ar ? "رفض — إبقاء الطلب للمراجعة" : "Reject — keep order in review"}</option></select><span className="normal-case leading-4 text-neutral-500">{ar ? "قرار الإيصال يحدد حالة الدفع والطلب تلقائياً لمنع التعارض." : "A proof decision sets the correct payment and order statuses automatically."}</span></label>
             <label className="grid gap-1 text-[10px] font-bold uppercase">{ar ? "شركة الشحن" : "Courier"}<input name="courier" defaultValue={order.courier ?? ""} className="h-10 border bg-white px-2 text-xs" /></label>

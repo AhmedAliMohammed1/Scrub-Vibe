@@ -58,6 +58,11 @@ function formatOrderErrorMessage(raw: string, locale: Locale): string {
       ? "المخزون المتوفر غير كافٍ لإتمام التوصيل."
       : "Insufficient stock available to deliver this order.";
   }
+  if (raw.includes("TERMINAL_ORDER")) {
+    return isAr
+      ? "لا يمكن تعديل حالة الطلبات الملغاة أو المرتجعة لأنها تعتبر طلبات نهائية تم تحرير مخزونها."
+      : "Cancelled and returned orders are terminal states and cannot be reopened.";
+  }
   return raw;
 }
 
