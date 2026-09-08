@@ -1,10 +1,11 @@
 import type { Metadata, Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Banknote, CircleDollarSign, Clock3, PackageCheck, Truck } from "lucide-react";
+import { Banknote, CircleDollarSign, Clock3, PackageCheck, ShoppingCart, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { updateOrderAction } from "@/features/orders/admin-actions";
 import { getPaymobConfigurationStatus } from "@/features/checkout/paymob";
+import { getRecoveryStats } from "@/features/cart-recovery/repository";
 import type { TrackedOrder } from "@/features/orders/types";
 import { isLocale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
@@ -41,13 +42,27 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
     payment_proofs(id, storage_path, amount_minor, status, review_note, created_at)
   `).order("created_at", { ascending: false }).limit(100);
   if (query.status && statuses.includes(query.status as TrackedOrder["status"])) request = request.eq("status", query.status as TrackedOrder["status"]);
-  const [ordersResult, webhookResult] = await Promise.all([
+  const [ordersResult, webhookResult, recoveryStats] = await Promise.all([
     request,
     admin
       .from("payment_webhook_events")
       .select("id, provider_event_id, transaction_id, outcome, error_code, received_at")
       .order("received_at", { ascending: false })
       .limit(10),
+    getRecoveryStats().catch((err) => {
+      console.error("[admin/orders] Failed to load recovery stats:", err);
+      return {
+        totalSent: 0,
+        totalRecovered: 0,
+        recoveryRatePercent: 0,
+        recoveredRevenueMinor: 0,
+        byStage: {
+          firstReminder: { sent: 0, recovered: 0 },
+          secondReminder: { sent: 0, recovered: 0 },
+          discountOffer: { sent: 0, recovered: 0 },
+        },
+      };
+    }),
   ]);
   const { data, error } = ordersResult;
   if (error) throw new Error("Orders could not be loaded.");
@@ -84,6 +99,41 @@ export default async function AdminOrdersPage({ params, searchParams }: { params
         <Metric icon={Clock3} label={ar ? "إيصالات للمراجعة" : "Proofs to review"} value={awaitingReview.toString()} alert={awaitingReview > 0} />
         <Metric icon={PackageCheck} label={ar ? "قائمة التجهيز" : "Fulfilment queue"} value={fulfilmentQueue.toString()} />
       </section>
+
+      <section className="mt-5 border border-[#0e7468]/30 bg-white p-5 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-4">
+          <div className="flex items-center gap-2">
+            <ShoppingCart size={20} className="text-[#0e7468]" />
+            <h2 className="font-serif text-2xl text-[#062f2b]">
+              {ar ? "استعادة السلات المتروكة" : "Abandoned cart recovery"}
+            </h2>
+          </div>
+          <span className="bg-[#dce9e5] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#073b36]">
+            {ar ? `نسبة الاستعادة: ${recoveryStats.recoveryRatePercent}٪` : `Recovery rate: ${recoveryStats.recoveryRatePercent}%`}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="border border-black/5 bg-[#f4f7f4] p-4">
+            <p className="text-[10px] font-bold uppercase text-neutral-500">{ar ? "تذكيرات مرسلة" : "Reminders sent"}</p>
+            <strong className="mt-1 block font-serif text-2xl text-[#062f2b]">{recoveryStats.totalSent}</strong>
+          </div>
+          <div className="border border-black/5 bg-[#f4f7f4] p-4">
+            <p className="text-[10px] font-bold uppercase text-neutral-500">{ar ? "سلات مستعادة" : "Carts recovered"}</p>
+            <strong className="mt-1 block font-serif text-2xl text-[#0e7468]">{recoveryStats.totalRecovered}</strong>
+          </div>
+          <div className="border border-black/5 bg-[#f4f7f4] p-4">
+            <p className="text-[10px] font-bold uppercase text-neutral-500">{ar ? "إيراد مسترد" : "Recovered revenue"}</p>
+            <strong className="mt-1 block font-serif text-2xl text-[#062f2b]">{formatMoney(recoveryStats.recoveredRevenueMinor, locale)}</strong>
+          </div>
+          <div className="border border-black/5 bg-[#f4f7f4] p-4">
+            <p className="text-[10px] font-bold uppercase text-neutral-500">{ar ? "المراحل" : "Stage breakdown"}</p>
+            <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+              1st (2h): {recoveryStats.byStage.firstReminder.sent} · 2nd (24h): {recoveryStats.byStage.secondReminder.sent} · 3rd (48h): {recoveryStats.byStage.discountOffer.sent}
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className={`mt-5 border p-5 ${paymobStatus.configured ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"}`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

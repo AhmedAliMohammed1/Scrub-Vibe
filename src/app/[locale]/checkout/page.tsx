@@ -7,9 +7,21 @@ import { getCustomerAddresses } from "@/features/addresses/repository";
 import { isLocale } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function CheckoutPage({ params }: { params: Promise<{ locale: string }> }) {
-  const [{ locale }, supabase] = await Promise.all([params, createClient()]);
+export default async function CheckoutPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ discount?: string }>;
+}) {
+  const [{ locale }, resolvedSearchParams, supabase] = await Promise.all([
+    params,
+    searchParams ? searchParams : Promise.resolve({ discount: undefined }),
+    createClient(),
+  ]);
   if (!isLocale(locale)) notFound();
+
+  const initialDiscountCode = resolvedSearchParams?.discount?.trim() ?? null;
 
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub ?? null;
@@ -49,6 +61,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
       savedAddresses={savedAddresses}
       isAuthenticated={Boolean(userId)}
       customerProfile={profileResult.data ?? null}
+      initialDiscountCode={initialDiscountCode}
       payments={{
         paymob: hasPaymobConfiguration(),
         vodafoneNumber: process.env.NEXT_PUBLIC_VODAFONE_CASH_NUMBER ?? null,

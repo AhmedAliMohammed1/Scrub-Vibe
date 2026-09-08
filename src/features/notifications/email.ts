@@ -78,7 +78,12 @@ export function formatPriceMajor(minor: number): string {
   return `EGP ${(minor / 100).toFixed(2)}`;
 }
 
-function baseLayout(title: string, content: string, isRtl = false): string {
+export function baseLayout(
+  title: string,
+  content: string,
+  isRtl = false,
+  footerExtra?: string,
+): string {
   const dir = isRtl ? "rtl" : "ltr";
   const align = isRtl ? "right" : "left";
   return `<!DOCTYPE html>
@@ -111,6 +116,7 @@ function baseLayout(title: string, content: string, isRtl = false): string {
             <p style="margin:0;font-size:11px;color:#888;text-align:center;">
               ${isRtl ? "© ٢٠٢٦ Scrub Vibe. جميع الحقوق محفوظة." : "© 2026 Scrub Vibe. All rights reserved."}
             </p>
+            ${footerExtra ? `<div style="margin-top:8px;text-align:center;">${footerExtra}</div>` : ""}
           </td>
         </tr>
       </table>

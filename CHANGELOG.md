@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Implemented Automated Abandoned-Cart Recovery Sequence from A to Z:
+  - Created `public.abandoned_cart_notifications` PostgreSQL table with escalation stages (`first_reminder`, `second_reminder`, `discount_offer`), customer cart snapshots, recovery discount tracking, and conversion attribution (`recovered_at`, `recovered_order_id`).
+  - Added `cart_recovery_opt_out` boolean flag to `public.profiles` allowing shoppers to opt out of reminders.
+  - Implemented high-performance index-backed PostgreSQL RPC `find_abandoned_cart_candidates` selecting eligible shoppers with unpurchased carts meeting delay thresholds (2h, 24h, 48h) and progression constraints with service-role security.
+  - Built 3 responsive, bilingual HTML recovery email templates (`renderFirstReminder`, `renderSecondReminder`, `renderDiscountOffer`) with cart items table, pricing, CTAs, and compliance unsubscribe footers.
+  - Built recovery engine with auto-generated time-limited single-use discount codes (`RECOVER-XXXX`) connected to the marketing promotions subsystem (`utm_campaign = 'cart_recovery'`).
+  - Added Vercel Cron endpoint (`/api/cron/abandoned-cart`) scheduled every 30 minutes in `vercel.json` with `CRON_SECRET` authorization.
+  - Added signed unsubscribe endpoint (`/api/cart/unsubscribe`) with HMAC verification and bilingual confirmation page.
+  - Integrated checkout with auto-application of recovery discount codes from email URL search parameters.
+  - Added non-blocking cart recovery attribution on completed checkouts (`markCartRecovered`).
+  - Added live "Abandoned cart recovery" metrics panel to operations dashboard (`/[locale]/admin/orders`) displaying reminders sent, recovered carts, recovery rate percentage, and attributed revenue.
+  - Added 19 comprehensive unit tests in `tests/unit/cart-recovery.test.ts` and migration security assertions in `tests/integration/migration-security.test.ts` (196 total passing tests).
+  - Applied migrations `20260908200000_abandoned_cart_recovery.sql` and `20260908203000_cart_recovery_functions.sql` to live hosted Supabase project `iqufqtjotgpmhhtvlxwf`.
 - Implemented Storefront Merchandising CMS & Dynamic Banners from A to Z:
   - Created `public.cms_banners` PostgreSQL table with bilingual English/Arabic fields, scheduling windows (`starts_at`, `ends_at`), background/text color customization, overlay opacity, sort positioning, and owner-isolated RLS.
   - Created public `banners` Supabase Storage bucket with administrative upload/delete policies.

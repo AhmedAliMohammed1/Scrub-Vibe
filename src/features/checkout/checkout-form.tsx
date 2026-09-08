@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { BadgePercent, CheckCircle2, CreditCard, Loader2, LockKeyhole, Package, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useShop } from "@/components/store/cart-provider";
 import type { Locale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
@@ -29,6 +29,7 @@ type Props = {
   savedAddresses?: CustomerAddress[];
   isAuthenticated?: boolean;
   customerProfile?: { full_name: string | null; email: string | null } | null;
+  initialDiscountCode?: string | null;
   payments: {
     paymob: boolean;
     vodafoneNumber: string | null;
@@ -50,6 +51,7 @@ export function CheckoutForm({
   savedAddresses = [],
   isAuthenticated = false,
   customerProfile,
+  initialDiscountCode,
 }: Props) {
   const ar = locale === "ar";
   const router = useRouter();
@@ -117,11 +119,56 @@ export function CheckoutForm({
   };
 
   const [busy, setBusy] = useState<"otp" | "verify" | "order" | null>(null);
-  const [discountInput, setDiscountInput] = useState("");
+  const [discountInput, setDiscountInput] = useState(initialDiscountCode ?? "");
   const [discountResult, setDiscountResult] = useState<{ preview: DiscountPreview; fingerprint: string } | null>(null);
   const [discountBusy, setDiscountBusy] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [error, setError] = useState("");
+
+  const hasAutoAppliedDiscountRef = useRef(false);
+
+  useEffect(() => {
+    if (!initialDiscountCode || hasAutoAppliedDiscountRef.current || !cartItems.length) {
+      return;
+    }
+    const code = normalizeDiscountCode(initialDiscountCode);
+    if (!code) return;
+
+    hasAutoAppliedDiscountRef.current = true;
+    const controller = new AbortController();
+
+    async function autoApply() {
+      try {
+        const response = await fetch("/api/checkout/discounts/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            code,
+            phone,
+            paymentMethod,
+            items: cartItems.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
+          }),
+        });
+        const result = (await response.json()) as DiscountPreview & { error?: string };
+        if (result && !result.error && result.code) {
+          setDiscountInput(result.code);
+          setDiscountResult({
+            preview: result,
+            fingerprint: `${cartItems.map((line) => `${line.variantId}:${line.quantity}`).join("|")}:${paymentMethod}:${phone.replace(/[^\d+]/g, "")}`,
+          });
+        }
+      } catch {
+        // Request aborted or failed
+      }
+    }
+
+    void autoApply();
+
+    return () => {
+      controller.abort();
+    };
+  }, [initialDiscountCode, cartItems, paymentMethod, phone]);
   const subtotal = cartItems.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const discountFingerprint = `${cartItems.map((line) => `${line.variantId}:${line.quantity}`).join("|")}:${paymentMethod}:${phone.replace(/[^\d+]/g, "")}`;
   const appliedDiscount = discountResult?.fingerprint === discountFingerprint

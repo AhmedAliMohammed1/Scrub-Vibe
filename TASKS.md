@@ -48,6 +48,6 @@
 - [ ] **ON HOLD** Add Paymob merchant credentials, register/test the webhook, run successful/declined sandbox payments and validate duplicate/delayed callbacks. Follow `PAYMOB_ACTIVATION.md`; merchant keys required.
 - [ ] **TODO** Configure and validate production Twilio credentials if phone OTP should be enabled.
 - [ ] **TODO** Implement WhatsApp notifications via Twilio/WhatsApp Business API.
-- [ ] **TODO** Implement automated abandoned-cart recovery emails.
+- [x] **DONE** Implement Automated Abandoned-Cart Recovery Sequence with database-backed `abandoned_cart_notifications` tracking, `cart_recovery_opt_out` profile flag, index-backed RPC candidate selection, 3-stage bilingual email sequence (2h, 24h, 48h), single-use recovery discount codes (`RECOVER-XXXX`), 30-minute Vercel Cron, HMAC-signed 1-click unsubscribe, checkout URL prefill, non-blocking order conversion attribution, and admin operations dashboard metrics. Tests: PASS (196 total + live Supabase verification).
 - [ ] **TODO** Add Resend sender domain verification and update `RESEND_FROM_EMAIL` in Vercel env vars.
 - [ ] **TODO** Add production observability/monitoring (Sentry DSN, Upstash Redis rate limiting).

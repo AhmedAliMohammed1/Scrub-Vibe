@@ -259,5 +259,24 @@
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`).
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`).
 
+## Automated Abandoned-Cart Recovery Sequence Checkpoint — 2026-09-08
+
+- Database & Migrations: PASS — `20260908200000_abandoned_cart_recovery.sql` and `20260908203000_cart_recovery_functions.sql` applied live to hosted Supabase project `iqufqtjotgpmhhtvlxwf`. `abandoned_cart_notifications` created with RLS and least-privilege staff grants; `profiles.cart_recovery_opt_out` created; `find_abandoned_cart_candidates` PostgreSQL RPC created with security definer and service-role execution grant.
+- Types & Schema: PASS — Generated TypeScript types via `npx supabase gen types` cleanly synchronized without BOM.
+- Escalation Sequence: PASS — 3-stage timed recovery orchestration: Stage 1 First Reminder (2h), Stage 2 Second Reminder / Urgency (24h), Stage 3 Exclusive Discount Offer (48h).
+- Recovery Codes: PASS — Automated single-use promotional discount codes (`RECOVER-XXXX`) generated and registered under `cart_recovery` marketing campaign.
+- Email Templates: PASS — Bilingual responsive HTML templates (`renderFirstReminder`, `renderSecondReminder`, `renderDiscountOffer`) with Scrub Vibe styling, items breakdown, pricing, CTA buttons, and CAN-SPAM compliant unsubscribe footers.
+- Vercel Cron: PASS — Scheduled every 30 minutes in `vercel.json` targeting `/api/cron/abandoned-cart` with `CRON_SECRET` authorization.
+- Unsubscribe & Privacy: PASS — Cryptographically signed HMAC tokens on `/api/cart/unsubscribe` with timing-safe verification, profile opt-out persistence, and branded confirmation page.
+- Checkout Prefill: PASS — URL search parameter `?discount=CODE` auto-populates and validates discount on checkout mount.
+- Order Attribution: PASS — Authenticated orders automatically call `markCartRecovered`, linking conversions to notifications and calculating recovered revenue.
+- Admin Operations Dashboard: PASS — `/[locale]/admin/orders` renders live Cart Recovery panel displaying total reminders sent, recovered carts, recovery conversion rate percentage, and attributed revenue.
+- Unit & Integration Tests: PASS — 19 tests in `tests/unit/cart-recovery.test.ts` covering configuration, types, security tokens, bilingual email templates, and calculation edge cases; `tests/integration/migration-security.test.ts` verifying RLS and RPC grants.
+- Total Tests: PASS — 19 files, 196 tests (100% passing).
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`).
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`).
+- Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`).
+
+
 
 

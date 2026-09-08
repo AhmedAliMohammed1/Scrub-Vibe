@@ -13,6 +13,7 @@ import {
   sendStaffEmail,
   type OrderEmailData,
 } from "@/features/notifications/email";
+import { markCartRecovered } from "@/features/cart-recovery/repository";
 
 export async function POST(request: Request) {
   const formData = await request.formData().catch(() => null);
@@ -152,6 +153,13 @@ export async function POST(request: Request) {
   const order = data as unknown as {
     id: string; order_number: string; subtotal_minor: number; shipping_minor: number; discount_minor: number; discount_code?: string; total_minor: number;
   };
+
+  if (userId) {
+    markCartRecovered(userId, order.id).catch((err) => {
+      console.error("[checkout/orders] Failed to mark cart recovered:", err);
+    });
+  }
+
   let paymentUrl: string | null = null;
   let paymentWarning: string | null = null;
   if (checkout.paymentMethod === "paymob") {

@@ -39,6 +39,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_cart_notifications: {
+        Row: {
+          cart_item_count: number
+          cart_snapshot: Json
+          cart_value_minor: number
+          created_at: string
+          email_sent_to: string
+          id: number
+          recovered_at: string | null
+          recovered_order_id: string | null
+          recovery_discount_code: string | null
+          stage: string
+          user_id: string
+        }
+        Insert: {
+          cart_item_count: number
+          cart_snapshot?: Json
+          cart_value_minor: number
+          created_at?: string
+          email_sent_to: string
+          id?: never
+          recovered_at?: string | null
+          recovered_order_id?: string | null
+          recovery_discount_code?: string | null
+          stage: string
+          user_id: string
+        }
+        Update: {
+          cart_item_count?: number
+          cart_snapshot?: Json
+          cart_value_minor?: number
+          created_at?: string
+          email_sent_to?: string
+          id?: never
+          recovered_at?: string | null
+          recovered_order_id?: string | null
+          recovery_discount_code?: string | null
+          stage?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_cart_notifications_recovered_order_id_fkey"
+            columns: ["recovered_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           anonymous_id: string
@@ -1443,6 +1493,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cart_recovery_opt_out: boolean
           created_at: string
           email: string | null
           full_name: string | null
@@ -1453,6 +1504,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cart_recovery_opt_out?: boolean
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1463,6 +1515,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cart_recovery_opt_out?: boolean
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1813,6 +1866,10 @@ export type Database = {
           p_user_id: string
           p_verification_token_hash: string
         }
+        Returns: Json
+      }
+      find_abandoned_cart_candidates: {
+        Args: { p_delay_hours: number; p_limit?: number; p_stage: string }
         Returns: Json
       }
       preview_discount_code: {

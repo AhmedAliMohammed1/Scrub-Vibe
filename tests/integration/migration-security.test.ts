@@ -122,6 +122,22 @@ const cmsBanners = readFileSync(
   "utf8",
 );
 
+const abandonedCartRecovery = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908200000_abandoned_cart_recovery.sql",
+  ),
+  "utf8",
+);
+
+const abandonedCartFunctions = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908203000_cart_recovery_functions.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -444,5 +460,41 @@ describe("foundation migration security", () => {
     expect(cmsBanners).toContain("create policy banners_public_read");
     expect(cmsBanners).toContain("create policy banners_admin_insert");
     expect(cmsBanners).not.toMatch(/auth\.role\s*\(/);
+  });
+
+  it("secures abandoned cart recovery table and RPC functions", () => {
+    expect(abandonedCartRecovery).toContain("alter table public.profiles");
+    expect(abandonedCartRecovery).toContain(
+      "add column if not exists cart_recovery_opt_out boolean not null default false;",
+    );
+    expect(abandonedCartRecovery).toContain(
+      "alter table public.abandoned_cart_notifications enable row level security;",
+    );
+    expect(abandonedCartRecovery).toContain(
+      "revoke all on public.abandoned_cart_notifications from anon, authenticated;",
+    );
+    expect(abandonedCartRecovery).toContain(
+      "grant select on public.abandoned_cart_notifications to authenticated;",
+    );
+    expect(abandonedCartRecovery).toContain(
+      "create policy abandoned_cart_notifications_staff_select",
+    );
+    expect(abandonedCartRecovery).toContain(
+      "private.has_any_role(array['analyst','support','admin','super_admin']::public.app_role[])",
+    );
+    expect(abandonedCartFunctions).toContain(
+      "create or replace function public.find_abandoned_cart_candidates",
+    );
+    expect(abandonedCartFunctions).toMatch(
+      /create or replace function public\.find_abandoned_cart_candidates[\s\S]*security definer[\s\S]*set search_path = ''/,
+    );
+    expect(abandonedCartFunctions).toContain(
+      "grant execute on function public.find_abandoned_cart_candidates(text, integer, integer) to service_role;",
+    );
+    expect(abandonedCartFunctions).toContain(
+      "revoke execute on function public.find_abandoned_cart_candidates(text, integer, integer) from public, anon, authenticated;",
+    );
+    expect(abandonedCartRecovery).not.toMatch(/auth\.role\s*\(/);
+    expect(abandonedCartFunctions).not.toMatch(/auth\.role\s*\(/);
   });
 });
