@@ -69,7 +69,7 @@ export default async function ShopPage({
       <div className="mt-3 flex items-end justify-between border-b border-black/15 pb-8">
         <div>
           <h1 className="font-serif text-5xl md:text-7xl">{heading}</h1>
-          <p className="mt-4 text-xs text-neutral-500">
+          <p className="mt-4 text-xs text-neutral-600">
             {products.length} {products.length === 1 ? t.piece : t.pieces}
           </p>
         </div>

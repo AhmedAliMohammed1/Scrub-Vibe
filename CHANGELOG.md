@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fixed Arabic document semantics so `/ar` now renders the root `<html>` element with `lang="ar"` and `dir="rtl"` while English remains `lang="en"` and `dir="ltr"`.
+- Fixed production metadata URLs by using Vercel's production deployment hostname when `NEXT_PUBLIC_APP_URL` is absent, preventing `robots.txt`, `sitemap.xml`, and metadata from advertising localhost.
+- Fixed the mobile header wordmark/action collision at 390px, including correct physical centering in RTL layouts and localized Arabic accessibility labels.
+- Raised catalogue, product-option, and size-guide secondary-text contrast above the WCAG 2 AA 4.5:1 threshold.
 - Fixed checkout subtotal continuously increasing / multiplying when switching browser tabs by making `public.sync_customer_cart_and_wishlist` database function strictly idempotent using `greatest(public.cart_items.quantity, excluded.quantity)` and clamping between 1 and 10.
 - Hardened client-side `ShopProvider` in `src/components/store/cart-provider.tsx` with user ID tracking (`lastSyncedUserIdRef`) and concurrency mutex (`isSyncingRef`), preventing duplicate syncs on tab focus / `visibilitychange` events and passing empty arrays for routine token refresh events.
 - Added automated idempotency unit tests in `tests/unit/cart-sync.test.ts` and database migration security assertions in `tests/integration/migration-security.test.ts`.

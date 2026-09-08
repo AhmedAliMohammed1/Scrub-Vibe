@@ -77,7 +77,7 @@ export default async function ProductPage({ params }: Props) {
             <strong>{formatMoney(p.price, locale)}</strong>
             {p.compareAt && (
               <>
-                <span className="text-neutral-500 line-through">
+                <span className="text-neutral-600 line-through">
                   {formatMoney(p.compareAt, locale)}
                 </span>
                 <span className="text-[#a6432b]">-{sale}%</span>
@@ -103,7 +103,10 @@ export default async function ProductPage({ params }: Props) {
               : [
                   [Truck, "Delivery across Egypt"],
                   [RotateCcw, "14-day returns"],
-                  [ShieldCheck, "Secure payment or cash on delivery with deposit"],
+                  [
+                    ShieldCheck,
+                    "Secure payment or cash on delivery with deposit",
+                  ],
                 ]
             ).map(([Icon, text]) => {
               const C = Icon as typeof Truck;

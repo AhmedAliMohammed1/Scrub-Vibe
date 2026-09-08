@@ -1,12 +1,19 @@
 import type { Locale } from "@/lib/i18n";
 
-export function getSiteOrigin() {
+type SiteEnvironment = Record<string, string | undefined> & {
+  NEXT_PUBLIC_APP_URL?: string;
+  NEXT_PUBLIC_SITE_URL?: string;
+  VERCEL_PROJECT_PRODUCTION_URL?: string;
+  VERCEL_URL?: string;
+};
+
+export function getSiteOrigin(environment: SiteEnvironment = process.env) {
   const configured =
-    process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+    environment.NEXT_PUBLIC_APP_URL ?? environment.NEXT_PUBLIC_SITE_URL;
   if (configured) return configured.replace(/\/$/, "");
 
   const vercelHost =
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+    environment.VERCEL_PROJECT_PRODUCTION_URL ?? environment.VERCEL_URL;
   if (vercelHost) return `https://${vercelHost}`;
 
   return "http://localhost:3000";

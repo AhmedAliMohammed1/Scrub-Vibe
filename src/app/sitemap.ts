@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { demoProducts } from "@/features/catalog/demo-catalog";
+import { getSiteOrigin } from "@/features/auth/site-url";
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const base = getSiteOrigin();
   return ["en", "ar"].flatMap((locale) => [
     {
       url: `${base}/${locale}`,

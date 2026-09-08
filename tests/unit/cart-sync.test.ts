@@ -13,7 +13,10 @@ describe("cart-sync unit tests", () => {
     variantId: "101",
     slug: "classic-scrub-burgundy",
     title: { en: "Classic Scrub - Burgundy", ar: "سكراب كلاسيكي - بورجوندي" },
-    image: { src: "/images/scrub-vibe/female-design-2.webp", alt: { en: "Scrub", ar: "سكراب" } },
+    image: {
+      src: "/images/scrub-vibe/female-design-2.webp",
+      alt: { en: "Scrub", ar: "سكراب" },
+    },
     price: 850,
     codDeposit: 150,
     colourCode: "burgundy",
@@ -30,7 +33,10 @@ describe("cart-sync unit tests", () => {
     variantId: "102",
     slug: "classic-scrub-navy",
     title: { en: "Classic Scrub - Navy", ar: "سكراب كلاسيكي - كحلي" },
-    image: { src: "/images/scrub-vibe/male-design-1.jpg", alt: { en: "Navy Scrub", ar: "سكراب كحلي" } },
+    image: {
+      src: "/images/scrub-vibe/male-design-1.jpg",
+      alt: { en: "Navy Scrub", ar: "سكراب كحلي" },
+    },
     price: 850,
     codDeposit: 150,
     colourCode: "navy",
@@ -130,4 +136,3 @@ describe("cart-sync unit tests", () => {
     expect(subtotal).toBe(1700);
   });
 });
-

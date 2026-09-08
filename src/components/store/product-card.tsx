@@ -87,7 +87,7 @@ export function ProductCard({
         <div className="flex gap-2 text-xs">
           <span>{formatMoney(product.price, locale)}</span>
           {product.compareAt && (
-            <span className="text-neutral-500 line-through">
+            <span className="text-neutral-600 line-through">
               {formatMoney(product.compareAt, locale)}
             </span>
           )}

@@ -3,7 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { X, Ruler, Sparkles, HelpCircle, Check, Info } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
-import type { SizeCategory, SizeChartEntry, MeasurementUnit } from "@/features/catalog/size-guide-types";
+import type {
+  SizeCategory,
+  SizeChartEntry,
+  MeasurementUnit,
+} from "@/features/catalog/size-guide-types";
 import {
   cmToInches,
   calculateRecommendedSize,
@@ -35,7 +39,9 @@ export function SizeGuideDialog({
   onSelectSize,
 }: Props) {
   const ar = locale === "ar";
-  const [activeTab, setActiveTab] = useState<"chart" | "calculator" | "howToMeasure">("chart");
+  const [activeTab, setActiveTab] = useState<
+    "chart" | "calculator" | "howToMeasure"
+  >("chart");
   const [unit, setUnit] = useState<MeasurementUnit>("cm");
 
   // Calculator state
@@ -82,7 +88,15 @@ export function SizeGuideDialog({
       availableSizes,
       entries,
     });
-  }, [category, unit, chestInput, waistInput, hipInput, availableSizes, entries]);
+  }, [
+    category,
+    unit,
+    chestInput,
+    waistInput,
+    hipInput,
+    availableSizes,
+    entries,
+  ]);
 
   if (!isOpen) return null;
 
@@ -114,7 +128,10 @@ export function SizeGuideDialog({
                 </span>
               )}
             </div>
-            <h2 id="size-guide-title" className="mt-1 font-serif text-2xl md:text-3xl">
+            <h2
+              id="size-guide-title"
+              className="mt-1 font-serif text-2xl md:text-3xl"
+            >
               {ar ? "دليل المقاسات ومساعد القياس" : "Size Guide & Fit Advisor"}
             </h2>
             <p className="text-xs text-white/70">{productTitle}</p>
@@ -141,7 +158,7 @@ export function SizeGuideDialog({
               className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold uppercase tracking-[.1em] transition ${
                 activeTab === "chart"
                   ? "border-b-2 border-[#0e7468] bg-white text-[#062f2b] shadow-sm"
-                  : "text-neutral-500 hover:text-black"
+                  : "text-neutral-600 hover:text-black"
               }`}
             >
               <Ruler size={14} />
@@ -155,7 +172,7 @@ export function SizeGuideDialog({
               className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold uppercase tracking-[.1em] transition ${
                 activeTab === "calculator"
                   ? "border-b-2 border-[#0e7468] bg-white text-[#062f2b] shadow-sm"
-                  : "text-neutral-500 hover:text-black"
+                  : "text-neutral-600 hover:text-black"
               }`}
             >
               <Sparkles size={14} />
@@ -169,7 +186,7 @@ export function SizeGuideDialog({
               className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold uppercase tracking-[.1em] transition ${
                 activeTab === "howToMeasure"
                   ? "border-b-2 border-[#0e7468] bg-white text-[#062f2b] shadow-sm"
-                  : "text-neutral-500 hover:text-black"
+                  : "text-neutral-600 hover:text-black"
               }`}
             >
               <HelpCircle size={14} />
@@ -242,7 +259,8 @@ export function SizeGuideDialog({
                     {entries.map((e) => {
                       const isSelected = currentSize === e.size;
                       const isAvailable =
-                        !availableSizes.length || availableSizes.includes(e.size);
+                        !availableSizes.length ||
+                        availableSizes.includes(e.size);
 
                       const formatVal = (cmVal: number) =>
                         unit === "cm" ? cmVal : cmToInches(cmVal);
@@ -251,7 +269,9 @@ export function SizeGuideDialog({
                         <tr
                           key={e.size}
                           className={`transition hover:bg-[#f9faf9] ${
-                            isSelected ? "bg-[#eaf4f1] font-semibold text-[#062f2b]" : ""
+                            isSelected
+                              ? "bg-[#eaf4f1] font-semibold text-[#062f2b]"
+                              : ""
                           }`}
                         >
                           <td className="px-4 py-3">
@@ -272,10 +292,12 @@ export function SizeGuideDialog({
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            {formatVal(e.chestMinCm)} – {formatVal(e.chestMaxCm)}
+                            {formatVal(e.chestMinCm)} –{" "}
+                            {formatVal(e.chestMaxCm)}
                           </td>
                           <td className="px-4 py-3">
-                            {formatVal(e.waistMinCm)} – {formatVal(e.waistMaxCm)}
+                            {formatVal(e.waistMinCm)} –{" "}
+                            {formatVal(e.waistMaxCm)}
                           </td>
                           <td className="px-4 py-3">
                             {formatVal(e.hipMinCm)} – {formatVal(e.hipMaxCm)}
@@ -284,7 +306,9 @@ export function SizeGuideDialog({
                             {e.inseamCm ? formatVal(e.inseamCm) : "—"}
                           </td>
                           <td className="px-4 py-3 text-neutral-600">
-                            {e.garmentLengthCm ? formatVal(e.garmentLengthCm) : "—"}
+                            {e.garmentLengthCm
+                              ? formatVal(e.garmentLengthCm)
+                              : "—"}
                           </td>
                           {onSelectSize && (
                             <td className="px-4 py-3 text-center">
@@ -340,7 +364,7 @@ export function SizeGuideDialog({
                   <h3 className="font-serif text-xl text-[#062f2b]">
                     {ar ? "أدخل قياسات جسمك" : "Enter your body measurements"}
                   </h3>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-neutral-600">
                     {ar
                       ? `أدخل قياساً واحداً أو أكثر بوحدة (${unit === "cm" ? "السنتيمتر" : "البوصة"}) لحساب المقاس الأمثل.`
                       : `Enter one or more measurements in ${unit === "cm" ? "centimeters" : "inches"} to find your perfect fit.`}
@@ -413,8 +437,10 @@ export function SizeGuideDialog({
                 </div>
 
                 {/* Quick Examples */}
-                <div className="flex flex-wrap items-center gap-2 pt-2 text-[10px] text-neutral-500">
-                  <span>{ar ? "أمثلة سريعة للتجربة:" : "Quick test presets:"}</span>
+                <div className="flex flex-wrap items-center gap-2 pt-2 text-[10px] text-neutral-600">
+                  <span>
+                    {ar ? "أمثلة سريعة للتجربة:" : "Quick test presets:"}
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
@@ -477,7 +503,7 @@ export function SizeGuideDialog({
                         {recommendation.recommendedSize}
                       </span>
                       {recommendation.secondarySize && (
-                        <span className="text-xs text-neutral-500">
+                        <span className="text-xs text-neutral-600">
                           {ar ? "أو مقاس" : "or size"}{" "}
                           <strong className="text-black">
                             {recommendation.secondarySize}
@@ -495,13 +521,17 @@ export function SizeGuideDialog({
                       {recommendation.fitBreakdown.chestFit && (
                         <span className="rounded border border-black/10 bg-white px-2 py-1 text-[10px]">
                           {ar ? "الصدر: " : "Chest: "}
-                          <strong>{recommendation.fitBreakdown.chestFit}</strong>
+                          <strong>
+                            {recommendation.fitBreakdown.chestFit}
+                          </strong>
                         </span>
                       )}
                       {recommendation.fitBreakdown.waistFit && (
                         <span className="rounded border border-black/10 bg-white px-2 py-1 text-[10px]">
                           {ar ? "الخصر: " : "Waist: "}
-                          <strong>{recommendation.fitBreakdown.waistFit}</strong>
+                          <strong>
+                            {recommendation.fitBreakdown.waistFit}
+                          </strong>
                         </span>
                       )}
                       {recommendation.fitBreakdown.hipFit && (
@@ -538,7 +568,7 @@ export function SizeGuideDialog({
                         ? "أدخل قياساتك لمعرفة المقاس الأنسب"
                         : "Enter your measurements to calculate your size"}
                     </p>
-                    <p className="mt-1 max-w-xs text-[11px] text-neutral-500">
+                    <p className="mt-1 max-w-xs text-[11px] text-neutral-600">
                       {ar
                         ? "سنقوم بمقارنة أبعاد جسمك فوراً مع أبعاد هذا الموديل واقتراح أفضل مقاس."
                         : "We’ll cross-reference your dimensions with this garment to pinpoint your ideal fit."}
@@ -621,7 +651,7 @@ export function SizeGuideDialog({
 
         {/* Footer */}
         <footer className="flex flex-wrap items-center justify-between border-t border-black/10 bg-[#f5f7f5] px-6 py-4 text-xs">
-          <p className="text-neutral-500">
+          <p className="text-neutral-600">
             {ar
               ? "تحتاج مساعدة إضافية في اختيار مقاسك؟ فريقنا الطبي متاح عبر الواتساب."
               : "Need personalized sizing advice? Our team is available on WhatsApp."}

@@ -218,9 +218,22 @@
 - Storefront UI: PASS — Hardened `ShopProvider` in `src/components/store/cart-provider.tsx` with user ID tracking (`lastSyncedUserIdRef`), in-flight mutex (`isSyncingRef`), and passing empty cart array on routine token refresh events.
 - Unit tests: PASS — Added idempotent quantity calculation test in `tests/unit/cart-sync.test.ts` verifying subtotal stability across repeated sync events.
 - Integration tests: PASS — `tests/integration/migration-security.test.ts` asserting `20260908073000_idempotent_cart_sync.sql` enforces `security invoker`, `set search_path = ''`, and `greatest(public.cart_items.quantity, excluded.quantity)`.
+
+## Full release audit checkpoint — 2026-09-08
+
+- Automated gates: PASS — ESLint with zero warnings, strict TypeScript, 17 test files / 155 tests, production dependency audit with zero known vulnerabilities, and Next.js 16.3.3 production build.
+- Production HTTP/API: PASS — English/Arabic storefronts, root redirect, unknown-order 404, malformed order/discount rejection, disabled-OTP response, and unsigned Paymob webhook rejection.
+- Storefront E2E: PASS — catalogue search/filtering, product colour/size selection, size chart and fit calculator, cart quantities/totals, Cairo shipping quote, COD deposit/balance, Vodafone Cash/InstaPay proof controls, invalid-discount feedback, tracking error state, and anonymous admin redirect.
+- Admin E2E: PASS — authenticated analytics/catalogue dashboard, discounts, orders/payment review, delivery pricing, and size-management routes render without framework overlays or browser console warnings/errors.
+- Supabase integrity: PASS — no public table without RLS, negative/over-reserved inventory, active product without variants, variant without inventory, orphan/itemless/history-less order, order/line total mismatch, duplicate code/governorate, or public payment-proof bucket.
+- Anonymous security probes: PASS — public products remain readable while orders, saved addresses, OTP requests, cart synchronization and admin order mutation are denied to anonymous callers.
+- Responsive/localization: PASS — 390×844 Arabic viewport has no horizontal overflow; root document uses `lang="ar"`/`dir="rtl"`; the mobile wordmark/action collision is fixed and Arabic header accessibility labels are localized.
+- Accessibility: PASS — axe-core 4.12.1 WCAG 2 A/AA scans report zero violations for Arabic mobile cart, English catalogue, account, populated checkout, product page and open size-guide dialog. One sticky table header remains manual-review/incomplete because its overlapping background cannot be calculated by axe.
+- SEO metadata fix: PASS locally/unit — Vercel production-host fallback prevents generated metadata, robots and sitemap URLs from falling back to localhost when the local-only app URL is absent.
+- External side effects: NOT_RUN — no real order, SMS, email, payment, receipt upload, discount redemption or admin mutation was created during this audit.
+- Vercel observability connector: BLOCKED — the connected Vercel app returned 403 for deployment/runtime-log access; live HTTP checks and browser console checks passed, but platform log inspection requires reconnecting the integration with project access.
 - Total: PASS — 16 files, 151 tests (100% passing)
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`)
-
 

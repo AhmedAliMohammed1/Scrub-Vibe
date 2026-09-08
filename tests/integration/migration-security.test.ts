@@ -247,18 +247,30 @@ describe("foundation migration security", () => {
       ...checkoutOrders.matchAll(/create table public\.([a-z_]+)/g),
     ].map(([, table]) => table);
     const secured = new Set(
-      [...checkoutOrders.matchAll(/alter table public\.([a-z_]+) enable row level security/g)].map(([, table]) => table),
+      [
+        ...checkoutOrders.matchAll(
+          /alter table public\.([a-z_]+) enable row level security/g,
+        ),
+      ].map(([, table]) => table),
     );
     expect(tables.filter((table) => !secured.has(table))).toEqual([]);
-    expect(checkoutOrders).toContain("'payment-proofs', 'payment-proofs', false");
-    expect(checkoutOrders).toContain("grant execute on function public.create_verified_order");
+    expect(checkoutOrders).toContain(
+      "'payment-proofs', 'payment-proofs', false",
+    );
+    expect(checkoutOrders).toContain(
+      "grant execute on function public.create_verified_order",
+    );
     expect(checkoutOrders).toContain("to service_role");
     expect(checkoutOrders).not.toMatch(/auth\.role\s*\(/);
   });
 
   it("creates orders and reserves stock in one locked transaction", () => {
-    expect(checkoutOrders).toMatch(/create or replace function public\.create_verified_order[\s\S]*for update/);
-    expect(checkoutOrders).toContain("coalesce(pv.price_override_minor, p.base_price_minor)");
+    expect(checkoutOrders).toMatch(
+      /create or replace function public\.create_verified_order[\s\S]*for update/,
+    );
+    expect(checkoutOrders).toContain(
+      "coalesce(pv.price_override_minor, p.base_price_minor)",
+    );
     expect(checkoutOrders).toContain("reserved = reserved + v_quantity");
     expect(checkoutOrders).toContain("PHONE_VERIFICATION_INVALID");
   });
@@ -267,9 +279,7 @@ describe("foundation migration security", () => {
     expect(paymentHardening).toContain(
       "alter table public.payment_webhook_events enable row level security",
     );
-    expect(paymentHardening).toContain(
-      "unique (provider, provider_event_id)",
-    );
+    expect(paymentHardening).toContain("unique (provider, provider_event_id)");
     expect(paymentHardening).toContain(
       "on conflict (provider, provider_event_id) do nothing",
     );
@@ -320,8 +330,12 @@ describe("foundation migration security", () => {
     expect(customerCartWishlist).toContain(
       "revoke all on public.cart_items, public.wishlist_items from anon, authenticated;",
     );
-    expect(customerCartWishlist).toContain("create policy cart_items_owner_select");
-    expect(customerCartWishlist).toContain("create policy wishlist_items_owner_select");
+    expect(customerCartWishlist).toContain(
+      "create policy cart_items_owner_select",
+    );
+    expect(customerCartWishlist).toContain(
+      "create policy wishlist_items_owner_select",
+    );
     expect(customerCartWishlist).toContain("auth.uid() = user_id");
     expect(customerCartWishlist).toMatch(
       /create or replace function public\.sync_customer_cart_and_wishlist[\s\S]*security invoker[\s\S]*set search_path = ''/,
@@ -340,17 +354,27 @@ describe("foundation migration security", () => {
   });
 
   it("protects discount management and redeems codes transactionally", () => {
-    for (const table of ["discount_campaigns", "discount_codes", "discount_redemptions"]) {
-      expect(discountCampaigns).toContain(`alter table public.${table} enable row level security`);
+    for (const table of [
+      "discount_campaigns",
+      "discount_codes",
+      "discount_redemptions",
+    ]) {
+      expect(discountCampaigns).toContain(
+        `alter table public.${table} enable row level security`,
+      );
     }
     expect(discountCampaigns).toContain("discount_campaigns_admin_all");
     expect(discountCampaigns).toContain("discount_codes_admin_all");
     expect(discountCampaigns).toContain("discount_redemptions_staff_select");
     expect(discountCampaigns).not.toMatch(/auth\.role\s*\(/);
-    expect(discountCampaigns).toMatch(/create or replace function public\.create_promotional_order[\s\S]*for update/);
+    expect(discountCampaigns).toMatch(
+      /create or replace function public\.create_promotional_order[\s\S]*for update/,
+    );
     expect(discountCampaigns).toContain("discount_customer_limit_reached");
     expect(discountCampaigns).toContain("discount_campaign_budget_exhausted");
-    expect(discountCampaigns).toContain("grant execute on function public.create_promotional_order");
+    expect(discountCampaigns).toContain(
+      "grant execute on function public.create_promotional_order",
+    );
     expect(discountCampaigns).toContain("to service_role");
     expect(discountIndexes).toContain("orders_discount_code_created_idx");
     expect(discountIndexes).toContain("orders_discount_campaign_created_idx");
@@ -366,10 +390,18 @@ describe("foundation migration security", () => {
     expect(customerAddresses).toContain(
       "grant select, insert, update, delete on public.customer_addresses to authenticated;",
     );
-    expect(customerAddresses).toContain("create policy customer_addresses_owner_select");
-    expect(customerAddresses).toContain("create policy customer_addresses_owner_insert");
-    expect(customerAddresses).toContain("create policy customer_addresses_owner_update");
-    expect(customerAddresses).toContain("create policy customer_addresses_owner_delete");
+    expect(customerAddresses).toContain(
+      "create policy customer_addresses_owner_select",
+    );
+    expect(customerAddresses).toContain(
+      "create policy customer_addresses_owner_insert",
+    );
+    expect(customerAddresses).toContain(
+      "create policy customer_addresses_owner_update",
+    );
+    expect(customerAddresses).toContain(
+      "create policy customer_addresses_owner_delete",
+    );
     expect(customerAddresses).toContain("auth.uid() = user_id");
     expect(customerAddresses).not.toMatch(/auth\.role\s*\(/);
     expect(customerAddresses).toMatch(

@@ -38,7 +38,7 @@ export function AddProduct({
         <strong className="uppercase tracking-[.12em]">
           {locale === "ar" ? "اللون" : "Colour"}: {selectedColour?.name[locale]}
         </strong>
-        <span className="text-neutral-500">
+        <span className="text-neutral-600">
           {product.colors.filter((colour) => colour.inStock).length}{" "}
           {locale === "ar" ? "ألوان متاحة" : "colours available"}
         </span>
