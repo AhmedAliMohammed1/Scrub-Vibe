@@ -183,11 +183,17 @@ export async function POST(request: Request) {
       line_total_minor: 0, // line totals not returned by RPC — total shown instead
     })),
   };
-  void sendEmail(renderOrderPlaced(emailOrder, "en"));
-  void sendStaffEmail(
-    `[Scrub Vibe] New order #${order.order_number} — EGP ${(order.total_minor / 100).toFixed(2)}`,
-    renderStaffNewOrder(emailOrder).html,
-  );
+  try {
+    await Promise.allSettled([
+      sendEmail(renderOrderPlaced(emailOrder, "en")),
+      sendStaffEmail(
+        `[Scrub Vibe] New order #${order.order_number} — EGP ${(order.total_minor / 100).toFixed(2)}`,
+        renderStaffNewOrder(emailOrder).html,
+      ),
+    ]);
+  } catch (emailError) {
+    console.error("[email] Failed to send order placed emails:", emailError);
+  }
 
   return NextResponse.json({
     orderNumber: order.order_number,

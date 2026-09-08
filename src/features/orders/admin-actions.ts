@@ -131,24 +131,24 @@ export async function updateOrderAction(formData: FormData) {
     redirect(`/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}${filterQuery}`);
   }
 
+  // 1. Fetch updated order data for emails & customer tracking revalidation
+  const admin = createAdminClient();
+  const { data: orderData } = await admin
+    .from("orders")
+    .select("order_number, customer_name, email, subtotal_minor, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
+    .eq("id", value.orderId)
+    .single();
+
+  // 2. Revalidate admin and tracking routes synchronously outside background closures
   revalidatePath(`/${value.locale}/admin/orders`);
   revalidatePath(`/${value.locale}/admin/orders`, "page");
+  if (orderData?.order_number) {
+    revalidatePath(`/${value.locale}/track/${orderData.order_number}`);
+  }
 
-  // ── Transactional emails (non-blocking) for all status transitions ─────────
-  void (async () => {
+  // 3. Await transactional emails before redirect so serverless execution doesn't terminate prematurely
+  if (orderData?.email) {
     try {
-      const admin = createAdminClient();
-      const { data: orderData } = await admin
-        .from("orders")
-        .select("order_number, customer_name, email, subtotal_minor, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
-        .eq("id", value.orderId)
-        .single();
-
-      if (!orderData || !orderData.email) return;
-
-      // Also revalidate the customer tracking page for this order
-      revalidatePath(`/${value.locale}/track/${orderData.order_number}`);
-
       const emailOrder: OrderEmailData = {
         order_number: orderData.order_number,
         customer_name: orderData.customer_name,
@@ -196,7 +196,7 @@ export async function updateOrderAction(formData: FormData) {
     } catch (emailError) {
       console.error("[email] Failed to send admin email notification:", emailError);
     }
-  })();
+  }
 
   const successMsg =
     value.locale === "ar" ? "تم تحديث الطلب بنجاح." : "Order updated successfully.";
