@@ -23,6 +23,7 @@ const schema = z.object({
   courier: z.string().trim().max(120),
   trackingUrl: z.union([z.literal(""), z.url().max(1000)]),
   proofStatus: z.enum(["", "approved", "rejected"]),
+  currentFilter: z.string().optional(),
 });
 
 function formatOrderErrorMessage(raw: string, locale: Locale): string {
@@ -109,10 +110,12 @@ export async function updateOrderAction(formData: FormData) {
 
   if (error) {
     const friendly = formatOrderErrorMessage(error.message, value.locale);
-    redirect(`/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}`);
+    const filterQuery = value.currentFilter ? `&status=${encodeURIComponent(value.currentFilter)}` : "";
+    redirect(`/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}${filterQuery}`);
   }
 
   revalidatePath(`/${value.locale}/admin/orders`);
+  revalidatePath(`/${value.locale}/admin/orders`, "page");
 
   // ── Transactional emails (non-blocking) ──────────────────────────────────
   const shouldEmailProofApproved = effectiveProofStatus === "approved";
@@ -128,6 +131,9 @@ export async function updateOrderAction(formData: FormData) {
           .single();
 
         if (!orderData || !orderData.email) return;
+
+        // Also revalidate the customer tracking page for this order
+        revalidatePath(`/${value.locale}/track/${orderData.order_number}`);
 
         const emailOrder: OrderEmailData = {
           order_number: orderData.order_number,
@@ -157,4 +163,9 @@ export async function updateOrderAction(formData: FormData) {
       }
     })();
   }
+
+  const successMsg =
+    value.locale === "ar" ? "تم تحديث الطلب بنجاح." : "Order updated successfully.";
+  const filterQuery = value.currentFilter ? `&status=${encodeURIComponent(value.currentFilter)}` : "";
+  redirect(`/${value.locale}/admin/orders?success=${encodeURIComponent(successMsg)}${filterQuery}`);
 }

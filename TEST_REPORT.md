@@ -155,6 +155,7 @@
 - Sender Domain Guard: PASS — `getFromAddress` detects unverified public webmail domains (e.g. `@gmail.com`, `@yahoo.com`) and automatically falls back to `Scrub Vibe <onboarding@resend.dev>` to avoid Resend 403 errors
 - Supabase Cart Sync Fix: PASS — resolved `column pov.metadata does not exist` by migrating `sync_customer_cart_and_wishlist` to query `pov.swatch_hex` on `iqufqtjotgpmhhtvlxwf`
 - Admin Order Hardening: PASS — auto-promotes pending proof status to approved when admin selects paid/cod_due, and replaces unhandled 500 error throws with localized query param alerts
+- Immediate UI Refresh: PASS — eliminates manual F5 requirement via dynamic form keys (`key={`${order.id}-${order.status}...`}`), dual path revalidation, and immediate navigation redirects preserving active filter parameters
 - Unit tests: PASS — 43 tests in `tests/unit/email-notifications.test.ts` covering templates, RTL flag, `formatPriceMajor`, sender domain fallback, and dev-preview fallback behaviour
 - Total: PASS — 13 files, 115 tests
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
