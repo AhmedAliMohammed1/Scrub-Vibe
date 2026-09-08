@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added complete order status transition emails (`renderOrderProcessing`, `renderOrderOutForDelivery`, `renderOrderDelivered`, `renderOrderCancelled`, and `renderOrderStatusNote`) ensuring customers receive tailored notifications on every order status change in the admin panel.
 - Fixed admin order status update requiring manual page refresh (F5) by adding dynamic form remount keys (`key={`${order.id}-${order.status}...`}`), dual path revalidation (`revalidatePath`), and immediate navigation redirects preserving active filter parameters.
 - Auto-promoted pending payment proofs to `approved` in `updateOrderAction` when an admin marks payment status as `paid` or `cod_due`, preventing `PROOF_APPROVAL_REQUIRED` database exceptions.
 - Replaced unhandled 500 error throws in `updateOrderAction` with graceful redirects displaying localized banner alerts for validation and database constraints.

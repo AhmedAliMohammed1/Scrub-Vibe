@@ -251,6 +251,7 @@ export function renderOrderPlaced(
 export function renderPaymentApproved(
   order: OrderEmailData,
   locale: "en" | "ar",
+  note?: string | null,
 ): EmailPayload {
   const isAr = locale === "ar";
   const subject = isAr
@@ -265,10 +266,16 @@ export function renderPaymentApproved(
     ? `تمت مراجعة إيصال الدفع الخاص بك وتأكيد طلبك. سنبدأ بتجهيزه في أقرب وقت ممكن.`
     : `Your payment has been reviewed and your order is confirmed. We'll start preparing it right away.`;
 
+  const noteSection = note
+    ? `<div style="background:#f4f7f4;border-${isAr ? "right" : "left"}:3px solid #0e7468;padding:12px 16px;margin:16px 0 24px;font-size:13px;color:#1b4332;">
+        <strong>${isAr ? "ملاحظة من فريق العمل:" : "Note from our team:"}</strong><br />${note}
+      </div>`
+    : "";
+
   const content = `
     <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
     <p style="font-size:13px;color:#555;margin:0 0 24px;">${intro}</p>
-
+    ${noteSection}
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#e8f5e9;border:1px solid #a5d6a7;padding:16px;margin:0 0 24px;">
       <tr>
         <td>
@@ -298,6 +305,7 @@ export function renderPaymentApproved(
 export function renderOrderShipped(
   order: OrderEmailData,
   locale: "en" | "ar",
+  note?: string | null,
 ): EmailPayload {
   const isAr = locale === "ar";
   const subject = isAr
@@ -311,6 +319,12 @@ export function renderOrderShipped(
   const intro = isAr
     ? `تم تسليم طلبك إلى شركة الشحن وهو في طريقه إليك.`
     : `Your order has been handed to the courier and is on its way.`;
+
+  const noteSection = note
+    ? `<div style="background:#f4f7f4;border-${isAr ? "right" : "left"}:3px solid #0e7468;padding:12px 16px;margin:16px 0 24px;font-size:13px;color:#1b4332;">
+        <strong>${isAr ? "ملاحظة من فريق العمل:" : "Note from our team:"}</strong><br />${note}
+      </div>`
+    : "";
 
   const courierSection =
     order.courier || order.shipment_number
@@ -340,11 +354,242 @@ export function renderOrderShipped(
   const content = `
     <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
     <p style="font-size:13px;color:#555;margin:0 0 16px;">${intro}</p>
+    ${noteSection}
     ${courierSection}
     ${trackingButton}
     ${itemsTable(order.items, locale)}
     <p style="font-size:12px;color:#888;margin:0;">
       ${isAr ? "شكراً لتسوقك مع Scrub Vibe 🌿" : "Thank you for shopping with Scrub Vibe 🌿"}
+    </p>`;
+
+  return { to: order.email, subject, html: baseLayout(subject, content, isAr) };
+}
+
+// ---------------------------------------------------------------------------
+// Template 3b — Order Processing / In Preparation
+// ---------------------------------------------------------------------------
+
+export function renderOrderProcessing(
+  order: OrderEmailData,
+  locale: "en" | "ar",
+  note?: string | null,
+): EmailPayload {
+  const isAr = locale === "ar";
+  const subject = isAr
+    ? `طلبك قيد التجهيز #${order.order_number} — Scrub Vibe`
+    : `We're preparing your order #${order.order_number} — Scrub Vibe`;
+
+  const greeting = isAr
+    ? `مرحباً ${order.customer_name}،`
+    : `Hi ${order.customer_name},`;
+
+  const intro = isAr
+    ? `طلبك مؤكد وبدأ فريقنا في تجهيز وتجهيز المنتجات الخاصة بك بعناية.`
+    : `Your order is confirmed and our team has started carefully preparing your scrub wear.`;
+
+  const noteSection = note
+    ? `<div style="background:#f4f7f4;border-${isAr ? "right" : "left"}:3px solid #0e7468;padding:12px 16px;margin:16px 0 24px;font-size:13px;color:#1b4332;">
+        <strong>${isAr ? "ملاحظة من فريق العمل:" : "Note from our team:"}</strong><br />${note}
+      </div>`
+    : "";
+
+  const content = `
+    <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
+    <p style="font-size:13px;color:#555;margin:0 0 16px;">${intro}</p>
+    ${noteSection}
+    ${itemsTable(order.items, locale)}
+    <p style="font-size:12px;color:#888;margin:16px 0 0;">
+      ${isAr ? "سنقوم بإشعارك فور تسليم طلبك لشركة الشحن 🌿" : "We'll notify you as soon as your package is dispatched 🌿"}
+    </p>`;
+
+  return { to: order.email, subject, html: baseLayout(subject, content, isAr) };
+}
+
+// ---------------------------------------------------------------------------
+// Template 3c — Out For Delivery
+// ---------------------------------------------------------------------------
+
+export function renderOrderOutForDelivery(
+  order: OrderEmailData,
+  locale: "en" | "ar",
+  note?: string | null,
+): EmailPayload {
+  const isAr = locale === "ar";
+  const subject = isAr
+    ? `طلبك مع مندوب التوصيل اليوم #${order.order_number} — Scrub Vibe`
+    : `Your order is out for delivery today #${order.order_number} — Scrub Vibe`;
+
+  const greeting = isAr
+    ? `مرحباً ${order.customer_name}،`
+    : `Hi ${order.customer_name},`;
+
+  const intro = isAr
+    ? `مندوب الشحن في طريقه لتسليم طلبك اليوم. يرجى التأكد من التواجد أو الرد على الهاتف.`
+    : `Your package is with the local courier driver and scheduled for delivery today. Please keep your phone handy.`;
+
+  const noteSection = note
+    ? `<div style="background:#f4f7f4;border-${isAr ? "right" : "left"}:3px solid #0e7468;padding:12px 16px;margin:16px 0 24px;font-size:13px;color:#1b4332;">
+        <strong>${isAr ? "ملاحظة من فريق العمل:" : "Note from our team:"}</strong><br />${note}
+      </div>`
+    : "";
+
+  const trackingButton = order.tracking_url
+    ? `<p style="margin:0 0 24px;">
+        <a href="${order.tracking_url}" style="display:inline-block;background:#062f2b;color:#ffffff;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.1em;text-transform:uppercase;">
+          ${isAr ? "تتبع الشحنة" : "Track delivery"}
+        </a>
+      </p>`
+    : "";
+
+  const content = `
+    <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
+    <p style="font-size:13px;color:#555;margin:0 0 16px;">${intro}</p>
+    ${noteSection}
+    ${trackingButton}
+    ${itemsTable(order.items, locale)}
+    <p style="font-size:12px;color:#888;margin:16px 0 0;">
+      ${isAr ? "شكراً لاختيارك Scrub Vibe 🌿" : "Thank you for choosing Scrub Vibe 🌿"}
+    </p>`;
+
+  return { to: order.email, subject, html: baseLayout(subject, content, isAr) };
+}
+
+// ---------------------------------------------------------------------------
+// Template 3d — Delivered
+// ---------------------------------------------------------------------------
+
+export function renderOrderDelivered(
+  order: OrderEmailData,
+  locale: "en" | "ar",
+  note?: string | null,
+): EmailPayload {
+  const isAr = locale === "ar";
+  const subject = isAr
+    ? `تم تسليم طلبك بنجاح #${order.order_number} — Scrub Vibe`
+    : `Your order has been delivered #${order.order_number} — Scrub Vibe`;
+
+  const greeting = isAr
+    ? `مرحباً ${order.customer_name}،`
+    : `Hi ${order.customer_name},`;
+
+  const intro = isAr
+    ? `يسرنا إعلامك بأنه تم تسليم طلبك بنجاح. نتمنى أن تنال منتجاتنا إعجابك وتوفر لك أقصى درجات الراحة والأناقة أثناء عملك.`
+    : `Your order has been delivered successfully. We hope your new scrubs provide comfort, quality, and style during your shifts.`;
+
+  const noteSection = note
+    ? `<div style="background:#f4f7f4;border-${isAr ? "right" : "left"}:3px solid #0e7468;padding:12px 16px;margin:16px 0 24px;font-size:13px;color:#1b4332;">
+        <strong>${isAr ? "ملاحظة من فريق العمل:" : "Note from our team:"}</strong><br />${note}
+      </div>`
+    : "";
+
+  const content = `
+    <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
+    <p style="font-size:13px;color:#555;margin:0 0 16px;">${intro}</p>
+    ${noteSection}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#e8f5e9;border:1px solid #a5d6a7;padding:16px;margin:0 0 24px;">
+      <tr>
+        <td>
+          <p style="margin:0;font-size:14px;font-weight:700;color:#2e7d32;">
+            ${isAr ? "✓ تم التسليم بنجاح" : "✓ Delivered successfully"}
+          </p>
+          <p style="margin:4px 0 0;font-size:12px;color:#555;">
+            #${order.order_number} · ${formatPriceMajor(order.total_minor)}
+          </p>
+        </td>
+      </tr>
+    </table>
+    ${itemsTable(order.items, locale)}
+    <p style="font-size:12px;color:#888;margin:16px 0 0;">
+      ${isAr ? "يسعدنا دائماً خدمتك — فريق Scrub Vibe 🌿" : "It's our pleasure serving you — The Scrub Vibe Team 🌿"}
+    </p>`;
+
+  return { to: order.email, subject, html: baseLayout(subject, content, isAr) };
+}
+
+// ---------------------------------------------------------------------------
+// Template 3e — Cancelled
+// ---------------------------------------------------------------------------
+
+export function renderOrderCancelled(
+  order: OrderEmailData,
+  locale: "en" | "ar",
+  note?: string | null,
+): EmailPayload {
+  const isAr = locale === "ar";
+  const subject = isAr
+    ? `تم إلغاء طلبك #${order.order_number} — Scrub Vibe`
+    : `Your order #${order.order_number} has been cancelled — Scrub Vibe`;
+
+  const greeting = isAr
+    ? `مرحباً ${order.customer_name}،`
+    : `Hi ${order.customer_name},`;
+
+  const intro = isAr
+    ? `نود إعلامك بأنه تم إلغاء الطلب رقم #${order.order_number}. إذا كانت لديك أي استفسارات، يمكنك التواصل معنا في أي وقت.`
+    : `We are writing to let you know that order #${order.order_number} has been cancelled. If you have any questions, please contact our support team.`;
+
+  const reasonSection = note
+    ? `<div style="background:#fff3f3;border-${isAr ? "right" : "left"}:3px solid #d32f2f;padding:12px 16px;margin:16px 0 24px;font-size:13px;color:#b71c1c;">
+        <strong>${isAr ? "سبب الإلغاء:" : "Reason for cancellation:"}</strong><br />${note}
+      </div>`
+    : "";
+
+  const content = `
+    <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
+    <p style="font-size:13px;color:#555;margin:0 0 16px;">${intro}</p>
+    ${reasonSection}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafafa;border:1px solid #e0e0e0;padding:16px;margin:0 0 24px;">
+      <tr>
+        <td>
+          <p style="margin:0;font-size:13px;font-weight:700;color:#616161;">
+            ${isAr ? "الطلب: #" + order.order_number : "Order: #" + order.order_number}
+          </p>
+          <p style="margin:4px 0 0;font-size:12px;color:#888;">
+            ${formatPriceMajor(order.total_minor)}
+          </p>
+        </td>
+      </tr>
+    </table>
+    ${itemsTable(order.items, locale)}
+    <p style="font-size:12px;color:#888;margin:16px 0 0;">
+      ${isAr ? "فريق دعم Scrub Vibe 🌿" : "Scrub Vibe Support Team 🌿"}
+    </p>`;
+
+  return { to: order.email, subject, html: baseLayout(subject, content, isAr) };
+}
+
+// ---------------------------------------------------------------------------
+// Template 3f — Customer Update Note
+// ---------------------------------------------------------------------------
+
+export function renderOrderStatusNote(
+  order: OrderEmailData,
+  locale: "en" | "ar",
+  note: string,
+  currentStatus: string,
+): EmailPayload {
+  const isAr = locale === "ar";
+  const subject = isAr
+    ? `تحديث بخصوص طلبك #${order.order_number} — Scrub Vibe`
+    : `Update on your order #${order.order_number} — Scrub Vibe`;
+
+  const greeting = isAr
+    ? `مرحباً ${order.customer_name}،`
+    : `Hi ${order.customer_name},`;
+
+  const statusLabel = isAr
+    ? "حالة الطلب الحالية: " + currentStatus.replaceAll("_", " ")
+    : "Current order status: " + currentStatus.replaceAll("_", " ").toUpperCase();
+
+  const content = `
+    <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>
+    <p style="font-size:12px;color:#888;margin:0 0 16px;">${statusLabel}</p>
+    <div style="background:#f4f7f4;border-${isAr ? "right" : "left"}:3px solid #0e7468;padding:16px;margin:0 0 24px;font-size:13px;color:#1b4332;">
+      <strong>${isAr ? "رسالة من فريق العمل:" : "Message from our team:"}</strong><br />${note}
+    </div>
+    ${itemsTable(order.items, locale)}
+    <p style="font-size:12px;color:#888;margin:16px 0 0;">
+      ${isAr ? "فريق Scrub Vibe 🌿" : "The Scrub Vibe Team 🌿"}
     </p>`;
 
   return { to: order.email, subject, html: baseLayout(subject, content, isAr) };

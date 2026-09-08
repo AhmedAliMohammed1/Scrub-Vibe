@@ -9,6 +9,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   renderPaymentApproved,
   renderOrderShipped,
+  renderOrderProcessing,
+  renderOrderOutForDelivery,
+  renderOrderDelivered,
+  renderOrderCancelled,
+  renderOrderStatusNote,
   sendEmail,
   type OrderEmailData,
 } from "@/features/notifications/email";
@@ -66,6 +71,13 @@ export async function updateOrderAction(formData: FormData) {
   const { supabase } = await requireRoles(["support", "warehouse", "admin", "super_admin"]);
   const value = parsed.data;
 
+  // 1. Fetch current order before update to know previous status and payment_status
+  const { data: previousOrder } = await supabase
+    .from("orders")
+    .select("status, payment_status")
+    .eq("id", value.orderId)
+    .single();
+
   // Auto-resolve proof decision if admin changed payment to paid/cod_due or status to confirmed
   let effectiveProofStatus = value.proofStatus || undefined;
   if (
@@ -117,52 +129,69 @@ export async function updateOrderAction(formData: FormData) {
   revalidatePath(`/${value.locale}/admin/orders`);
   revalidatePath(`/${value.locale}/admin/orders`, "page");
 
-  // ── Transactional emails (non-blocking) ──────────────────────────────────
-  const shouldEmailProofApproved = effectiveProofStatus === "approved";
-  const shouldEmailShipped = value.status === "shipped";
-  if (shouldEmailProofApproved || shouldEmailShipped) {
-    void (async () => {
-      try {
-        const admin = createAdminClient();
-        const { data: orderData } = await admin
-          .from("orders")
-          .select("order_number, customer_name, email, subtotal_minor, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
-          .eq("id", value.orderId)
-          .single();
+  // ── Transactional emails (non-blocking) for all status transitions ─────────
+  void (async () => {
+    try {
+      const admin = createAdminClient();
+      const { data: orderData } = await admin
+        .from("orders")
+        .select("order_number, customer_name, email, subtotal_minor, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
+        .eq("id", value.orderId)
+        .single();
 
-        if (!orderData || !orderData.email) return;
+      if (!orderData || !orderData.email) return;
 
-        // Also revalidate the customer tracking page for this order
-        revalidatePath(`/${value.locale}/track/${orderData.order_number}`);
+      // Also revalidate the customer tracking page for this order
+      revalidatePath(`/${value.locale}/track/${orderData.order_number}`);
 
-        const emailOrder: OrderEmailData = {
-          order_number: orderData.order_number,
-          customer_name: orderData.customer_name,
-          email: orderData.email,
-          subtotal_minor: orderData.subtotal_minor,
-          shipping_minor: orderData.shipping_minor,
-          total_minor: orderData.total_minor,
-          payment_method: orderData.payment_method,
-          courier: orderData.courier,
-          shipment_number: orderData.shipment_number,
-          tracking_url: orderData.tracking_url,
-          items: (orderData.order_items as OrderEmailData["items"]) ?? [],
-        };
+      const emailOrder: OrderEmailData = {
+        order_number: orderData.order_number,
+        customer_name: orderData.customer_name,
+        email: orderData.email,
+        subtotal_minor: orderData.subtotal_minor,
+        shipping_minor: orderData.shipping_minor,
+        total_minor: orderData.total_minor,
+        payment_method: orderData.payment_method,
+        courier: orderData.courier,
+        shipment_number: orderData.shipment_number,
+        tracking_url: orderData.tracking_url,
+        items: (orderData.order_items as OrderEmailData["items"]) ?? [],
+      };
 
-        const locale: "en" | "ar" =
-          (value.locale as Locale) === "ar" ? "ar" : "en";
+      const locale: "en" | "ar" =
+        (value.locale as Locale) === "ar" ? "ar" : "en";
+      const customerNote = value.note?.trim() || null;
 
-        if (shouldEmailProofApproved) {
-          await sendEmail(renderPaymentApproved(emailOrder, locale));
+      const proofApprovedNow =
+        effectiveProofStatus === "approved" &&
+        previousOrder?.payment_status !== "paid" &&
+        previousOrder?.payment_status !== "cod_due";
+
+      const statusChanged = Boolean(previousOrder && previousOrder.status !== value.status);
+
+      if (proofApprovedNow) {
+        await sendEmail(renderPaymentApproved(emailOrder, locale, customerNote));
+      } else if (statusChanged) {
+        if (value.status === "processing" || value.status === "ready_to_ship") {
+          await sendEmail(renderOrderProcessing(emailOrder, locale, customerNote));
+        } else if (value.status === "shipped") {
+          await sendEmail(renderOrderShipped(emailOrder, locale, customerNote));
+        } else if (value.status === "out_for_delivery") {
+          await sendEmail(renderOrderOutForDelivery(emailOrder, locale, customerNote));
+        } else if (value.status === "delivered") {
+          await sendEmail(renderOrderDelivered(emailOrder, locale, customerNote));
+        } else if (value.status === "cancelled") {
+          await sendEmail(renderOrderCancelled(emailOrder, locale, customerNote));
+        } else if (value.status === "confirmed") {
+          await sendEmail(renderPaymentApproved(emailOrder, locale, customerNote));
         }
-        if (shouldEmailShipped) {
-          await sendEmail(renderOrderShipped(emailOrder, locale));
-        }
-      } catch (emailError) {
-        console.error("[email] Failed to send admin email notification:", emailError);
+      } else if (customerNote) {
+        await sendEmail(renderOrderStatusNote(emailOrder, locale, customerNote, value.status));
       }
-    })();
-  }
+    } catch (emailError) {
+      console.error("[email] Failed to send admin email notification:", emailError);
+    }
+  })();
 
   const successMsg =
     value.locale === "ar" ? "تم تحديث الطلب بنجاح." : "Order updated successfully.";

@@ -137,6 +137,20 @@
 - Database: PASS — `harden_payment_processing` applied to project `iqufqtjotgpmhhtvlxwf`; event table, JSON callback function and service-role-only execution verified
 - Unit/integration: PASS — 10 files, 61 tests
 
+## Egyptian shipping-zone pricing checkpoint — 2026-09-08
+
+- Database: PASS — 6 delivery zones, all 27 governorates and 83 city/district choices are live on project `iqufqtjotgpmhhtvlxwf` with RLS and least-privilege grants
+- Server pricing: PASS — `create_verified_order` validates the city/governorate relationship and calculates the base fee, free-shipping discount, COD surcharge, total and due-on-delivery amount inside the order transaction
+- Order history: PASS — destination labels, zone, charge breakdown and delivery window are stored as immutable order snapshots
+- Admin: PASS — admins can edit zone fees, free-shipping thresholds, COD availability/surcharges, delivery-day ranges and active status from the bilingual delivery page
+- Checkout and tracking: PASS — cascading bilingual location selectors, custom-area fallback, live quote breakdown, COD eligibility and delivery estimates render in English and Arabic
+- Live security: PASS — anonymous users can read active delivery configuration; only admin/super-admin users can update zones; the order transaction remains executable only by `service_role`
+- Unit/integration: PASS — shipping quote cases, checkout location validation and migration security invariants included in the 66-test shipping checkpoint
+- Lint: PASS — zero warnings
+- Typecheck: PASS — strict TypeScript
+- Build: PASS — Next.js 16.3.3 production build including `/[locale]/admin/shipping`
+- Local browser: PASS — live Supabase data produced all 27 governorates, dependent cities, free-shipping/COD totals, delivery windows and Arabic RTL custom-area behavior without console errors
+
 ## Persistent cart and wishlist synchronization checkpoint — 2026-09-08
 
 - Database: PASS — `cart_items` and `wishlist_items` tables created with owner-scoped RLS, least-privilege grants and transactional `sync_customer_cart_and_wishlist` function verified on project `iqufqtjotgpmhhtvlxwf`
@@ -150,14 +164,14 @@
 ## Transactional email notifications checkpoint — 2026-09-08
 
 - Email module: PASS — `src/features/notifications/email.ts` wraps Resend SDK; dev-preview fallback logs to console when `RESEND_API_KEY` is absent or `[SENSITIVE]`
-- Templates: PASS — 5 bilingual (EN/AR) HTML templates verified: `renderOrderPlaced`, `renderPaymentApproved`, `renderOrderShipped`, `renderStaffNewOrder`, `renderStaffProofSubmitted`
-- Triggers: PASS — Order Placed + New Order staff alert fire non-blocking after `create_verified_order` RPC in `src/app/api/checkout/orders/route.ts`; Payment Approved + Order Shipped fire non-blocking after `admin_update_order` RPC in `src/features/orders/admin-actions.ts`
+- Templates: PASS — 9 bilingual (EN/AR) HTML templates verified: `renderOrderPlaced`, `renderPaymentApproved`, `renderOrderProcessing`, `renderOrderShipped`, `renderOrderOutForDelivery`, `renderOrderDelivered`, `renderOrderCancelled`, `renderOrderStatusNote`, `renderStaffNewOrder`, `renderStaffProofSubmitted`
+- Triggers: PASS — fires non-blocking real-time bilingual emails on every admin status update (`processing`, `ready_to_ship`, `shipped`, `out_for_delivery`, `delivered`, `cancelled`) and note change in `src/features/orders/admin-actions.ts`
 - Sender Domain Guard: PASS — `getFromAddress` detects unverified public webmail domains (e.g. `@gmail.com`, `@yahoo.com`) and automatically falls back to `Scrub Vibe <onboarding@resend.dev>` to avoid Resend 403 errors
 - Supabase Cart Sync Fix: PASS — resolved `column pov.metadata does not exist` by migrating `sync_customer_cart_and_wishlist` to query `pov.swatch_hex` on `iqufqtjotgpmhhtvlxwf`
 - Admin Order Hardening: PASS — auto-promotes pending proof status to approved when admin selects paid/cod_due, and replaces unhandled 500 error throws with localized query param alerts
 - Immediate UI Refresh: PASS — eliminates manual F5 requirement via dynamic form keys (`key={`${order.id}-${order.status}...`}`), dual path revalidation, and immediate navigation redirects preserving active filter parameters
-- Unit tests: PASS — 43 tests in `tests/unit/email-notifications.test.ts` covering templates, RTL flag, `formatPriceMajor`, sender domain fallback, and dev-preview fallback behaviour
-- Total: PASS — 13 files, 115 tests
+- Unit tests: PASS — 52 tests in `tests/unit/email-notifications.test.ts` covering all lifecycle templates, RTL flag, `formatPriceMajor`, sender domain fallback, and dev-preview fallback behaviour
+- Total: PASS — 13 files, 124 tests
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 production build (`npm run build`)

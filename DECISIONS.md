@@ -35,3 +35,11 @@
 ## ADR-009 — Explicit Paymob activation and callback source of truth
 
 **Status:** Accepted. **Reason:** Paymob stays unavailable unless `PAYMOB_ENABLED=true` and every credential/callback setting is valid. Server-to-server HMAC callbacks—not browser redirects—are authoritative. Callback identities are deduplicated in PostgreSQL, successful payments cannot be downgraded by later failures, and only payload digests plus operational identifiers are retained for audit.
+
+## ADR-010 — Server-authoritative shipping quotes with immutable order snapshots
+
+**Status:** Accepted. **Reason:** The checkout UI may preview delivery charges, but the order transaction validates the selected Egyptian governorate/city and recalculates the zone fee, free-shipping discount and COD surcharge from live database settings. Each order stores the resulting zone, destination labels, charge breakdown and delivery window so later admin rate changes cannot rewrite the commercial terms promised to the customer.
+
+## ADR-011 — Multi-stage transactional order lifecycle notifications
+
+**Status:** Accepted. **Reason:** Customers receive real-time, non-blocking bilingual (Arabic/English) email notifications throughout their entire order lifecycle (Order Placed, Payment Approved, In Preparation, Shipped with Tracking, Out for Delivery, Delivered, and Cancelled), as well as on any staff update note. Sending failures never abort administrative or customer transactions, and sandbox/unverified sender domains safely fall back to Resend's onboarding domain to avoid delivery disruptions.

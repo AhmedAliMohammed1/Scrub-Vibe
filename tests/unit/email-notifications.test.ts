@@ -10,6 +10,11 @@ import {
   renderOrderPlaced,
   renderPaymentApproved,
   renderOrderShipped,
+  renderOrderProcessing,
+  renderOrderOutForDelivery,
+  renderOrderDelivered,
+  renderOrderCancelled,
+  renderOrderStatusNote,
   renderStaffNewOrder,
   renderStaffProofSubmitted,
   sendEmail,
@@ -376,5 +381,80 @@ describe("sendStaffEmail (no STAFF_EMAIL)", () => {
     expect(spy).toHaveBeenCalledWith(
       expect.stringContaining("Staff email skipped"),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Additional Status Templates
+// ---------------------------------------------------------------------------
+
+describe("renderOrderProcessing", () => {
+  it("renders EN processing email with customer name and items", () => {
+    const { subject, html } = renderOrderProcessing(ORDER, "en", "Special packaging requested");
+    expect(subject).toContain("SV-1001");
+    expect(subject).toContain("preparing");
+    expect(html).toContain("Ahmed Ali");
+    expect(html).toContain("Special packaging requested");
+    expect(html).toContain("Classic Scrub Top");
+  });
+
+  it("renders AR processing email with Arabic copy", () => {
+    const { subject, html } = renderOrderProcessing(ORDER, "ar");
+    expect(subject).toContain("قيد التجهيز");
+    expect(subject).toContain("SV-1001");
+    expect(html).toContain("dir=\"rtl\"");
+    expect(html).toContain("قميص سكراب كلاسيك");
+  });
+});
+
+describe("renderOrderOutForDelivery", () => {
+  it("renders EN out for delivery email with tracking and note", () => {
+    const { subject, html } = renderOrderOutForDelivery(ORDER, "en", "Driver will call before arrival");
+    expect(subject).toContain("out for delivery today");
+    expect(html).toContain("Driver will call before arrival");
+    expect(html).toContain("https://track.aramex.com");
+  });
+
+  it("renders AR out for delivery email", () => {
+    const { subject, html } = renderOrderOutForDelivery(ORDER, "ar");
+    expect(subject).toContain("مع مندوب التوصيل اليوم");
+    expect(html).toContain("dir=\"rtl\"");
+  });
+});
+
+describe("renderOrderDelivered", () => {
+  it("renders EN delivered email with thank you copy", () => {
+    const { subject, html } = renderOrderDelivered(ORDER, "en");
+    expect(subject).toContain("delivered");
+    expect(html).toContain("Delivered successfully");
+  });
+
+  it("renders AR delivered email", () => {
+    const { subject, html } = renderOrderDelivered(ORDER, "ar", "شكراً لاختياركم سكراب فايب");
+    expect(subject).toContain("تم تسليم طلبك بنجاح");
+    expect(html).toContain("شكراً لاختياركم سكراب فايب");
+  });
+});
+
+describe("renderOrderCancelled", () => {
+  it("renders EN cancelled email with cancellation reason", () => {
+    const { subject, html } = renderOrderCancelled(ORDER, "en", "Customer requested cancellation");
+    expect(subject).toContain("cancelled");
+    expect(html).toContain("Customer requested cancellation");
+  });
+
+  it("renders AR cancelled email", () => {
+    const { subject, html } = renderOrderCancelled(ORDER, "ar", "بناء على طلب العميل");
+    expect(subject).toContain("تم إلغاء طلبك");
+    expect(html).toContain("بناء على طلب العميل");
+  });
+});
+
+describe("renderOrderStatusNote", () => {
+  it("renders note update email with status and message", () => {
+    const { subject, html } = renderOrderStatusNote(ORDER, "en", "We added extra embroidery per your request", "processing");
+    expect(subject).toContain("Update on your order");
+    expect(html).toContain("We added extra embroidery per your request");
+    expect(html).toContain("PROCESSING");
   });
 });
