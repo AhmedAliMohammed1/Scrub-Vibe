@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added `src/features/notifications/email.ts` — Resend-backed email sender with dev-preview console fallback when `RESEND_API_KEY` is absent.
+- Added bilingual (EN/AR) HTML email templates for Order Placed, Payment Approved and Order Shipped customer lifecycle events.
+- Added staff alert email templates for New Order and Payment Proof Submitted events routed to `STAFF_EMAIL`.
+- Triggered Order Placed customer email and New Order staff alert (non-blocking) from `src/app/api/checkout/orders/route.ts` after successful `create_verified_order` RPC.
+- Triggered Payment Approved and Order Shipped customer emails (non-blocking) from `src/features/orders/admin-actions.ts` on `proofStatus === "approved"` and `status === "shipped"` respectively.
+- Added `RESEND_FROM_EMAIL` and `STAFF_EMAIL` env vars to `.env.example`.
+- Added 37-test `tests/unit/email-notifications.test.ts` covering all 5 templates (EN/AR), `formatPriceMajor`, and `sendEmail`/`sendStaffEmail` dev-preview fallback behaviour.
+- Installed `resend@6.26.0` via pnpm.
 - Initialized the NOVA Cairo production foundation.
 - Added English/Arabic storefront routes with LTR/RTL layouts.
 - Added original editorial hero art and responsive home, shop and product experiences.

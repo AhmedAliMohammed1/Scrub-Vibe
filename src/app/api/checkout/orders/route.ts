@@ -6,6 +6,13 @@ import { hashToken, issuePrivateToken } from "@/features/checkout/security";
 import { createPaymobIntention, hasPaymobConfiguration } from "@/features/checkout/paymob";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import {
+  renderOrderPlaced,
+  renderStaffNewOrder,
+  sendEmail,
+  sendStaffEmail,
+  type OrderEmailData,
+} from "@/features/notifications/email";
 
 export async function POST(request: Request) {
   const formData = await request.formData().catch(() => null);
@@ -156,6 +163,31 @@ export async function POST(request: Request) {
       paymentWarning = "paymob_start_failed";
     }
   }
+
+  // ── Transactional emails (non-blocking — never fail the order response) ──
+  const emailOrder: OrderEmailData = {
+    order_number: order.order_number,
+    customer_name: checkout.customerName,
+    email: checkout.email,
+    subtotal_minor: order.subtotal_minor,
+    shipping_minor: order.shipping_minor,
+    total_minor: order.total_minor,
+    payment_method: checkout.paymentMethod,
+    items: checkout.items.map((item) => ({
+      title_en: item.variantId.toString(),
+      title_ar: item.variantId.toString(),
+      colour_en: null,
+      colour_ar: null,
+      size: null,
+      quantity: item.quantity,
+      line_total_minor: 0, // line totals not returned by RPC — total shown instead
+    })),
+  };
+  void sendEmail(renderOrderPlaced(emailOrder, "en"));
+  void sendStaffEmail(
+    `[Scrub Vibe] New order #${order.order_number} — EGP ${(order.total_minor / 100).toFixed(2)}`,
+    renderStaffNewOrder(emailOrder).html,
+  );
 
   return NextResponse.json({
     orderNumber: order.order_number,

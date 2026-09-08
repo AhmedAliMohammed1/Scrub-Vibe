@@ -3,6 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRoles } from "@/server/auth/roles";
+import type { Locale } from "@/lib/i18n";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  renderPaymentApproved,
+  renderOrderShipped,
+  sendEmail,
+  type OrderEmailData,
+} from "@/features/notifications/email";
 
 const schema = z.object({
   locale: z.enum(["en", "ar"]),
@@ -33,4 +41,48 @@ export async function updateOrderAction(formData: FormData) {
   });
   if (error) throw new Error(error.message);
   revalidatePath(`/${value.locale}/admin/orders`);
+
+  // ── Transactional emails (non-blocking) ──────────────────────────────────
+  const shouldEmailProofApproved = value.proofStatus === "approved";
+  const shouldEmailShipped = value.status === "shipped";
+  if (shouldEmailProofApproved || shouldEmailShipped) {
+    void (async () => {
+      try {
+        const admin = createAdminClient();
+        const { data: orderData } = await admin
+          .from("orders")
+          .select("order_number, customer_name, email, subtotal_minor, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
+          .eq("id", value.orderId)
+          .single();
+
+        if (!orderData || !orderData.email) return;
+
+        const emailOrder: OrderEmailData = {
+          order_number: orderData.order_number,
+          customer_name: orderData.customer_name,
+          email: orderData.email,
+          subtotal_minor: orderData.subtotal_minor,
+          shipping_minor: orderData.shipping_minor,
+          total_minor: orderData.total_minor,
+          payment_method: orderData.payment_method,
+          courier: orderData.courier,
+          shipment_number: orderData.shipment_number,
+          tracking_url: orderData.tracking_url,
+          items: (orderData.order_items as OrderEmailData["items"]) ?? [],
+        };
+
+        const locale: "en" | "ar" =
+          (value.locale as Locale) === "ar" ? "ar" : "en";
+
+        if (shouldEmailProofApproved) {
+          await sendEmail(renderPaymentApproved(emailOrder, locale));
+        }
+        if (shouldEmailShipped) {
+          await sendEmail(renderOrderShipped(emailOrder, locale));
+        }
+      } catch (emailError) {
+        console.error("[email] Failed to send admin email notification:", emailError);
+      }
+    })();
+  }
 }

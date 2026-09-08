@@ -38,6 +38,10 @@
 - [x] **DONE** Verify production manual proof records for COD and Vodafone Cash reach consistent approved payment/order states.
 - [x] **DONE** Add shipping-zone pricing, delivery windows, governorate/city cascading selects and admin zone rate management. Tests: PASS (66 total).
 - [x] **DONE** Implement database-backed persistent cart and wishlist synchronization with owner-scoped RLS, automatic sign-in merge, optimistic updates, quantity modifiers and rich wishlist view. Tests: PASS (72 total + live Supabase verification).
+- [x] **DONE** Implement transactional email notifications via Resend — bilingual (EN/AR) HTML emails for Order Placed, Payment Approved and Order Shipped; staff alert emails for new orders and payment proof submissions; dev-preview console fallback when `RESEND_API_KEY` is absent. Tests: PASS (109 total).
 - [ ] **ON HOLD** Add Paymob merchant credentials, register/test the webhook, run successful/declined sandbox payments and validate duplicate/delayed callbacks. Follow `PAYMOB_ACTIVATION.md`; merchant keys required.
 - [ ] **TODO** Configure and validate production Twilio credentials if phone OTP should be enabled.
-- [ ] **TODO** Implement transactional notifications (email via Resend / WhatsApp), abandoned-cart recovery automation, and production observability/monitoring.
+- [ ] **TODO** Implement WhatsApp notifications via Twilio/WhatsApp Business API.
+- [ ] **TODO** Implement automated abandoned-cart recovery emails.
+- [ ] **TODO** Add Resend sender domain verification and update `RESEND_FROM_EMAIL` in Vercel env vars.
+- [ ] **TODO** Add production observability/monitoring (Sentry DSN, Upstash Redis rate limiting).
