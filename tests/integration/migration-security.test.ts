@@ -114,6 +114,14 @@ const customerAddresses = readFileSync(
   "utf8",
 );
 
+const cmsBanners = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260908104000_cms_banners.sql",
+  ),
+  "utf8",
+);
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -410,5 +418,31 @@ describe("foundation migration security", () => {
     expect(customerAddresses).toMatch(
       /create or replace function public\.handle_customer_address_delete[\s\S]*security definer[\s\S]*set search_path = ''/,
     );
+  });
+
+  it("secures cms banners and storage assets with role-based policies", () => {
+    expect(cmsBanners).toContain(
+      "alter table public.cms_banners enable row level security;",
+    );
+    expect(cmsBanners).toContain(
+      "revoke all on public.cms_banners from anon, authenticated;",
+    );
+    expect(cmsBanners).toContain(
+      "grant select on public.cms_banners to anon, authenticated;",
+    );
+    expect(cmsBanners).toContain(
+      "grant insert, update, delete on public.cms_banners to authenticated;",
+    );
+    expect(cmsBanners).toContain("create policy cms_banners_public_read");
+    expect(cmsBanners).toContain("create policy cms_banners_admin_read_all");
+    expect(cmsBanners).toContain("create policy cms_banners_admin_manage");
+    expect(cmsBanners).toContain(
+      "private.has_any_role(array['admin','super_admin']::public.app_role[])",
+    );
+    expect(cmsBanners).toContain("insert into storage.buckets");
+    expect(cmsBanners).toContain("'banners'");
+    expect(cmsBanners).toContain("create policy banners_public_read");
+    expect(cmsBanners).toContain("create policy banners_admin_insert");
+    expect(cmsBanners).not.toMatch(/auth\.role\s*\(/);
   });
 });

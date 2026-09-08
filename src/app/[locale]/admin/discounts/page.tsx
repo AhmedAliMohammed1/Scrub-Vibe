@@ -113,6 +113,12 @@ export default async function AdminDiscountsPage({
                 {ar ? "لوحة الإدارة" : "Dashboard"}
               </Link>
               <Link
+                href={`/${locale}/admin/banners` as Route}
+                className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
+              >
+                {ar ? "البانرات" : "Banners"}
+              </Link>
+              <Link
                 href={`/${locale}/checkout` as Route}
                 className="bg-white px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em] text-[#062f2b]"
               >

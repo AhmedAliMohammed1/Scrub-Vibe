@@ -247,4 +247,17 @@
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`).
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`).
 
+## Storefront Merchandising CMS & Dynamic Banners Checkpoint — 2026-09-08
+
+- Database: PASS — `public.cms_banners` created with RLS, least-privilege grants, and public storage bucket `banners` with admin-only policies applied live to Supabase project `iqufqtjotgpmhhtvlxwf`.
+- Storefront UI: PASS — Server-side `AnnouncementBar` with CSS-only ticker rotation, `HeroCarousel` with 6s auto-advance and dot navigation, and `PromoSection` with alternating 2-column layout; all featuring automatic fallback to foundational brand assets when no CMS banners are active.
+- Admin Management: PASS — `/[locale]/admin/banners` workspace with 3 tabs (Announcements, Heroes, Promos), image file upload, native color pickers, opacity slider, schedule controls, status badges, and position reordering.
+- Unit Tests: PASS — 19 tests in `tests/unit/cms-banners.test.ts` covering types, bilingual content resolution, storage image URL construction, scheduling status, DB row mapping, and Zod input validation.
+- Integration Tests: PASS — `tests/integration/migration-security.test.ts` verifying RLS, grant revocation, admin write policies, public storage read, and admin storage insert.
+- Total Tests: PASS — 18 files, 176 tests (100% passing).
+- Lint: PASS — zero warnings (`eslint . --max-warnings=0`).
+- Typecheck: PASS — strict TypeScript (`tsc --noEmit`).
+- Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`).
+
+
 

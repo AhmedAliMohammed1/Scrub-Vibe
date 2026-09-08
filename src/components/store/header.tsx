@@ -30,9 +30,6 @@ export function Header({ locale }: { locale: Locale }) {
         };
   return (
     <>
-      <div className="bg-neutral-950 px-4 py-2 text-center text-[10px] font-medium uppercase tracking-[.18em] text-white">
-        {t.freeShipping}
-      </div>
       <header className="relative z-20 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
         <div className="mx-auto flex h-17 max-w-[1600px] items-center justify-between px-2 sm:px-4 md:px-8">
           <details className="group xl:hidden">

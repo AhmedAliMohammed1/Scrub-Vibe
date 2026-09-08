@@ -263,6 +263,87 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_banners: {
+        Row: {
+          bg_color: string
+          body_ar: string | null
+          body_en: string | null
+          created_at: string
+          cta_text_ar: string | null
+          cta_text_en: string | null
+          cta_url: string | null
+          ends_at: string | null
+          id: number
+          image_path: string | null
+          is_active: boolean
+          overlay_opacity: number
+          position: number
+          secondary_cta_text_ar: string | null
+          secondary_cta_text_en: string | null
+          secondary_cta_url: string | null
+          starts_at: string | null
+          subtitle_ar: string | null
+          subtitle_en: string | null
+          text_color: string
+          title_ar: string
+          title_en: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          cta_text_ar?: string | null
+          cta_text_en?: string | null
+          cta_url?: string | null
+          ends_at?: string | null
+          id?: never
+          image_path?: string | null
+          is_active?: boolean
+          overlay_opacity?: number
+          position?: number
+          secondary_cta_text_ar?: string | null
+          secondary_cta_text_en?: string | null
+          secondary_cta_url?: string | null
+          starts_at?: string | null
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          text_color?: string
+          title_ar?: string
+          title_en?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          cta_text_ar?: string | null
+          cta_text_en?: string | null
+          cta_url?: string | null
+          ends_at?: string | null
+          id?: never
+          image_path?: string | null
+          is_active?: boolean
+          overlay_opacity?: number
+          position?: number
+          secondary_cta_text_ar?: string | null
+          secondary_cta_text_en?: string | null
+          secondary_cta_url?: string | null
+          starts_at?: string | null
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          text_color?: string
+          title_ar?: string
+          title_en?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_addresses: {
         Row: {
           apartment: string | null

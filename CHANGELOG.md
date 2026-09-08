@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Implemented Storefront Merchandising CMS & Dynamic Banners from A to Z:
+  - Created `public.cms_banners` PostgreSQL table with bilingual English/Arabic fields, scheduling windows (`starts_at`, `ends_at`), background/text color customization, overlay opacity, sort positioning, and owner-isolated RLS.
+  - Created public `banners` Supabase Storage bucket with administrative upload/delete policies.
+  - Built server-side `AnnouncementBar` component with CSS-only ticker rotation and automatic fallback to static brand text.
+  - Built `HeroCarousel` client component with 6-second auto-advance, dot navigation, Supabase image rendering, and fallback to the foundational hero section.
+  - Built `PromoSection` server component with alternating 2-column image/copy blocks for promotional campaigns.
+  - Created admin management workspace at `/[locale]/admin/banners` with 3 tabs (Announcements, Heroes, Promos), image file upload, native color pickers, opacity slider, schedule controls, live status badges, and position reordering.
+  - Added cross-admin "Banners" navigation links to Overview, Discounts, Sizes, Shipping, and Orders pages.
+  - Added 19 comprehensive unit tests in `tests/unit/cms-banners.test.ts` and storage/RLS assertions in `tests/integration/migration-security.test.ts` (176 total passing tests).
+  - Applied migration `20260908104000_cms_banners.sql` to live hosted Supabase project `iqufqtjotgpmhhtvlxwf`.
 - Integrated official original brand icons for Vodafone Cash and InstaPay Egypt in the checkout payment and deposit selection interfaces:
   - Vodafone Cash now uses the official circular Vodafone speechmark vector extracted directly from `web.vodafone.com.eg` with Vodafone Red (`#e60000`) and pure white teardrop speechmark cutout.
   - InstaPay now uses the authentic Egyptian Banks Company (EBC) / Central Bank of Egypt (CBE) InstaPay logo mark (`public/images/payments/instapay.png`), cropped and centered for crisp display across all device displays.

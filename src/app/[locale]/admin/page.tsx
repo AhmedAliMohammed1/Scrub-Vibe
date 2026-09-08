@@ -222,6 +222,12 @@ export default async function AdminPage({
                 <span className="flex items-center gap-2"><BadgePercent size={14} />{ar ? "الخصومات" : "Discounts"}</span>
               </Link>
               <Link
+                href={`/${locale}/admin/banners` as Route}
+                className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
+              >
+                <span className="flex items-center gap-2"><Sparkles size={14} />{ar ? "البانرات" : "Banners"}</span>
+              </Link>
+              <Link
                 href={`/${locale}/admin/sizes` as Route}
                 className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
               >
