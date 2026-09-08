@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 export type { CartLine };
 
 type ProductSelection = { colourCode?: string; size?: string };
+type CartMutationResult = { success: boolean; error?: string };
 type StoredShop = {
   version?: number;
   cartItems?: CartLine[];
@@ -69,6 +70,27 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   const wishlistRef = useRef(wishlist);
   const lastSyncedUserIdRef = useRef<string | null>(null);
   const isSyncingRef = useRef<boolean>(false);
+  const cartMutationQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  const queueCartMutation = useCallback(
+    (label: string, mutation: () => Promise<CartMutationResult>) => {
+      const queued = cartMutationQueueRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          const result = await mutation();
+          if (!result.success) {
+            throw new Error(result.error ?? "unknown_cart_mutation_error");
+          }
+        });
+
+      // Keep writes ordered so a slower, older request cannot overwrite the
+      // customer's latest quantity. Catch here to keep the next write usable.
+      cartMutationQueueRef.current = queued.catch((error) => {
+        console.error(`[cart/${label}] Background save failed`, error);
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     cartItemsRef.current = cartItems;
@@ -117,6 +139,8 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         const res = await syncCartAndWishlistAction(localCart, localWishlist);
         if (res && active) {
           lastSyncedUserIdRef.current = userId;
+          cartItemsRef.current = res.cart;
+          wishlistRef.current = res.wishlist;
           setCartItems(res.cart);
           setWishlist(res.wishlist);
         }
@@ -157,6 +181,8 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       } else if (event === "SIGNED_OUT") {
         setIsAuthenticated(false);
         lastSyncedUserIdRef.current = null;
+        cartItemsRef.current = [];
+        wishlistRef.current = [];
         setCartItems([]);
         setWishlist([]);
         try {
@@ -189,26 +215,27 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       if (!variantId) return;
 
       let nextQuantity = 1;
+      const currentLines = cartItemsRef.current;
+      const existing = currentLines.find((line) => line.key === key);
+      let nextLines: CartLine[];
 
-      setCartItems((lines) => {
-        const existing = lines.find((line) => line.key === key);
-        if (existing) {
-          nextQuantity = Math.min(10, existing.quantity + 1);
-          return lines.map((line) =>
-            line.key === key
-              ? {
-                  ...line,
-                  quantity: nextQuantity,
-                  price: product.price,
-                  codDeposit: product.codDeposit,
-                  title: product.title,
-                  image: product.image,
-                }
-              : line,
-          );
-        }
-        return [
-          ...lines,
+      if (existing) {
+        nextQuantity = Math.min(10, existing.quantity + 1);
+        nextLines = currentLines.map((line) =>
+          line.key === key
+            ? {
+                ...line,
+                quantity: nextQuantity,
+                price: product.price,
+                codDeposit: product.codDeposit,
+                title: product.title,
+                image: product.image,
+              }
+            : line,
+        );
+      } else {
+        nextLines = [
+          ...currentLines,
           {
             key,
             productId: product.id,
@@ -225,11 +252,14 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
             quantity: 1,
           },
         ];
-      });
+      }
+
+      cartItemsRef.current = nextLines;
+      setCartItems(nextLines);
 
       if (isAuthenticated) {
-        updateCartItemQuantityAction(variantId, nextQuantity).catch((err) =>
-          console.error("[cart/add] Background save failed", err),
+        queueCartMutation("add", () =>
+          updateCartItemQuantityAction(variantId, nextQuantity),
         );
       }
 
@@ -238,72 +268,63 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
         metadata: { colour: colour.code, size },
       });
     },
-    [isAuthenticated],
+    [isAuthenticated, queueCartMutation],
   );
 
   const updateQuantity = useCallback(
     (key: string, delta: number) => {
-      let targetVariantId: string | null = null;
-      let finalQty = 1;
+      const target = cartItemsRef.current.find((line) => line.key === key);
+      if (!target) return;
 
-      setCartItems((lines) => {
-        const target = lines.find((line) => line.key === key);
-        if (!target) return lines;
-        targetVariantId = target.variantId;
-        finalQty = target.quantity + delta;
+      const finalQty = Math.min(10, target.quantity + delta);
+      const nextLines =
+        finalQty <= 0
+          ? cartItemsRef.current.filter((line) => line.key !== key)
+          : cartItemsRef.current.map((line) =>
+              line.key === key ? { ...line, quantity: finalQty } : line,
+            );
+      cartItemsRef.current = nextLines;
+      setCartItems(nextLines);
 
+      if (isAuthenticated) {
         if (finalQty <= 0) {
-          return lines.filter((line) => line.key !== key);
-        }
-
-        const clamped = Math.min(10, finalQty);
-        finalQty = clamped;
-        return lines.map((line) =>
-          line.key === key ? { ...line, quantity: clamped } : line,
-        );
-      });
-
-      if (isAuthenticated && targetVariantId) {
-        if (finalQty <= 0) {
-          removeCartItemAction(targetVariantId).catch((err) =>
-            console.error("[cart/remove] Background delete failed", err),
+          queueCartMutation("remove", () =>
+            removeCartItemAction(target.variantId),
           );
         } else {
-          updateCartItemQuantityAction(targetVariantId, finalQty).catch((err) =>
-            console.error("[cart/update] Background update failed", err),
+          queueCartMutation("update", () =>
+            updateCartItemQuantityAction(target.variantId, finalQty),
           );
         }
       }
     },
-    [isAuthenticated],
+    [isAuthenticated, queueCartMutation],
   );
 
   const removeCartItem = useCallback(
     (key: string) => {
-      let targetVariantId: string | null = null;
-      setCartItems((lines) => {
-        const found = lines.find((line) => line.key === key);
-        if (found) targetVariantId = found.variantId;
-        return lines.filter((line) => line.key !== key);
-      });
+      const found = cartItemsRef.current.find((line) => line.key === key);
+      if (!found) return;
+      const nextLines = cartItemsRef.current.filter((line) => line.key !== key);
+      cartItemsRef.current = nextLines;
+      setCartItems(nextLines);
 
-      if (isAuthenticated && targetVariantId) {
-        removeCartItemAction(targetVariantId).catch((err) =>
-          console.error("[cart/remove] Background delete failed", err),
+      if (isAuthenticated) {
+        queueCartMutation("remove", () =>
+          removeCartItemAction(found.variantId),
         );
       }
     },
-    [isAuthenticated],
+    [isAuthenticated, queueCartMutation],
   );
 
   const clearCart = useCallback(() => {
+    cartItemsRef.current = [];
     setCartItems([]);
     if (isAuthenticated) {
-      clearCartAction().catch((err) =>
-        console.error("[cart/clear] Background clear failed", err),
-      );
+      queueCartMutation("clear", clearCartAction);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, queueCartMutation]);
 
   const toggleWishlist = useCallback(
     (id: string) => {
