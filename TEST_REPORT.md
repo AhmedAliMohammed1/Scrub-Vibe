@@ -152,8 +152,10 @@
 - Email module: PASS — `src/features/notifications/email.ts` wraps Resend SDK; dev-preview fallback logs to console when `RESEND_API_KEY` is absent or `[SENSITIVE]`
 - Templates: PASS — 5 bilingual (EN/AR) HTML templates verified: `renderOrderPlaced`, `renderPaymentApproved`, `renderOrderShipped`, `renderStaffNewOrder`, `renderStaffProofSubmitted`
 - Triggers: PASS — Order Placed + New Order staff alert fire non-blocking after `create_verified_order` RPC in `src/app/api/checkout/orders/route.ts`; Payment Approved + Order Shipped fire non-blocking after `admin_update_order` RPC in `src/features/orders/admin-actions.ts`
-- Unit tests: PASS — 37 new tests in `tests/unit/email-notifications.test.ts` covering subject/body content for EN and AR variants, RTL flag, conditional courier/tracking sections, `formatPriceMajor`, and both `sendEmail` and `sendStaffEmail` dev-preview fallback behaviour
-- Total: PASS — 13 files, 109 tests
+- Sender Domain Guard: PASS — `getFromAddress` detects unverified public webmail domains (e.g. `@gmail.com`, `@yahoo.com`) and automatically falls back to `Scrub Vibe <onboarding@resend.dev>` to avoid Resend 403 errors
+- Supabase Cart Sync Fix: PASS — resolved `column pov.metadata does not exist` by migrating `sync_customer_cart_and_wishlist` to query `pov.swatch_hex` on `iqufqtjotgpmhhtvlxwf`
+- Unit tests: PASS — 43 tests in `tests/unit/email-notifications.test.ts` covering templates, RTL flag, `formatPriceMajor`, sender domain fallback, and dev-preview fallback behaviour
+- Total: PASS — 13 files, 115 tests
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`)
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`)
 - Build: PASS — Next.js 16.3.3 production build (`npm run build`)

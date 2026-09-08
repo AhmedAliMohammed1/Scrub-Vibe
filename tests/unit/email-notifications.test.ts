@@ -15,6 +15,8 @@ import {
   sendEmail,
   sendStaffEmail,
   formatPriceMajor,
+  getFromAddress,
+  getStaffEmail,
   type OrderEmailData,
 } from "../../src/features/notifications/email";
 
@@ -76,6 +78,52 @@ describe("formatPriceMajor", () => {
 
   it("formats 39700 piastres as EGP 397.00", () => {
     expect(formatPriceMajor(39700)).toBe("EGP 397.00");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getFromAddress & getStaffEmail
+// ---------------------------------------------------------------------------
+
+describe("getFromAddress", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("defaults to onboarding@resend.dev when RESEND_FROM_EMAIL is not set", () => {
+    vi.stubEnv("RESEND_FROM_EMAIL", "");
+    expect(getFromAddress()).toBe("Scrub Vibe <onboarding@resend.dev>");
+  });
+
+  it("falls back to onboarding@resend.dev when given a @gmail.com address", () => {
+    vi.stubEnv("RESEND_FROM_EMAIL", "mytest@gmail.com");
+    expect(getFromAddress()).toBe("Scrub Vibe <onboarding@resend.dev>");
+  });
+
+  it("falls back to onboarding@resend.dev when given a @yahoo.com address", () => {
+    vi.stubEnv("RESEND_FROM_EMAIL", "store@yahoo.com");
+    expect(getFromAddress()).toBe("Scrub Vibe <onboarding@resend.dev>");
+  });
+
+  it("uses custom verified domain when provided", () => {
+    vi.stubEnv("RESEND_FROM_EMAIL", "noreply@scrub-vibe.com");
+    expect(getFromAddress()).toBe("Scrub Vibe <noreply@scrub-vibe.com>");
+  });
+});
+
+describe("getStaffEmail", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns trimmed staff email when set", () => {
+    vi.stubEnv("STAFF_EMAIL", "  ops@scrub-vibe.com  ");
+    expect(getStaffEmail()).toBe("ops@scrub-vibe.com");
+  });
+
+  it("returns empty string when unset", () => {
+    vi.stubEnv("STAFF_EMAIL", "");
+    expect(getStaffEmail()).toBe("");
   });
 });
 

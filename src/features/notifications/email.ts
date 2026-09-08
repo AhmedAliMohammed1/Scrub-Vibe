@@ -10,8 +10,18 @@ function getResendClient(): Resend | null {
   return new Resend(key);
 }
 
-const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL ?? "noreply@resend.dev";
-const STAFF_EMAIL = process.env.STAFF_EMAIL ?? "";
+export function getFromAddress(): string {
+  const custom = process.env.RESEND_FROM_EMAIL?.trim();
+  const unverifiedProviders = ["@gmail.com", "@yahoo.com", "@outlook.com", "@hotmail.com", "@icloud.com"];
+  if (!custom || unverifiedProviders.some((domain) => custom.toLowerCase().endsWith(domain))) {
+    return "Scrub Vibe <onboarding@resend.dev>";
+  }
+  return custom.includes("<") ? custom : `Scrub Vibe <${custom}>`;
+}
+
+export function getStaffEmail(): string {
+  return (process.env.STAFF_EMAIL ?? "").trim();
+}
 
 export type EmailPayload = {
   to: string;
@@ -31,8 +41,9 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
     );
     return;
   }
+  const from = getFromAddress();
   const { error } = await resend.emails.send({
-    from: FROM_ADDRESS,
+    from,
     to: payload.to,
     subject: payload.subject,
     html: payload.html,
@@ -47,14 +58,15 @@ export async function sendStaffEmail(
   subject: string,
   html: string,
 ): Promise<void> {
-  if (!STAFF_EMAIL) {
+  const staffEmail = getStaffEmail();
+  if (!staffEmail) {
     console.log(
       "[email-preview] Staff email skipped (STAFF_EMAIL not configured):\n" +
         `  Subject: ${subject}`,
     );
     return;
   }
-  await sendEmail({ to: STAFF_EMAIL, subject, html });
+  await sendEmail({ to: staffEmail, subject, html });
 }
 
 // ---------------------------------------------------------------------------
@@ -357,7 +369,7 @@ export function renderStaffNewOrder(order: OrderEmailData): EmailPayload {
     </table>
     ${itemsTable(order.items, "en")}`,
   );
-  return { to: STAFF_EMAIL, subject, html };
+  return { to: getStaffEmail(), subject, html };
 }
 
 // ---------------------------------------------------------------------------
@@ -379,5 +391,5 @@ export function renderStaffProofSubmitted(order: OrderEmailData): EmailPayload {
       <tr><td style="padding:4px 0;">Total</td><td style="padding:4px 0;font-weight:700;color:#062f2b;text-align:right;">${formatPriceMajor(order.total_minor)}</td></tr>
     </table>`,
   );
-  return { to: STAFF_EMAIL, subject, html };
+  return { to: getStaffEmail(), subject, html };
 }

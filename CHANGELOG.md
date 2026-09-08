@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added automatic sender domain fallback in `getFromAddress` preventing Resend 403 errors when public webmail addresses (e.g. `@gmail.com`) are configured as `RESEND_FROM_EMAIL`.
+- Fixed `column pov.metadata does not exist` in `sync_customer_cart_and_wishlist` database function by querying `pov.swatch_hex`.
+- Expanded `tests/unit/email-notifications.test.ts` to 43 tests covering sender domain fallback and staff email resolution.
 - Added `src/features/notifications/email.ts` — Resend-backed email sender with dev-preview console fallback when `RESEND_API_KEY` is absent.
 - Added bilingual (EN/AR) HTML email templates for Order Placed, Payment Approved and Order Shipped customer lifecycle events.
 - Added staff alert email templates for New Order and Payment Proof Submitted events routed to `STAFF_EMAIL`.

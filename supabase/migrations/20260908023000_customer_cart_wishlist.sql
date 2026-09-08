@@ -149,7 +149,7 @@ begin
         limit 1
       ),
       'swatch', coalesce((
-        select pov.metadata ->> 'swatch'
+        select pov.swatch_hex
         from public.product_variant_values pvv
         join public.product_option_values pov on pov.id = pvv.option_value_id
         join public.product_options po on po.id = pov.option_id
