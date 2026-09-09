@@ -73,18 +73,25 @@ summary {
 }
 .skip-link {
   position: fixed;
-  inset-block-start: 12px;
+  inset-block-start: 0;
   inset-inline-start: 12px;
   z-index: 100;
-  translate: 0 -200%;
+  transform: translateY(calc(-100% - 8px));
+  opacity: 0;
+  pointer-events: none;
   background: white;
   color: var(--brand-950);
   padding: 12px 16px;
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
+  transition: transform 160ms ease, opacity 160ms ease;
 }
-.skip-link:focus {
-  translate: 0;
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(12px);
+  opacity: 1;
+  pointer-events: auto;
 }
 .counter {
   position: absolute;
