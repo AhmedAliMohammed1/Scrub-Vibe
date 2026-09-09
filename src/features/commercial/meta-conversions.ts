@@ -18,7 +18,8 @@ export async function sendMetaPurchase(input: {
 }) {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
   const token = process.env.META_CONVERSIONS_API_TOKEN?.trim();
-  if (!pixelId || !token) return { sent: false as const, reason: "not_configured" as const };
+  if (!pixelId || !token)
+    return { sent: false as const, reason: "not_configured" as const };
   const userData: Record<string, string | string[]> = {
     em: [hash(input.email)],
     ph: [hash(input.phone.replace(/\D/g, ""))],
@@ -43,12 +44,25 @@ export async function sendMetaPurchase(input: {
       },
     ],
   };
-  if (process.env.META_TEST_EVENT_CODE?.trim()) payload.test_event_code = process.env.META_TEST_EVENT_CODE.trim();
+  if (process.env.META_TEST_EVENT_CODE?.trim())
+    payload.test_event_code = process.env.META_TEST_EVENT_CODE.trim();
   const version = process.env.META_GRAPH_API_VERSION?.trim() || "v24.0";
-  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(token)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), cache: "no-store" });
+  const response = await fetch(
+    `https://graph.facebook.com/${version}/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(token)}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    },
+  );
   if (!response.ok) {
     const detail = await response.text();
-    console.error("[meta-capi] Purchase event rejected", response.status, detail.slice(0, 500));
+    console.error(
+      "[meta-capi] Purchase event rejected",
+      response.status,
+      detail.slice(0, 500),
+    );
     return { sent: false as const, reason: "rejected" as const };
   }
   return { sent: true as const };

@@ -12,8 +12,17 @@ function getResendClient(): Resend | null {
 
 export function getFromAddress(): string {
   const custom = process.env.RESEND_FROM_EMAIL?.trim();
-  const unverifiedProviders = ["@gmail.com", "@yahoo.com", "@outlook.com", "@hotmail.com", "@icloud.com"];
-  if (!custom || unverifiedProviders.some((domain) => custom.toLowerCase().endsWith(domain))) {
+  const unverifiedProviders = [
+    "@gmail.com",
+    "@yahoo.com",
+    "@outlook.com",
+    "@hotmail.com",
+    "@icloud.com",
+  ];
+  if (
+    !custom ||
+    unverifiedProviders.some((domain) => custom.toLowerCase().endsWith(domain))
+  ) {
     return "Scrub Vibe <onboarding@resend.dev>";
   }
   return custom.includes("<") ? custom : `Scrub Vibe <${custom}>`;
@@ -36,22 +45,67 @@ export function renderBackInStockSubscription(input: {
   unsubscribeUrl: string;
 }): EmailPayload {
   const ar = input.locale === "ar";
-  const subject = ar ? "تم تفعيل تنبيه توفر المنتج — Scrub Vibe" : "Your stock alert is active — Scrub Vibe";
+  const subject = ar
+    ? "تم تفعيل تنبيه توفر المنتج — Scrub Vibe"
+    : "Your stock alert is active — Scrub Vibe";
   const content = `<p style="font-size:14px;line-height:1.7;color:#444">${ar ? "سنرسل لك رسالة واحدة عند عودة اختيارك للمخزون." : "We’ll send you one email as soon as your selection is available again."}</p><p><a href="${input.productUrl}" style="display:inline-block;background:#073b36;color:#fff;padding:12px 20px;text-decoration:none;font-size:12px;font-weight:700">${ar ? "عرض المنتج" : "View product"}</a></p>`;
-  return { to: input.email, subject, html: baseLayout(subject, content, ar, `<a href="${input.unsubscribeUrl}" style="color:#777">${ar ? "إلغاء التنبيه" : "Cancel this alert"}</a>`) };
+  return {
+    to: input.email,
+    subject,
+    html: baseLayout(
+      subject,
+      content,
+      ar,
+      `<a href="${input.unsubscribeUrl}" style="color:#777">${ar ? "إلغاء التنبيه" : "Cancel this alert"}</a>`,
+    ),
+  };
 }
 
-export function renderBackInStock(input: { email: string; locale: "en" | "ar"; productName: string; productUrl: string }): EmailPayload {
+export function renderBackInStock(input: {
+  email: string;
+  locale: "en" | "ar";
+  productName: string;
+  productUrl: string;
+}): EmailPayload {
   const ar = input.locale === "ar";
-  const subject = ar ? `${input.productName} متوفر الآن` : `${input.productName} is back in stock`;
+  const subject = ar
+    ? `${input.productName} متوفر الآن`
+    : `${input.productName} is back in stock`;
   const content = `<p style="font-size:14px;line-height:1.7;color:#444">${ar ? "اختيارك متوفر من جديد. المخزون قد ينفد سريعاً." : "Your selection is available again. Stock may be limited."}</p><p><a href="${input.productUrl}" style="display:inline-block;background:#073b36;color:#fff;padding:12px 20px;text-decoration:none;font-size:12px;font-weight:700">${ar ? "تسوق الآن" : "Shop now"}</a></p>`;
   return { to: input.email, subject, html: baseLayout(subject, content, ar) };
 }
 
-export function renderReturnUpdate(input: { email: string; customerName: string; orderNumber: string; returnNumber: string; requestType: string; status: string; note: string | null; locale: "en" | "ar" }): EmailPayload {
+export function renderReturnUpdate(input: {
+  email: string;
+  customerName: string;
+  orderNumber: string;
+  returnNumber: string;
+  requestType: string;
+  status: string;
+  note: string | null;
+  locale: "en" | "ar";
+}): EmailPayload {
   const ar = input.locale === "ar";
-  const subject = ar ? `تحديث طلب ${input.returnNumber}` : `Update for ${input.returnNumber}`;
+  const subject = ar
+    ? `تحديث طلب ${input.returnNumber}`
+    : `Update for ${input.returnNumber}`;
   const content = `<p style="font-size:14px;color:#444">${ar ? `مرحباً ${input.customerName}، تم تحديث طلبك المرتبط بالطلب ${input.orderNumber}.` : `Hi ${input.customerName}, your request for order ${input.orderNumber} has been updated.`}</p><table width="100%" style="background:#f0f5f3;padding:16px;font-size:13px"><tr><td>${ar ? "النوع" : "Type"}</td><td style="text-align:right;font-weight:700">${input.requestType.replaceAll("_", " ")}</td></tr><tr><td>${ar ? "الحالة" : "Status"}</td><td style="text-align:right;font-weight:700">${input.status.replaceAll("_", " ")}</td></tr></table>${input.note ? `<p style="font-size:13px;color:#555"><strong>${ar ? "ملاحظة الفريق:" : "Team note:"}</strong><br>${input.note}</p>` : ""}`;
+  return { to: input.email, subject, html: baseLayout(subject, content, ar) };
+}
+
+export function renderReturnSubmitted(input: {
+  email: string;
+  customerName: string;
+  orderNumber: string;
+  returnNumber: string;
+  requestType: string;
+  locale: "en" | "ar";
+}): EmailPayload {
+  const ar = input.locale === "ar";
+  const subject = ar
+    ? `تم استلام طلبك ${input.returnNumber}`
+    : `We received your request ${input.returnNumber}`;
+  const content = `<p style="font-size:14px;color:#333">${ar ? `مرحباً ${input.customerName}، استلمنا طلب ${input.requestType === "exchange" ? "الاستبدال" : "الاسترجاع"} المرتبط بالطلب ${input.orderNumber}.` : `Hi ${input.customerName}, we received your ${input.requestType} request for order ${input.orderNumber}.`}</p><p style="font-size:13px;color:#666">${ar ? "سيراجع فريقنا التفاصيل ويحدث الحالة من خلال حسابك." : "Our team will review the details and update the status in your account."}</p>`;
   return { to: input.email, subject, html: baseLayout(subject, content, ar) };
 }
 
@@ -615,7 +669,8 @@ export function renderOrderStatusNote(
 
   const statusLabel = isAr
     ? "حالة الطلب الحالية: " + currentStatus.replaceAll("_", " ")
-    : "Current order status: " + currentStatus.replaceAll("_", " ").toUpperCase();
+    : "Current order status: " +
+      currentStatus.replaceAll("_", " ").toUpperCase();
 
   const content = `
     <p style="font-size:15px;color:#333;margin:0 0 8px;">${greeting}</p>

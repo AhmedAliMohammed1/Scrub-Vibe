@@ -28,12 +28,16 @@ export async function getProductMerchandising(
       catalog.featured(),
     ]);
 
-  const bundleIds = [...new Set((memberships ?? []).map((row) => row.bundle_id))];
+  const bundleIds = [
+    ...new Set((memberships ?? []).map((row) => row.bundle_id)),
+  ];
   const [{ data: bundleRows }, { data: bundleItems }] = await Promise.all([
     bundleIds.length
       ? supabase
           .from("product_bundles")
-          .select("id, slug, title_en, title_ar, description_en, description_ar")
+          .select(
+            "id, slug, title_en, title_ar, description_en, description_ar",
+          )
           .in("id", bundleIds)
           .order("position")
       : Promise.resolve({ data: [] }),
@@ -45,8 +49,12 @@ export async function getProductMerchandising(
           .order("position")
       : Promise.resolve({ data: [] }),
   ]);
-  const byId = new Map(products.map((product) => [Number(product.id), product]));
-  const relatedIds = (recommendations ?? []).map((row) => row.related_product_id);
+  const byId = new Map(
+    products.map((product) => [Number(product.id), product]),
+  );
+  const relatedIds = (recommendations ?? []).map(
+    (row) => row.related_product_id,
+  );
 
   return {
     related: relatedIds.flatMap((id) => {
@@ -58,21 +66,24 @@ export async function getProductMerchandising(
         .filter((item) => item.bundle_id === bundle.id)
         .flatMap((item) => {
           const product = byId.get(item.product_id);
-          return product ? Array.from({ length: item.quantity }, () => product) : [];
+          return product
+            ? Array.from({ length: item.quantity }, () => product)
+            : [];
         });
       return items.length > 1
-        ? [{
-            id: bundle.id,
-            slug: bundle.slug,
-            title: { en: bundle.title_en, ar: bundle.title_ar },
-            description: {
-              en: bundle.description_en,
-              ar: bundle.description_ar,
+        ? [
+            {
+              id: bundle.id,
+              slug: bundle.slug,
+              title: { en: bundle.title_en, ar: bundle.title_ar },
+              description: {
+                en: bundle.description_en,
+                ar: bundle.description_ar,
+              },
+              products: items,
             },
-            products: items,
-          }]
+          ]
         : [];
     }),
   };
 }
-

@@ -115,10 +115,7 @@ const customerAddresses = readFileSync(
 );
 
 const cmsBanners = readFileSync(
-  resolve(
-    process.cwd(),
-    "supabase/migrations/20260908104000_cms_banners.sql",
-  ),
+  resolve(process.cwd(), "supabase/migrations/20260908104000_cms_banners.sql"),
   "utf8",
 );
 
@@ -530,14 +527,18 @@ describe("foundation migration security", () => {
         `alter table public.${table} enable row level security`,
       );
     }
-    expect(commercialGrowth).toContain("'return-evidence', 'return-evidence', false");
+    expect(commercialGrowth).toContain(
+      "'return-evidence', 'return-evidence', false",
+    );
     expect(commercialGrowth).not.toMatch(/auth\.role\s*\(/);
     expect(commercialGrowth).toContain("(select auth.uid()) = user_id");
   });
 
   it("indexes foreign keys and prevents duplicate return cases", () => {
     expect(commercialGrowth).toContain("product_bundle_items_product_idx");
-    expect(commercialGrowth).toContain("stock_subscriptions_active_variant_idx");
+    expect(commercialGrowth).toContain(
+      "stock_subscriptions_active_variant_idx",
+    );
     expect(commercialGrowth).toContain("return_request_items_order_item_idx");
     expect(commercialGrowth).toContain("return_status_history_actor_idx");
     expect(commercialReturnGuardrails).toContain(

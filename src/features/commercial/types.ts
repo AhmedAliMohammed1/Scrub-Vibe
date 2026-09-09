@@ -24,4 +24,3 @@ export const returnStatuses = [
 ] as const;
 
 export type ReturnStatus = (typeof returnStatuses)[number];
-
