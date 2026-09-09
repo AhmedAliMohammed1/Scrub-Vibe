@@ -93,6 +93,25 @@ summary {
   opacity: 1;
   pointer-events: auto;
 }
+@keyframes quick-add-confirm {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  55% {
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.quick-add-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: quick-add-confirm 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 .counter {
   position: absolute;
   inset-inline-end: -8px;
