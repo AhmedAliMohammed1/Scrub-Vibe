@@ -141,6 +141,8 @@ describe("Supabase catalogue mapping", () => {
           name: { en: "Bone", ar: "عاجي" },
           sizes: ["S", "M"],
           variants: { S: "10", M: "11" },
+          allVariants: { S: "10", M: "11" },
+          stockBySize: { S: 9, M: 9, L: 0 },
           inStock: true,
         },
         {
@@ -150,6 +152,8 @@ describe("Supabase catalogue mapping", () => {
           name: { en: "Navy", ar: "كحلي" },
           sizes: ["M"],
           variants: { M: "13" },
+          allVariants: { M: "13" },
+          stockBySize: { S: 0, M: 4, L: 0 },
           inStock: true,
         },
       ],

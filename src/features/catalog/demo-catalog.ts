@@ -17,7 +17,7 @@ type ScrubInput = Pick<
 
 const originalScrubVibePalette: Omit<
   ProductColour,
-  "id" | "sizes" | "variants" | "inStock"
+  "id" | "sizes" | "variants" | "inStock" | "allVariants" | "stockBySize"
 >[] = [
   {
     code: "burgundy",
@@ -67,6 +67,12 @@ const scrub = (product: ScrubInput): Product => {
       sizes: product.sizes,
       variants: Object.fromEntries(
         product.sizes.map((size, index) => [size, String(index + 1)]),
+      ),
+      allVariants: Object.fromEntries(
+        product.sizes.map((size, index) => [size, String(index + 1)]),
+      ),
+      stockBySize: Object.fromEntries(
+        product.sizes.map((size) => [size, 25]),
       ),
       inStock: true,
     })),

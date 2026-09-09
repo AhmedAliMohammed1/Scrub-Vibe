@@ -5,6 +5,8 @@ export type ProductColour = {
   name: { en: string; ar: string };
   sizes: string[];
   variants: Record<string, string>;
+  allVariants: Record<string, string>;
+  stockBySize: Record<string, number>;
   inStock: boolean;
 };
 

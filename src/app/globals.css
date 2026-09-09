@@ -5,11 +5,13 @@
   --brand-800: #09564e;
   --brand-700: #0e7468;
   --brand-100: #dce9e5;
+  --brand-surface: #f0f5f3;
   --surface-canvas: #f6f7f4;
   --surface-raised: #ffffff;
   --text-strong: #10201e;
   --text-muted: #536460;
   --border-subtle: #d8deda;
+  --border-strong: #10201e;
   --accent-warm: #a5472f;
   --status-success: #18794e;
   --status-warning: #a15c00;
@@ -37,6 +39,21 @@ body {
   overflow-x: clip;
   text-rendering: optimizeLegibility;
 }
+/* Themed scrollbar surfaces */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-700);
+}
 button,
 a {
   cursor: pointer;
@@ -46,6 +63,10 @@ input,
 select,
 textarea {
   font: inherit;
+}
+input,
+textarea {
+  caret-color: var(--brand-700);
 }
 button:disabled {
   cursor: not-allowed;
@@ -57,8 +78,8 @@ select,
 textarea,
 summary {
   transition-duration: 180ms;
-  transition-property: color, background-color, border-color, opacity, box-shadow;
-  transition-timing-function: ease;
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 :focus-visible {
   outline: 2px solid var(--brand-700);
@@ -70,6 +91,11 @@ summary {
 }
 .font-serif {
   font-family: var(--font-display);
+}
+/* Arabic diacritical clearance per DESIGN.md */
+[lang="ar"] .font-serif,
+[dir="rtl"] .font-serif {
+  line-height: 1.22;
 }
 .skip-link {
   position: fixed;
@@ -117,36 +143,38 @@ summary {
   inset-inline-end: -8px;
   top: -8px;
   display: grid;
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   place-items: center;
   border-radius: 50%;
-  background: var(--clay);
+  background: var(--brand-700);
   color: white;
-  font-size: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(7, 59, 54, 0.2);
 }
 .nav-secondary,
 .nav-sale {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .nav-sale {
-  color: var(--clay);
+  color: var(--brand-700);
 }
 .eyebrow {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 6.6vw, 7.2rem);
+  font-size: clamp(2.75rem, 6.2vw, 6.5rem);
   font-weight: 400;
-  line-height: 0.88;
-  letter-spacing: -0.055em;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
 }
 .page-shell {
   margin-inline: auto;

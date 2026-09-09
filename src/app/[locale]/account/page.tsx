@@ -65,7 +65,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
       .eq("user_id", userId),
     supabase
       .from("orders")
-      .select("id, order_number, status, payment_status, total_minor, created_at")
+      .select("id, order_number, status, payment_status, total_minor, created_at, delivered_at")
       .order("created_at", { ascending: false })
       .limit(8),
     getCustomerAddresses(supabase, userId),
@@ -79,17 +79,17 @@ export default async function AccountPage({ params, searchParams }: Props) {
 
   return (
     <main className="mx-auto min-h-[70vh] max-w-[1200px] px-5 py-16 md:px-10 md:py-24">
-      <p className="eyebrow text-[#a6432b]">
+      <p className="eyebrow text-[var(--color-accent)]">
         {locale === "ar" ? "حساب سكراب فايب" : "SCRUB VIBE ACCOUNT"}
       </p>
-      <div className="mt-4 grid gap-12 md:grid-cols-[1.2fr_.8fr]">
+      <div className="mt-4 grid gap-12 lg:grid-cols-[1.25fr_.75fr]">
         <section>
-          <h1 className="max-w-xl font-serif text-5xl leading-none md:text-7xl">
+          <h1 className="max-w-xl font-serif text-4xl leading-[1.1] md:text-6xl text-[var(--text-primary)]">
             {locale === "ar" ? `مرحباً، ${name}` : `Welcome, ${name}`}
           </h1>
-          <p className="mt-6 text-sm text-neutral-600">{email}</p>
+          <p className="mt-3 text-sm text-[var(--text-secondary)]">{email}</p>
           {query.password === "updated" && (
-            <p className="mt-6 max-w-md border border-[#526744]/30 bg-[#526744]/8 px-4 py-3 text-xs text-[#3f5135]">
+            <p className="mt-6 max-w-md rounded-xs border border-[#0e7468]/30 bg-[#0e7468]/10 px-4 py-3 text-xs text-[#073b36]">
               {locale === "ar"
                 ? "تم تحديث كلمة المرور بنجاح."
                 : "Your password has been updated."}
@@ -97,37 +97,58 @@ export default async function AccountPage({ params, searchParams }: Props) {
           )}
           <div className="mt-12">
             <div className="flex items-end justify-between gap-4">
-              <h2 className="font-serif text-3xl">
+              <h2 className="font-serif text-2xl md:text-3xl text-[var(--text-primary)]">
                 {locale === "ar" ? "طلباتك" : "Your orders"}
               </h2>
             </div>
             {orderRows?.length ? (
-              <div className="mt-5 divide-y divide-black/10 border-y border-black/10">
+              <div className="mt-5 divide-y divide-[var(--border-subtle)] rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-raised)] shadow-subtle overflow-hidden">
                 {orderRows.map((order) => (
-                  <Link
+                  <article
                     key={order.id}
-                    href={`/${locale}/track/${order.order_number}` as Route}
-                    className="grid grid-cols-[1fr_auto] gap-4 py-4 hover:text-[#0e7468]"
+                    className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-[var(--surface-sunken)]/60"
                   >
-                    <span>
-                      <strong className="block text-sm">{order.order_number}</strong>
-                      <small className="mt-1 block text-[10px] uppercase text-neutral-500">
-                        {order.status.replaceAll("_", " ")} · {order.payment_status.replaceAll("_", " ")}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
+                          {order.order_number}
+                        </strong>
+                        <span className="rounded-xs bg-[var(--color-secondary)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--color-primary-dark)]">
+                          {order.status.replaceAll("_", " ")}
+                        </span>
+                      </div>
+                      <small className="mt-1.5 block text-[10px] uppercase text-[var(--text-muted)]">
+                        {order.payment_status.replaceAll("_", " ")}
                       </small>
-                    </span>
-                    <span className="text-end">
-                      <strong className="block text-sm">{formatMoney(order.total_minor, locale)}</strong>
-                      <small className="mt-1 block text-[10px] text-neutral-500">
+                      <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
+                        <Link href={`/${locale}/track/${order.order_number}` as Route}>{locale === "ar" ? "تتبع" : "Track"}</Link>
+                        <Link href={`/${locale}/account/orders/${order.order_number}/invoice` as Route}>{locale === "ar" ? "الفاتورة" : "Invoice"}</Link>
+                        {order.status === "delivered" && order.delivered_at && Date.now() <= new Date(order.delivered_at).getTime() + 14 * 86400000 && <Link href={`/${locale}/account/returns/new?order=${order.id}` as Route}>{locale === "ar" ? "استرجاع / استبدال" : "Return / exchange"}</Link>}
+                      </span>
+                    </div>
+                    <div className="text-end">
+                      <strong className="block text-sm font-semibold text-[var(--text-primary)]">
+                        {formatMoney(order.total_minor, locale)}
+                      </strong>
+                      <small className="mt-1.5 block text-[10px] text-[var(--text-muted)]">
                         {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(order.created_at))}
                       </small>
-                    </span>
-                  </Link>
+                    </div>
+                  </article>
                 ))}
               </div>
             ) : (
-              <p className="mt-5 border border-dashed border-black/15 p-6 text-sm text-neutral-500">
-                {locale === "ar" ? "لا توجد طلبات مرتبطة بهذا الحساب بعد." : "No orders are linked to this account yet."}
-              </p>
+              <div className="mt-5 rounded-xs border border-dashed border-[var(--border-subtle)] bg-[var(--surface-raised)] p-8 text-center">
+                <p className="text-sm text-[var(--text-muted)]">
+                  {locale === "ar" ? "لا توجد طلبات مرتبطة بهذا الحساب بعد." : "No orders are linked to this account yet."}
+                </p>
+                <Link
+                  href={`/${locale}/shop`}
+                  className="mt-4 inline-block text-xs font-bold uppercase tracking-[.12em] text-[var(--color-primary)] underline underline-offset-4 hover:text-[var(--color-primary-hover)]"
+                >
+                  {locale === "ar" ? "استكشف التشكيلة" : "Browse catalog"}
+                </Link>
+              </div>
             )}
           </div>
 
@@ -137,43 +158,44 @@ export default async function AccountPage({ params, searchParams }: Props) {
             locale={locale}
           />
         </section>
-        <aside className="border border-black/10 bg-white/35 p-6 md:p-8">
-          <h2 className="font-serif text-3xl">
+        <aside className="self-start rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-6 shadow-subtle md:p-8 backdrop-blur-sm">
+          <h2 className="font-serif text-2xl md:text-3xl text-[var(--text-primary)]">
             {locale === "ar" ? "تفاصيل الحساب" : "Account details"}
           </h2>
-          <dl className="mt-6 divide-y divide-black/10 text-sm">
+          <dl className="mt-6 divide-y divide-[var(--border-subtle)] text-sm">
             <div className="py-4">
-              <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-neutral-500">
+              <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]">
                 {locale === "ar" ? "البريد الإلكتروني" : "Email"}
               </dt>
-              <dd className="mt-2 break-all">{email}</dd>
+              <dd className="mt-2 break-all text-[var(--text-primary)] font-mono text-xs">{email}</dd>
             </div>
             <div className="py-4">
-              <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-neutral-500">
+              <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]">
                 {locale === "ar" ? "اللغة المفضلة" : "Preferred language"}
               </dt>
-              <dd className="mt-2 uppercase">
+              <dd className="mt-2 uppercase font-medium text-[var(--text-primary)]">
                 {profile?.preferred_locale ?? locale}
               </dd>
             </div>
           </dl>
           <Link
             href={`/${locale}/account/update-password`}
-            className="mt-6 inline-block text-xs underline underline-offset-4"
+            className="mt-6 inline-block text-xs text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--color-primary)] transition-colors"
           >
             {locale === "ar" ? "تغيير كلمة المرور" : "Change password"}
           </Link>
+          <Link href={`/${locale}/account/returns` as Route} className="mt-4 block text-xs text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--color-primary)]">{locale === "ar" ? "طلبات الاسترجاع والاستبدال" : "Returns & exchanges"}</Link>
           {canAdmin && (
             <Link
               href={`/${locale}/admin` as Route}
-              className="mt-4 block bg-[#073b36] px-5 py-4 text-center text-xs font-bold uppercase tracking-[.14em] text-white"
+              className="mt-4 block rounded-xs bg-[var(--color-primary)] px-5 py-3.5 text-center text-xs font-bold uppercase tracking-[.14em] text-white shadow-subtle transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99]"
             >
               {locale === "ar" ? "فتح لوحة الإدارة" : "Open admin dashboard"}
             </Link>
           )}
-          <form action={signOutAction} className="mt-8">
+          <form action={signOutAction} className="mt-6">
             <input type="hidden" name="locale" value={locale} />
-            <button className="h-12 w-full border border-neutral-950 text-xs font-bold uppercase tracking-[.14em]">
+            <button className="h-12 w-full rounded-xs border border-[var(--border-subtle)] bg-white text-xs font-bold uppercase tracking-[.14em] text-[var(--text-primary)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-sunken)] active:scale-[0.99]">
               {locale === "ar" ? "تسجيل الخروج" : "Sign out"}
             </button>
           </form>

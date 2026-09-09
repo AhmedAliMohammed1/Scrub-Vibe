@@ -37,7 +37,8 @@ type Props = {
   };
 };
 
-const inputClass = "h-12 w-full border border-black/20 bg-white px-4 text-base outline-none focus:border-[#0e7468] focus:ring-2 focus:ring-[#0e7468]/15";
+const inputClass =
+  "h-12 w-full rounded-xs border border-[var(--border-subtle)] bg-white px-4 text-sm text-[var(--text-strong)] outline-none transition focus:border-[#0e7468] focus:ring-2 focus:ring-[#0e7468]/20";
 const paymentHelpUrl =
   "https://wa.me/201096733209?text=" +
   encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
@@ -400,27 +401,35 @@ export function CheckoutForm({
       : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 md:px-10 md:py-16">
-      <p className="eyebrow text-[#0e7468]">{ar ? "دفع آمن" : "SECURE CHECKOUT"}</p>
-      <h1 className="mt-3 font-serif text-5xl md:text-7xl">{ar ? "أكمل طلبك" : "Complete your order"}</h1>
-      <form onSubmit={placeOrder} className="mt-8 grid gap-6 lg:grid-cols-[1fr_390px] lg:gap-8">
-        <div className="grid gap-7">
-          <section className="border border-[var(--border-subtle)] bg-white p-5 md:p-7">
-            <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">1</span><h2 className="font-serif text-3xl">{ar ? "بيانات التواصل" : "Contact details"}</h2></div>
+    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-6 md:px-10 md:py-16">
+      <p className="eyebrow text-[#0e7468]">{ar ? "دفع آمن ومحمي" : "SECURE CHECKOUT"}</p>
+      <h1 className="mt-3 font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[var(--text-strong)]">{ar ? "إتمام الطلب" : "Complete your order"}</h1>
+      <form onSubmit={placeOrder} className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">
+        <div className="grid gap-8">
+          {/* Step 1: Contact Details */}
+          <section className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
+            <div className="flex items-center gap-3">
+              <span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs font-bold text-white">1</span>
+              <h2 className="font-serif text-2xl text-[var(--text-strong)]">{ar ? "بيانات التواصل" : "Contact details"}</h2>
+            </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-xs font-bold">{ar ? "الاسم بالكامل" : "Full name"}<input name="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} required minLength={2} autoComplete="name" /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "البريد الإلكتروني (اختياري)" : "Email (optional)"}<input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} autoComplete="email" /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "الاسم بالكامل" : "Full name"}<input name="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} required minLength={2} autoComplete="name" /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "البريد الإلكتروني (اختياري)" : "Email (optional)"}<input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} autoComplete="email" /></label>
               <div className="sm:col-span-2">
-                <label className="grid gap-2 text-xs font-bold">{ar ? "رقم الموبايل المصري" : "Egyptian mobile number"}<span className="flex gap-2"><input name="phone" value={phone} onChange={(event) => { setPhone(event.target.value); setVerificationToken(""); setOtpSent(false); }} className={inputClass} inputMode="tel" placeholder="01xxxxxxxxx" required autoComplete="tel" disabled={otpEnabled && Boolean(verificationToken)} />{otpEnabled && <button type="button" onClick={requestOtp} disabled={Boolean(busy) || Boolean(verificationToken)} className="min-w-32 bg-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-white disabled:opacity-50">{busy === "otp" ? <Loader2 className="mx-auto animate-spin" size={16} /> : verificationToken ? (ar ? "تم التحقق" : "Verified") : (ar ? "إرسال الرمز" : "Send OTP")}</button>}</span></label>
-                {otpEnabled && otpSent && !verificationToken && <div className="mt-3 flex gap-2"><input value={otp} onChange={(event) => setOtp(event.target.value)} className={inputClass} inputMode="numeric" placeholder={ar ? "رمز التحقق" : "Verification code"} maxLength={8} /><button type="button" onClick={verifyOtp} disabled={busy === "verify" || otp.length < 4} className="min-w-32 border border-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-[#073b36] disabled:opacity-50">{busy === "verify" ? <Loader2 className="mx-auto animate-spin" size={16} /> : (ar ? "تحقق" : "Verify")}</button></div>}
+                <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "رقم الموبايل المصري" : "Egyptian mobile number"}<span className="flex gap-2"><input name="phone" value={phone} onChange={(event) => { setPhone(event.target.value); setVerificationToken(""); setOtpSent(false); }} className={inputClass} inputMode="tel" placeholder="01xxxxxxxxx" required autoComplete="tel" disabled={otpEnabled && Boolean(verificationToken)} />{otpEnabled && <button type="button" onClick={requestOtp} disabled={Boolean(busy) || Boolean(verificationToken)} className="min-w-32 rounded-xs bg-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-white disabled:opacity-50">{busy === "otp" ? <Loader2 className="mx-auto animate-spin" size={16} /> : verificationToken ? (ar ? "تم التحقق" : "Verified") : (ar ? "إرسال الرمز" : "Send OTP")}</button>}</span></label>
+                {otpEnabled && otpSent && !verificationToken && <div className="mt-3 flex gap-2"><input value={otp} onChange={(event) => setOtp(event.target.value)} className={inputClass} inputMode="numeric" placeholder={ar ? "رمز التحقق" : "Verification code"} maxLength={8} /><button type="button" onClick={verifyOtp} disabled={busy === "verify" || otp.length < 4} className="min-w-32 rounded-xs border border-[#0e7468] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-[#073b36] disabled:opacity-50">{busy === "verify" ? <Loader2 className="mx-auto animate-spin" size={16} /> : (ar ? "تحقق" : "Verify")}</button></div>}
                 {otpEnabled && verificationToken && <p className="mt-3 flex items-center gap-2 text-xs font-bold text-[#0e7468]"><CheckCircle2 size={15} />{ar ? "تم التحقق من رقم الهاتف." : "Phone number verified."}</p>}
-                {!otpEnabled && <p className="mt-3 text-xs text-neutral-500">{ar ? "التحقق برمز الهاتف غير مطلوب حالياً." : "Phone OTP verification is not currently required."}</p>}
+                {!otpEnabled && <p className="mt-3 text-xs text-[var(--text-muted)]">{ar ? "التحقق برمز الهاتف غير مطلوب حالياً." : "Phone OTP verification is not currently required."}</p>}
               </div>
             </div>
           </section>
 
-          <section className="border border-[var(--border-subtle)] bg-white p-5 md:p-7">
-            <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">2</span><h2 className="font-serif text-3xl">{ar ? "عنوان التوصيل" : "Delivery address"}</h2></div>
+          {/* Step 2: Delivery Address */}
+          <section className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
+            <div className="flex items-center gap-3">
+              <span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs font-bold text-white">2</span>
+              <h2 className="font-serif text-2xl text-[var(--text-strong)]">{ar ? "عنوان التوصيل" : "Delivery address"}</h2>
+            </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {isAuthenticated && (
                 <CheckoutAddressSelector
@@ -435,36 +444,157 @@ export function CheckoutForm({
                   onSelectNewAddressLabel={setNewAddressLabel}
                 />
               )}
-              <label className="grid gap-2 text-xs font-bold">{ar ? "المحافظة" : "Governorate"}<select name="governorateCode" className={inputClass} required value={governorateCode} onChange={(event) => { const next = shippingLocations.find((item) => item.code === event.target.value); setGovernorateCode(event.target.value); setCityCode(""); setCustomCity(""); if (paymentMethod === "cod" && !next?.zone.codEnabled) setPaymentMethod("vodafone_cash"); }}><option value="" disabled>{ar ? "اختر المحافظة" : "Choose governorate"}</option>{shippingLocations.map((item) => <option key={item.code} value={item.code}>{ar ? item.nameAr : item.nameEn}</option>)}</select></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "المدينة / المنطقة" : "City / district"}<select name="cityCode" className={inputClass} required value={cityCode} disabled={!selectedGovernorate} onChange={(event) => { setCityCode(event.target.value); setCustomCity(""); }}><option value="" disabled>{ar ? "اختر المدينة" : "Choose city"}</option>{selectedGovernorate?.cities.map((city) => <option key={city.code} value={city.code}>{ar ? city.nameAr : city.nameEn}</option>)}<option value="other">{ar ? "منطقة أخرى" : "Other area"}</option></select></label>
-              {cityCode === "other" && <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اكتب المدينة أو المنطقة" : "Enter city or district"}<input name="city" className={inputClass} required minLength={2} maxLength={100} value={customCity} onChange={(event) => setCustomCity(event.target.value)} /></label>}
-              {selectedGovernorate && <div className="border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4 text-xs leading-5 text-neutral-700 sm:col-span-2"><strong>{ar ? selectedGovernorate.zone.nameAr : selectedGovernorate.zone.nameEn}</strong><span className="ms-2">{ar ? `التوصيل المتوقع خلال ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} أيام عمل.` : `Estimated delivery in ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} business days.`}</span>{selectedGovernorate.zone.freeShippingThresholdMinor !== null && <span className="mt-1 block text-[#0e7468]">{ar ? `شحن أساسي مجاني للطلبات من ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.` : `Free base shipping from ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.`}</span>}</div>}
-              <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "اسم الشارع والعنوان" : "Street address"}<input name="streetAddress" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} className={inputClass} required minLength={5} autoComplete="street-address" /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "المبنى" : "Building"}<input name="building" value={building} onChange={(e) => setBuilding(e.target.value)} className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "الدور" : "Floor"}<input name="floor" value={floor} onChange={(e) => setFloor(e.target.value)} className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "العيادة / الشقة" : "Clinic / Apt"}<input name="apartment" value={apartment} onChange={(e) => setApartment(e.target.value)} className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold">{ar ? "علامة مميزة" : "Landmark"}<input name="landmark" value={landmark} onChange={(e) => setLandmark(e.target.value)} className={inputClass} /></label>
-              <label className="grid gap-2 text-xs font-bold sm:col-span-2">{ar ? "ملاحظات الطلب" : "Order notes"}<textarea name="customerNotes" value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} className="min-h-24 border border-black/20 bg-white p-4 text-sm" maxLength={1000} /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "المحافظة" : "Governorate"}<select name="governorateCode" className={inputClass} required value={governorateCode} onChange={(event) => { const next = shippingLocations.find((item) => item.code === event.target.value); setGovernorateCode(event.target.value); setCityCode(""); setCustomCity(""); if (paymentMethod === "cod" && !next?.zone.codEnabled) setPaymentMethod("vodafone_cash"); }}><option value="" disabled>{ar ? "اختر المحافظة" : "Choose governorate"}</option>{shippingLocations.map((item) => <option key={item.code} value={item.code}>{ar ? item.nameAr : item.nameEn}</option>)}</select></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "المدينة / المنطقة" : "City / district"}<select name="cityCode" className={inputClass} required value={cityCode} disabled={!selectedGovernorate} onChange={(event) => { setCityCode(event.target.value); setCustomCity(""); }}><option value="" disabled>{ar ? "اختر المدينة" : "Choose city"}</option>{selectedGovernorate?.cities.map((city) => <option key={city.code} value={city.code}>{ar ? city.nameAr : city.nameEn}</option>)}<option value="other">{ar ? "منطقة أخرى" : "Other area"}</option></select></label>
+              {cityCode === "other" && <label className="grid gap-2 text-xs font-bold sm:col-span-2 text-[var(--text-muted)]">{ar ? "اكتب المدينة أو المنطقة" : "Enter city or district"}<input name="city" className={inputClass} required minLength={2} maxLength={100} value={customCity} onChange={(event) => setCustomCity(event.target.value)} /></label>}
+              {selectedGovernorate && <div className="rounded-xs border border-[#0e7468]/20 bg-[#f0f5f3] p-4 text-xs leading-relaxed text-[var(--text-strong)] sm:col-span-2"><strong>{ar ? selectedGovernorate.zone.nameAr : selectedGovernorate.zone.nameEn}</strong><span className="ms-2">{ar ? `التوصيل المتوقع خلال ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} أيام عمل.` : `Estimated delivery in ${selectedGovernorate.zone.deliveryMinDays}–${selectedGovernorate.zone.deliveryMaxDays} business days.`}</span>{selectedGovernorate.zone.freeShippingThresholdMinor !== null && <span className="mt-1 block font-semibold text-[#0e7468]">{ar ? `شحن أساسي مجاني للطلبات من ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.` : `Free base shipping from ${formatMoney(selectedGovernorate.zone.freeShippingThresholdMinor, locale)}.`}</span>}</div>}
+              <label className="grid gap-2 text-xs font-bold sm:col-span-2 text-[var(--text-muted)]">{ar ? "اسم الشارع والعنوان" : "Street address"}<input name="streetAddress" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} className={inputClass} required minLength={5} autoComplete="street-address" /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "المبنى" : "Building"}<input name="building" value={building} onChange={(e) => setBuilding(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "الدور" : "Floor"}<input name="floor" value={floor} onChange={(e) => setFloor(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "العيادة / الشقة" : "Clinic / Apt"}<input name="apartment" value={apartment} onChange={(e) => setApartment(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">{ar ? "علامة مميزة" : "Landmark"}<input name="landmark" value={landmark} onChange={(e) => setLandmark(e.target.value)} className={inputClass} /></label>
+              <label className="grid gap-2 text-xs font-bold sm:col-span-2 text-[var(--text-muted)]">{ar ? "ملاحظات إضافية على الطلب" : "Order notes"}<textarea name="customerNotes" value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} className="min-h-24 w-full rounded-xs border border-[var(--border-subtle)] bg-white p-4 text-sm text-[var(--text-strong)] outline-none focus:border-[#0e7468]" maxLength={1000} /></label>
             </div>
           </section>
 
-          <section className="border border-[var(--border-subtle)] bg-white p-5 md:p-7">
-            <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">3</span><h2 className="font-serif text-3xl">{ar ? "طريقة الدفع" : "Payment method"}</h2></div>
-            <div className="mt-6 grid gap-3">{paymentOptions.map(({ id, title, detail, icon: Icon, disabled }) => <label key={id} className={`flex gap-4 border p-4 ${disabled ? "cursor-not-allowed bg-neutral-50 opacity-55" : "cursor-pointer"} ${paymentMethod === id ? "border-[#0e7468] bg-[#dce9e5]/60" : "border-black/10"}`}><input type="radio" name="paymentMethod" value={id} checked={paymentMethod === id} disabled={disabled} onChange={() => setPaymentMethod(id)} className="mt-1 accent-[#0e7468]" /><Icon size={24} className="shrink-0" /><span><strong className="block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-neutral-600">{detail}</span></span></label>)}</div>
-            {paymentMethod === "cod" && codAvailable && <div className="mt-5 border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4"><strong className="text-sm">{ar ? `مقدم مطلوب: ${formatMoney(codDeposit, locale)}` : `Required deposit: ${formatMoney(codDeposit, locale)}`}</strong><p className="mt-1 text-xs text-neutral-600">{ar ? `المتبقي عند الاستلام: ${formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}` : `Balance due on delivery: ${formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}`}</p><p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-neutral-600">{ar ? "طريقة دفع المقدم" : "Deposit payment method"}</p><div className="mt-2 grid grid-cols-2 gap-2"><DepositMethodButton selected={codDepositMethod === "vodafone_cash"} onClick={() => setCodDepositMethod("vodafone_cash")} label="Vodafone Cash" icon={VodafoneCashIcon} /><DepositMethodButton selected={codDepositMethod === "instapay"} onClick={() => setCodDepositMethod("instapay")} label="InstaPay" icon={InstaPayIcon} /></div>{transferDestination && <p className="mt-3 text-xs font-semibold text-[#073b36]">{ar ? `حوّل المقدم إلى ${transferDestination}` : `Transfer the deposit to ${transferDestination}`}</p>}</div>}
-            {proofRequired && <div className="mt-5 grid gap-4">{!manualDestinationConfigured && <p className="border border-[#0e7468]/25 bg-[#dce9e5]/40 p-4 text-xs leading-5 text-neutral-700">{ar ? "قبل التحويل، احصل على بيانات الدفع الصحيحة من فريق Scrub Vibe عبر واتساب." : "Before transferring, get the correct payment details from the Scrub Vibe team on WhatsApp."} <a href={paymentHelpUrl} target="_blank" rel="noreferrer" className="font-bold text-[#0e7468] underline">{ar ? "فتح واتساب" : "Open WhatsApp"}</a></p>}<label className="grid gap-2 text-xs font-bold">{paymentMethod === "cod" ? (ar ? "صورة إيصال المقدم" : "Deposit receipt screenshot") : (ar ? "صورة إيصال التحويل" : "Transfer screenshot")}<input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required className="border border-dashed border-[#0e7468] bg-[#dce9e5]/30 p-5 text-xs" /><span className="font-normal text-neutral-500">{ar ? "JPG أو PNG أو WebP — بحد أقصى ٥ ميجابايت. لن يبدأ تجهيز الطلب حتى تتم مراجعة التحويل." : "JPG, PNG or WebP — maximum 5 MB. Fulfilment starts after the transfer is reviewed."}</span></label></div>}
+          {/* Step 3: Payment Method */}
+          <section className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
+            <div className="flex items-center gap-3">
+              <span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs font-bold text-white">3</span>
+              <h2 className="font-serif text-2xl text-[var(--text-strong)]">{ar ? "طريقة الدفع" : "Payment method"}</h2>
+            </div>
+            <div className="mt-6 grid gap-3">
+              {paymentOptions.map(({ id, title, detail, icon: Icon, disabled }) => (
+                <label
+                  key={id}
+                  className={`flex items-start gap-4 rounded-xs border p-4 transition ${
+                    disabled
+                      ? "cursor-not-allowed bg-neutral-50 opacity-50"
+                      : "cursor-pointer hover:border-[#0e7468]"
+                  } ${
+                    paymentMethod === id
+                      ? "border-[#0e7468] bg-[#f0f5f3] ring-1 ring-[#0e7468]"
+                      : "border-[var(--border-subtle)] bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={id}
+                    checked={paymentMethod === id}
+                    disabled={disabled}
+                    onChange={() => setPaymentMethod(id)}
+                    className="mt-1 accent-[#0e7468]"
+                  />
+                  <Icon size={24} className="shrink-0" />
+                  <span>
+                    <strong className="block text-sm font-bold text-[var(--text-strong)]">{title}</strong>
+                    <span className="mt-1 block text-xs leading-relaxed text-[var(--text-muted)]">{detail}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {paymentMethod === "cod" && codAvailable && (
+              <div className="mt-6 rounded-xs border border-[#0e7468]/20 bg-[#f0f5f3] p-4 text-xs">
+                <strong className="text-sm font-bold text-[var(--text-strong)]">{ar ? `المقدم المطلوب: ${formatMoney(codDeposit, locale)}` : `Required deposit: ${formatMoney(codDeposit, locale)}`}</strong>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">{ar ? `المتبقي عند الاستلام: ${formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}` : `Balance due on delivery: ${formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}`}</p>
+                <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{ar ? "طريقة دفع المقدم" : "Deposit payment method"}</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <DepositMethodButton selected={codDepositMethod === "vodafone_cash"} onClick={() => setCodDepositMethod("vodafone_cash")} label="Vodafone Cash" icon={VodafoneCashIcon} />
+                  <DepositMethodButton selected={codDepositMethod === "instapay"} onClick={() => setCodDepositMethod("instapay")} label="InstaPay" icon={InstaPayIcon} />
+                </div>
+                {transferDestination && <p className="mt-3 text-xs font-bold text-[#073b36]">{ar ? `حوّل المقدم إلى الرقم / العنوان: ${transferDestination}` : `Transfer the deposit to: ${transferDestination}`}</p>}
+              </div>
+            )}
+
+            {proofRequired && (
+              <div className="mt-6 grid gap-4">
+                {!manualDestinationConfigured && (
+                  <p className="rounded-xs border border-[#0e7468]/25 bg-[#f0f5f3] p-4 text-xs leading-relaxed text-[var(--text-strong)]">
+                    {ar ? "قبل التحويل، يرجى طلب تفاصيل التحويل المحدثة من فريق العمل عبر واتساب." : "Before transferring, please request updated transfer details on WhatsApp."}{" "}
+                    <a href={paymentHelpUrl} target="_blank" rel="noreferrer" className="font-bold text-[#0e7468] underline">{ar ? "فتح محادثة واتساب" : "Open WhatsApp"}</a>
+                  </p>
+                )}
+                <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                  {paymentMethod === "cod" ? (ar ? "صورة إيصال تحويل المقدم" : "Deposit transfer receipt screenshot") : (ar ? "صورة إيصال التحويل الكامل" : "Transfer receipt screenshot")}
+                  <input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required className="rounded-xs border border-dashed border-[#0e7468] bg-[#f0f5f3] p-5 text-xs text-[var(--text-strong)]" />
+                  <span className="font-normal text-[var(--text-muted)]">{ar ? "صيغ JPG أو PNG أو WebP — بحد أقصى ٥ ميجابايت. يبدأ تجهيز الطلب فور مراجعة الإيصال." : "JPG, PNG, or WebP — max 5 MB. Fulfilment begins after receipt review."}</span>
+                </label>
+              </div>
+            )}
           </section>
         </div>
 
-        <aside className="h-fit border border-[#0e7468]/25 bg-white p-5 shadow-[0_16px_45px_rgba(7,59,54,.07)] lg:sticky lg:top-24">
-          <h2 className="font-serif text-3xl">{ar ? "ملخص الطلب" : "Order summary"}</h2>
-          <div className="mt-5 max-h-80 divide-y divide-black/10 overflow-auto">{cartItems.map((line) => <div key={line.key} className="grid grid-cols-[56px_1fr_auto] gap-3 py-3"><div className="relative aspect-[3/4] overflow-hidden bg-[#ebe9e4]"><Image src={line.image.src} alt={line.image.alt[locale]} fill sizes="56px" className="object-cover" /></div><div><strong className="text-xs">{line.title[locale]}</strong><p className="mt-1 text-[10px] text-neutral-500">{line.colourName[locale]} · {line.size} · ×{line.quantity}</p></div><strong className="text-[11px]">{formatMoney(line.price * line.quantity, locale)}</strong></div>)}</div>
-          <div className="mt-5 border-t border-black/10 pt-5"><label htmlFor="discount-code" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.12em]"><BadgePercent size={15} />{ar ? "كود الخصم" : "Discount code"}</label><div className="mt-2 flex gap-2"><input id="discount-code" value={discountInput} onChange={(event) => { setDiscountInput(event.target.value.toUpperCase()); setDiscountError(""); }} maxLength={32} className="h-11 min-w-0 flex-1 border border-black/15 px-3 font-mono text-sm uppercase outline-none focus:border-[#0e7468]" placeholder={ar ? "أدخل الكود" : "Enter code"} />{appliedDiscount ? <button type="button" onClick={removeDiscount} className="flex h-11 items-center gap-2 border border-black/15 px-3 text-[10px] font-bold uppercase"><X size={14} />{ar ? "إزالة" : "Remove"}</button> : <button type="button" onClick={applyDiscount} disabled={discountBusy || !discountInput.trim()} className="flex h-11 min-w-24 items-center justify-center bg-[#0e7468] px-3 text-[10px] font-bold uppercase text-white disabled:opacity-50">{discountBusy ? <Loader2 size={15} className="animate-spin" /> : (ar ? "تطبيق" : "Apply")}</button>}</div>{appliedDiscount && <p className="mt-2 text-xs font-bold text-[#0e7468]">{ar ? `تم تطبيق ${appliedDiscount.code}: وفرت ${formatMoney(appliedDiscount.discountMinor, locale)}` : `${appliedDiscount.code} applied: you save ${formatMoney(appliedDiscount.discountMinor, locale)}`}{(ar ? appliedDiscount.campaignNameAr : appliedDiscount.campaignNameEn) ? ` · ${ar ? appliedDiscount.campaignNameAr : appliedDiscount.campaignNameEn}` : ""}</p>}{discountResult && !appliedDiscount && <p className="mt-2 text-xs text-amber-700">{ar ? "تغيرت بيانات السلة أو الدفع. أعد تطبيق الكود." : "Your basket, phone or payment method changed. Apply the code again."}</p>}{discountError && <p role="alert" className="mt-2 text-xs text-[#a6432b]">{discountError}</p>}</div>
-          <dl className="mt-5 border-t pt-4 text-sm"><div className="flex justify-between"><dt>{ar ? "المنتجات" : "Subtotal"}</dt><dd>{formatMoney(appliedDiscount?.subtotalMinor ?? subtotal, locale)}</dd></div>{appliedDiscount && <div className="mt-2 flex justify-between font-bold text-[#0e7468]"><dt>{ar ? `خصم ${appliedDiscount.code}` : `${appliedDiscount.code} discount`}</dt><dd>−{formatMoney(appliedDiscount.discountMinor, locale)}</dd></div>}<div className="mt-2 flex justify-between"><dt>{ar ? "الشحن الأساسي" : "Base shipping"}</dt><dd>{shippingQuote ? shippingQuote.baseMinor ? formatMoney(shippingQuote.baseMinor, locale) : (ar ? "مجاني" : "Free") : (ar ? "اختر المنطقة" : "Choose area")}</dd></div>{shippingQuote?.discountMinor ? <div className="mt-2 flex justify-between text-[#0e7468]"><dt>{ar ? "خصم الشحن" : "Shipping discount"}</dt><dd>−{formatMoney(shippingQuote.discountMinor, locale)}</dd></div> : null}{shippingQuote?.codSurchargeMinor ? <div className="mt-2 flex justify-between"><dt>{ar ? "رسوم الدفع عند الاستلام" : "COD service fee"}</dt><dd>{formatMoney(shippingQuote.codSurchargeMinor, locale)}</dd></div> : null}{paymentMethod === "cod" && codAvailable && <><div className="mt-3 flex justify-between font-bold text-[#0e7468]"><dt>{ar ? "المقدم الآن" : "Deposit now"}</dt><dd>{formatMoney(codDeposit, locale)}</dd></div><div className="mt-2 flex justify-between"><dt>{ar ? "المتبقي عند الاستلام" : "Due on delivery"}</dt><dd>{formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}</dd></div></>}<div className="mt-4 flex justify-between border-t pt-4 font-bold"><dt>{ar ? "الإجمالي" : "Total"}</dt><dd>{formatMoney(shippingQuote?.totalMinor ?? pricingSubtotal, locale)}</dd></div></dl>
-          <label className="mt-5 flex gap-3 text-[11px] leading-5 text-neutral-600"><input type="checkbox" required className="mt-1 accent-[#0e7468]" />{ar ? "أؤكد صحة البيانات وأوافق على التواصل معي بخصوص الطلب." : "I confirm these details and agree to be contacted about this order."}</label>
-          {error && <p role="alert" className="mt-4 border border-[#a6432b]/30 bg-[#a6432b]/8 p-3 text-xs text-[#8c3624]">{error}</p>}
-          <button disabled={Boolean(busy) || discountBusy || Boolean(discountInput.trim() && !appliedDiscount) || (otpEnabled && !verificationToken) || !shippingQuote || !cityCode || (paymentMethod === "cod" && !codAvailable)} className="mt-5 flex h-14 w-full items-center justify-center gap-2 bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white disabled:cursor-not-allowed disabled:opacity-50">{busy === "order" ? <Loader2 className="animate-spin" size={17} /> : <LockKeyhole size={16} />}{ar ? "تأكيد الطلب" : "Place secure order"}</button>
-          <p className="mt-3 text-center text-[10px] leading-4 text-neutral-500">{ar ? "لن نعتمد أي دفع إلكتروني إلا بعد التحقق الآمن منه." : "Electronic payments are never accepted without secure verification."}</p>
+        {/* Sidebar Order Summary */}
+        <aside className="h-fit rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs lg:sticky lg:top-24">
+          <h2 className="font-serif text-2xl text-[var(--text-strong)]">{ar ? "ملخص الطلب" : "Order summary"}</h2>
+          <div className="mt-5 max-h-80 divide-y divide-[var(--border-subtle)] overflow-auto pe-1">
+            {cartItems.map((line) => (
+              <div key={line.key} className="grid grid-cols-[56px_1fr_auto] gap-3 py-3">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-xs border border-[var(--border-subtle)] bg-[#ebe9e4]">
+                  <Image src={line.image.src} alt={line.image.alt[locale]} fill sizes="56px" className="object-cover" />
+                </div>
+                <div>
+                  <strong className="line-clamp-1 text-xs font-semibold text-[var(--text-strong)]">{line.title[locale]}</strong>
+                  <p className="mt-1 text-[10px] text-[var(--text-muted)]">{line.colourName[locale]} · {line.size} · ×{line.quantity}</p>
+                </div>
+                <strong className="text-xs font-bold text-[var(--text-strong)]">{formatMoney(line.price * line.quantity, locale)}</strong>
+              </div>
+            ))}
+          </div>
+
+          {/* Discount code */}
+          <div className="mt-5 border-t border-[var(--border-subtle)] pt-5">
+            <label htmlFor="discount-code" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]">
+              <BadgePercent size={15} />
+              {ar ? "كود الخصم" : "Discount code"}
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                id="discount-code"
+                value={discountInput}
+                onChange={(event) => { setDiscountInput(event.target.value.toUpperCase()); setDiscountError(""); }}
+                maxLength={32}
+                className="h-11 min-w-0 flex-1 rounded-xs border border-[var(--border-subtle)] px-3 font-mono text-xs uppercase outline-none focus:border-[#0e7468]"
+                placeholder={ar ? "أدخل الكود" : "ENTER CODE"}
+              />
+              {appliedDiscount ? (
+                <button type="button" onClick={removeDiscount} className="flex h-11 items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] px-3 text-[10px] font-bold uppercase text-[var(--text-muted)] hover:text-[#a5472f]">
+                  <X size={14} />
+                  {ar ? "إزالة" : "Remove"}
+                </button>
+              ) : (
+                <button type="button" onClick={applyDiscount} disabled={discountBusy || !discountInput.trim()} className="flex h-11 min-w-24 items-center justify-center rounded-xs bg-[#073b36] px-4 text-[10px] font-bold uppercase tracking-[.1em] text-white hover:bg-[#0e7468] disabled:opacity-50">
+                  {discountBusy ? <Loader2 size={15} className="animate-spin" /> : (ar ? "تطبيق" : "Apply")}
+                </button>
+              )}
+            </div>
+            {appliedDiscount && <p className="mt-2 text-xs font-bold text-[#0e7468]">{ar ? `تم تطبيق ${appliedDiscount.code}: وفرت ${formatMoney(appliedDiscount.discountMinor, locale)}` : `${appliedDiscount.code} applied: you save ${formatMoney(appliedDiscount.discountMinor, locale)}`}</p>}
+            {discountResult && !appliedDiscount && <p className="mt-2 text-xs text-amber-700">{ar ? "تغيرت بيانات السلة أو الدفع. أعد تطبيق الكود." : "Cart or payment changed. Please re-apply code."}</p>}
+            {discountError && <p role="alert" className="mt-2 text-xs font-semibold text-[#a5472f]">{discountError}</p>}
+          </div>
+
+          {/* Pricing breakdown */}
+          <dl className="mt-5 space-y-2.5 border-t border-[var(--border-subtle)] pt-4 text-xs">
+            <div className="flex justify-between text-[var(--text-muted)]"><dt>{ar ? "المنتجات" : "Items subtotal"}</dt><dd className="font-semibold text-[var(--text-strong)]">{formatMoney(appliedDiscount?.subtotalMinor ?? subtotal, locale)}</dd></div>
+            {appliedDiscount && <div className="flex justify-between font-bold text-[#0e7468]"><dt>{ar ? `خصم ${appliedDiscount.code}` : `${appliedDiscount.code} discount`}</dt><dd>−{formatMoney(appliedDiscount.discountMinor, locale)}</dd></div>}
+            <div className="flex justify-between text-[var(--text-muted)]"><dt>{ar ? "الشحن الأساسي" : "Base shipping"}</dt><dd className="font-semibold text-[var(--text-strong)]">{shippingQuote ? shippingQuote.baseMinor ? formatMoney(shippingQuote.baseMinor, locale) : (ar ? "مجاني" : "Free") : (ar ? "اختر المحافظة" : "Select governorate")}</dd></div>
+            {shippingQuote?.discountMinor ? <div className="flex justify-between text-[#0e7468]"><dt>{ar ? "خصم الشحن" : "Shipping discount"}</dt><dd>−{formatMoney(shippingQuote.discountMinor, locale)}</dd></div> : null}
+            {shippingQuote?.codSurchargeMinor ? <div className="flex justify-between text-[var(--text-muted)]"><dt>{ar ? "رسوم الدفع عند الاستلام" : "COD service fee"}</dt><dd className="font-semibold text-[var(--text-strong)]">{formatMoney(shippingQuote.codSurchargeMinor, locale)}</dd></div> : null}
+            {paymentMethod === "cod" && codAvailable && (
+              <>
+                <div className="flex justify-between border-t border-dashed border-[var(--border-subtle)] pt-2 font-bold text-[#0e7468]"><dt>{ar ? "المقدم المطلوب" : "Deposit due"}</dt><dd>{formatMoney(codDeposit, locale)}</dd></div>
+                <div className="flex justify-between font-bold text-[#a5472f]"><dt>{ar ? "المتبقي عند الاستلام" : "Due on delivery"}</dt><dd>{formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}</dd></div>
+              </>
+            )}
+            <div className="flex justify-between border-t border-[var(--border-subtle)] pt-3 text-sm font-bold text-[var(--text-strong)]"><dt>{ar ? "الإجمالي الكلي" : "Total amount"}</dt><dd>{formatMoney(shippingQuote?.totalMinor ?? pricingSubtotal, locale)}</dd></div>
+          </dl>
+
+          <label className="mt-5 flex items-start gap-2.5 text-[11px] leading-relaxed text-[var(--text-muted)]"><input type="checkbox" required className="mt-0.5 accent-[#0e7468]" /><span>{ar ? "أؤكد صحة بيانات الشحن والتواصل وأوافق على سياسة الاستبدال." : "I confirm these delivery details and accept the store exchange policy."}</span></label>
+          {error && <p role="alert" className="mt-4 rounded-xs border border-[#a5472f]/30 bg-[#a5472f]/10 p-3 text-xs font-semibold text-[#a5472f]">{error}</p>}
+          <button disabled={Boolean(busy) || discountBusy || Boolean(discountInput.trim() && !appliedDiscount) || (otpEnabled && !verificationToken) || !shippingQuote || !cityCode || (paymentMethod === "cod" && !codAvailable)} className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xs bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white shadow-xs transition hover:bg-[#0e7468] disabled:cursor-not-allowed disabled:opacity-50">{busy === "order" ? <Loader2 className="animate-spin" size={17} /> : <LockKeyhole size={16} />}{ar ? "تأكيد الطلب الآن" : "Place secure order"}</button>
+          <p className="mt-3 text-center text-[10px] text-[var(--text-muted)]">{ar ? "مدفوعات محمية ومراجعة يدوياً لضمان سلامة كل طلب." : "All transactions are secured and verified."}</p>
         </aside>
       </form>
     </main>
@@ -477,7 +607,21 @@ function DepositMethodButton({ selected, onClick, label, icon: Icon }: {
   label: string;
   icon: React.ComponentType<PaymentIconProps>;
 }) {
-  return <button type="button" onClick={onClick} aria-pressed={selected} className={`flex items-center gap-2 border px-3 py-3 text-start text-xs font-bold ${selected ? "border-[#0e7468] bg-white text-[#073b36]" : "border-black/10 bg-white/60 text-neutral-600"}`}><Icon size={22} /><span>{label}</span></button>;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`flex items-center gap-2 rounded-xs border px-3 py-2.5 text-start text-xs font-bold transition ${
+        selected
+          ? "border-[#0e7468] bg-[#f0f5f3] text-[#073b36]"
+          : "border-[var(--border-subtle)] bg-white text-[var(--text-muted)] hover:border-[#0e7468]"
+      }`}
+    >
+      <Icon size={20} />
+      <span>{label}</span>
+    </button>
+  );
 }
 
 function VodafoneCashIcon({ size = 24, className }: PaymentIconProps) {

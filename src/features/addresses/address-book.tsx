@@ -81,12 +81,12 @@ export function AddressBook({
 
   return (
     <div className="mt-12">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/10 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-4">
         <div>
-          <h2 className="font-serif text-3xl">
+          <h2 className="font-serif text-2xl md:text-3xl text-[var(--text-primary)]">
             {isAr ? "عناوين التوصيل المحفوظة" : "Saved delivery addresses"}
           </h2>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             {isAr
               ? "احفظ عناوين العيادة أو المستشفى أو المنزل لتسريع عملية الشراء."
               : "Save your clinic, hospital, or home delivery locations for quick checkout."}
@@ -95,7 +95,7 @@ export function AddressBook({
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="flex items-center gap-2 bg-[#073b36] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[#0e7468]"
+          className="flex items-center gap-2 rounded-xs bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-subtle transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99]"
         >
           <Plus size={15} />
           <span>{isAr ? "إضافة عنوان جديد" : "Add New Address"}</span>
@@ -103,12 +103,12 @@ export function AddressBook({
       </div>
 
       {addresses.length === 0 ? (
-        <div className="mt-6 border border-dashed border-black/15 p-8 text-center">
-          <MapPin size={32} className="mx-auto text-neutral-400" />
-          <p className="mt-3 font-medium text-sm text-neutral-700">
+        <div className="mt-6 rounded-xs border border-dashed border-[var(--border-subtle)] bg-[var(--surface-raised)] p-8 text-center">
+          <MapPin size={32} className="mx-auto text-[var(--text-muted)]" />
+          <p className="mt-3 font-medium text-sm text-[var(--text-primary)]">
             {isAr ? "لا توجد عناوين محفوظة بعد" : "No saved addresses yet"}
           </p>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             {isAr
               ? "أضف عنوان عيادتك أو منزلك ليتم تعبئته تلقائياً عند إتمام الطلب."
               : "Add your clinic or home address to prefill details automatically during checkout."}
@@ -116,7 +116,7 @@ export function AddressBook({
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="mt-4 inline-flex items-center gap-1.5 border border-black/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-neutral-800 transition hover:bg-neutral-50"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-sunken)] active:scale-[0.99]"
           >
             <Plus size={14} />
             <span>{isAr ? "إضافة أول عنوان" : "Add Your First Address"}</span>

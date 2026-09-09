@@ -11,6 +11,13 @@ test-results/
 
 .vercel
 .env*
+
+# Agent harness & local tooling
+.agents/
+.codex/
+.github/agents/
+.github/hooks/
+.github/skills/
 !.env.example
 
 .env*

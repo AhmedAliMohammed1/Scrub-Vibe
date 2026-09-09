@@ -99,22 +99,22 @@ export function AddressCard({
 
   return (
     <div
-      className={`relative flex flex-col justify-between border p-5 transition md:p-6 ${
+      className={`relative flex flex-col justify-between rounded-xs border p-5 transition md:p-6 shadow-subtle ${
         address.isDefault
-          ? "border-[#0e7468] bg-[#0e7468]/[0.03] shadow-sm"
-          : "border-black/10 bg-white hover:border-black/25"
+          ? "border-[var(--color-primary)] bg-[var(--color-secondary)]/15"
+          : "border-[var(--border-subtle)] bg-[var(--surface-raised)] hover:border-[var(--border-strong)]"
       }`}
     >
       <div>
         {/* Top Badges */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#073b36]">
-            <Icon size={16} className="text-[#0e7468]" />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">
+            <Icon size={16} className="text-[var(--color-primary)]" />
             <span>{displayLabel}</span>
           </div>
           {address.isDefault ? (
-            <span className="flex items-center gap-1 rounded-full bg-[#0e7468]/15 px-2.5 py-0.5 text-[11px] font-bold text-[#073b36]">
-              <CheckCircle2 size={13} className="text-[#0e7468]" />
+            <span className="flex items-center gap-1 rounded-xs bg-[var(--color-secondary)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--color-primary-dark)]">
+              <CheckCircle2 size={13} className="text-[var(--color-primary)]" />
               {isAr ? "العنوان الافتراضي" : "Default Address"}
             </span>
           ) : (
@@ -122,7 +122,7 @@ export function AddressCard({
               type="button"
               onClick={handleSetDefault}
               disabled={Boolean(busy)}
-              className="flex items-center gap-1 text-[11px] font-medium text-neutral-500 transition hover:text-[#0e7468]"
+              className="flex items-center gap-1 text-[11px] font-medium text-[var(--text-muted)] transition hover:text-[var(--color-primary)]"
             >
               {busy === "default" ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -136,32 +136,32 @@ export function AddressCard({
 
         {/* Recipient & Contact */}
         <div className="mt-3">
-          <h3 className="font-bold text-sm text-neutral-900">
+          <h3 className="font-semibold text-sm text-[var(--text-primary)]">
             {address.recipientName}
           </h3>
-          <p className="mt-0.5 text-xs text-neutral-600 dir-ltr text-start font-mono">
+          <p className="mt-0.5 text-xs text-[var(--text-secondary)] dir-ltr text-start font-mono">
             {address.phone}
           </p>
         </div>
 
         {/* Formatted Address */}
-        <p className="mt-3 text-xs leading-relaxed text-neutral-700">
+        <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">
           {formattedAddress}
         </p>
       </div>
 
       {/* Action Footer */}
-      <div className="mt-5 flex items-center justify-end gap-2 border-t border-black/10 pt-3">
+      <div className="mt-5 flex items-center justify-end gap-2 border-t border-[var(--border-subtle)] pt-3">
         {confirmDelete ? (
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-[#a6432b]">
+            <span className="text-[11px] font-medium text-[var(--color-accent)]">
               {isAr ? "تأكيد الحذف؟" : "Confirm delete?"}
             </span>
             <button
               type="button"
               onClick={handleDelete}
               disabled={busy === "delete"}
-              className="bg-[#a6432b] px-2.5 py-1 text-[11px] font-bold text-white transition hover:bg-[#8c3624]"
+              className="rounded-xs bg-[var(--color-accent)] px-2.5 py-1 text-[11px] font-bold text-white transition hover:bg-[var(--color-accent-hover)] active:scale-[0.99]"
             >
               {busy === "delete" ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -173,7 +173,7 @@ export function AddressCard({
               type="button"
               onClick={() => setConfirmDelete(false)}
               disabled={busy === "delete"}
-              className="border border-black/15 px-2 py-1 text-[11px] text-neutral-600 transition hover:bg-neutral-100"
+              className="rounded-xs border border-[var(--border-subtle)] px-2 py-1 text-[11px] text-[var(--text-secondary)] transition hover:bg-[var(--surface-sunken)]"
             >
               {isAr ? "إلغاء" : "Cancel"}
             </button>
@@ -184,7 +184,7 @@ export function AddressCard({
               type="button"
               onClick={() => onEdit(address)}
               disabled={Boolean(busy)}
-              className="flex items-center gap-1.5 border border-black/15 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:border-black/30 hover:bg-neutral-50"
+              className="flex items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-sunken)] active:scale-[0.99]"
             >
               <Pencil size={13} />
               <span>{isAr ? "تعديل" : "Edit"}</span>
@@ -193,7 +193,7 @@ export function AddressCard({
               type="button"
               onClick={handleDelete}
               disabled={Boolean(busy)}
-              className="flex items-center gap-1.5 border border-black/15 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition hover:border-[#a6432b] hover:text-[#a6432b]"
+              className="flex items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] active:scale-[0.99]"
             >
               <Trash2 size={13} />
               <span>{isAr ? "حذف" : "Delete"}</span>

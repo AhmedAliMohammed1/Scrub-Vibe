@@ -29,6 +29,32 @@ export type EmailPayload = {
   html: string;
 };
 
+export function renderBackInStockSubscription(input: {
+  email: string;
+  locale: "en" | "ar";
+  productUrl: string;
+  unsubscribeUrl: string;
+}): EmailPayload {
+  const ar = input.locale === "ar";
+  const subject = ar ? "تم تفعيل تنبيه توفر المنتج — Scrub Vibe" : "Your stock alert is active — Scrub Vibe";
+  const content = `<p style="font-size:14px;line-height:1.7;color:#444">${ar ? "سنرسل لك رسالة واحدة عند عودة اختيارك للمخزون." : "We’ll send you one email as soon as your selection is available again."}</p><p><a href="${input.productUrl}" style="display:inline-block;background:#073b36;color:#fff;padding:12px 20px;text-decoration:none;font-size:12px;font-weight:700">${ar ? "عرض المنتج" : "View product"}</a></p>`;
+  return { to: input.email, subject, html: baseLayout(subject, content, ar, `<a href="${input.unsubscribeUrl}" style="color:#777">${ar ? "إلغاء التنبيه" : "Cancel this alert"}</a>`) };
+}
+
+export function renderBackInStock(input: { email: string; locale: "en" | "ar"; productName: string; productUrl: string }): EmailPayload {
+  const ar = input.locale === "ar";
+  const subject = ar ? `${input.productName} متوفر الآن` : `${input.productName} is back in stock`;
+  const content = `<p style="font-size:14px;line-height:1.7;color:#444">${ar ? "اختيارك متوفر من جديد. المخزون قد ينفد سريعاً." : "Your selection is available again. Stock may be limited."}</p><p><a href="${input.productUrl}" style="display:inline-block;background:#073b36;color:#fff;padding:12px 20px;text-decoration:none;font-size:12px;font-weight:700">${ar ? "تسوق الآن" : "Shop now"}</a></p>`;
+  return { to: input.email, subject, html: baseLayout(subject, content, ar) };
+}
+
+export function renderReturnUpdate(input: { email: string; customerName: string; orderNumber: string; returnNumber: string; requestType: string; status: string; note: string | null; locale: "en" | "ar" }): EmailPayload {
+  const ar = input.locale === "ar";
+  const subject = ar ? `تحديث طلب ${input.returnNumber}` : `Update for ${input.returnNumber}`;
+  const content = `<p style="font-size:14px;color:#444">${ar ? `مرحباً ${input.customerName}، تم تحديث طلبك المرتبط بالطلب ${input.orderNumber}.` : `Hi ${input.customerName}, your request for order ${input.orderNumber} has been updated.`}</p><table width="100%" style="background:#f0f5f3;padding:16px;font-size:13px"><tr><td>${ar ? "النوع" : "Type"}</td><td style="text-align:right;font-weight:700">${input.requestType.replaceAll("_", " ")}</td></tr><tr><td>${ar ? "الحالة" : "Status"}</td><td style="text-align:right;font-weight:700">${input.status.replaceAll("_", " ")}</td></tr></table>${input.note ? `<p style="font-size:13px;color:#555"><strong>${ar ? "ملاحظة الفريق:" : "Team note:"}</strong><br>${input.note}</p>` : ""}`;
+  return { to: input.email, subject, html: baseLayout(subject, content, ar) };
+}
+
 /** Send an email via Resend, or log it to the console in dev-preview mode. */
 export async function sendEmail(payload: EmailPayload): Promise<void> {
   const resend = getResendClient();

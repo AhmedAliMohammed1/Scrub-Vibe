@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T14:48:25Z",
+  "title": "Design System: Scrub Vibe",
+  "extensions": {
+    "colorMeta": {
+      "teal-deep": {
+        "role": "primary",
+        "displayName": "Deep Surgical Teal",
+        "canonical": "#073b36",
+        "tonalRamp": ["#031816", "#052623", "#073b36", "#09564e", "#0e7468", "#239487", "#81c5b8", "#dce9e5"]
+      },
+      "teal-primary": {
+        "role": "primary",
+        "displayName": "Surgical Green Accent",
+        "canonical": "#0e7468",
+        "tonalRamp": ["#042622", "#07423b", "#0a5d53", "#0e7468", "#179b8c", "#38b8a9", "#78d4c8", "#dce9e5"]
+      },
+      "paper-canvas": {
+        "role": "neutral",
+        "displayName": "Paper Canvas",
+        "canonical": "#f6f7f4",
+        "tonalRamp": ["#10201e", "#33403e", "#536460", "#899692", "#c4ccc8", "#e4e8e5", "#f0f2ef", "#f6f7f4"]
+      },
+      "surface-card": {
+        "role": "neutral",
+        "displayName": "Surface Card",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#10201e", "#333f3e", "#616c6a", "#959e9c", "#c8cdcc", "#e9ebec", "#f7f8f8", "#ffffff"]
+      },
+      "accent-terracotta": {
+        "role": "tertiary",
+        "displayName": "Terracotta Accent",
+        "canonical": "#a5472f",
+        "tonalRamp": ["#3b150c", "#5e2316", "#813320", "#a5472f", "#c46349", "#dd866e", "#f0b4a3", "#fae6e0"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines and primary editorial titles." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles and dialog headers." },
+      "title": { "displayName": "Title", "purpose": "Product card titles and group headings." },
+      "body": { "displayName": "Body", "purpose": "Standard narrative and product descriptions." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows, badges, and uppercase metadata." }
+    },
+    "shadows": [
+      { "name": "subtle-elevation", "value": "0 4px 20px -2px rgba(7, 59, 54, 0.06)", "purpose": "Floating panels, sticky navigation, and modal dialogs." },
+      { "name": "focus-glow", "value": "0 0 0 3px rgba(14, 116, 104, 0.25)", "purpose": "Accessible focus ring on active controls." }
+    ],
+    "motion": [
+      { "name": "ease-precise", "value": "cubic-bezier(0.2, 0.8, 0.2, 1)", "purpose": "Crisp transitions for interactive controls and modal dialogs." },
+      { "name": "duration-fast", "value": "180ms", "purpose": "Standard hover and state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1440px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button with surgical teal fill, uppercase tracked lettering, and 48px touch height.",
+      "html": "<button class=\"ds-btn-primary\">SHOP FEMALE SCRUBS</button>",
+      "css": ".ds-btn-primary { background: #073b36; color: #ffffff; min-height: 48px; padding: 14px 28px; font-family: Inter, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 2px; cursor: pointer; transition: background-color 180ms ease, transform 180ms ease; } .ds-btn-primary:hover { background: #0e7468; transform: translateY(-1px); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary outline button with crisp 1px border and deep teal text.",
+      "html": "<button class=\"ds-btn-secondary\">VIEW SIZE GUIDE</button>",
+      "css": ".ds-btn-secondary { background: #ffffff; color: #073b36; min-height: 48px; padding: 14px 28px; font-family: Inter, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid #d8deda; border-radius: 2px; cursor: pointer; transition: all 180ms ease; } .ds-btn-secondary:hover { border-color: #0e7468; color: #0e7468; background: #f0f5f3; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-standard",
+      "description": "Form input with high-contrast label, 48px height, and clear teal focus state.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\">PHONE NUMBER</label><input type=\"tel\" class=\"ds-input\" placeholder=\"01012345678\" /></div>",
+      "css": ".ds-field { display: grid; gap: 6px; font-family: Inter, sans-serif; } .ds-label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #536460; } .ds-input { height: 48px; padding: 0 16px; border: 1px solid #d8deda; border-radius: 2px; font-size: 15px; color: #10201e; background: #ffffff; outline: none; transition: border-color 180ms ease, box-shadow 180ms ease; } .ds-input:focus { border-color: #0e7468; box-shadow: 0 0 0 3px rgba(14, 116, 104, 0.2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Surgeon’s Atelier",
+    "overview": "Scrub Vibe synthesizes medical-grade functional utility with refined editorial apparel presentation. Born in an Egyptian apparel manufacturing house dedicated exclusively to healthcare practitioners, the visual language balances the surgical sterility and precision of the operating theatre with the warmth, dignity, and tailored confidence deserving of long, demanding hospital shifts.\n\nThe aesthetic rejects both the hyper-commercialized neon tech-gimmickry of generic consumer e-commerce and the dry, utilitarian catalog formatting of legacy uniform distributors. Surfaces feature generous, calibrated white space, disciplined hairline structural borders, warm paper-tinted canvases, rich surgical-teal focal points, and authentic photography capturing Egyptian medical practitioners in action.",
+    "keyCharacteristics": [
+      "Disciplined chromatic hierarchy: 80% calm neutral paper/canvas, 15% surgical deep teal anchors, 5% warm terracotta/sage functional accents.",
+      "Dual-culture typographic mastery: balanced bilingual serif editorial display paired with ultra-legible grotesque interface typography in both Arabic (RTL) and English (LTR).",
+      "Uncompromising tactile utility: clear 44px+ minimum touch surfaces, high-contrast states, and immediate scanability under shift fatigue.",
+      "Authentic institutional trust: clear local payment identities (Vodafone Cash, InstaPay, COD with deposit), transparent delivery timetables, and exact size calculators."
+    ],
+    "rules": [
+      {
+        "name": "The Surgical Focus Rule",
+        "body": "Deep Surgical Teal (#073b36) is reserved for primary actions, navigation anchors, and significant headings. It never exceeds 20% of viewport area on content pages to preserve its commanding visual priority.",
+        "section": "colors"
+      },
+      {
+        "name": "The Functional Accent Rule",
+        "body": "Terracotta (#a5472f) is never decorative; it communicates discount magnitude, stock depletion, or destructive state. If everything shouts urgency, nothing is urgent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Arabic Diacritical Clearance Rule",
+        "body": "In Arabic (locale === 'ar'), all serif display and headline titles must maintain line-height >= 1.2 and omit tight negative leading (leading-none or leading-[.94]) to prevent clipping of high ascenders and lower loops.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Content cards, catalog tiles, and table rows rest completely flat on the canvas. Shadows are never used for static cards; depth is achieved by the white card resting on the paper canvas enclosed by a subtle 1px border.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do test every layout in both English LTR and Arabic RTL at 390px, 768px, and 1440px viewports.",
+      "Do use CSS logical properties (start, end, ps, pe, ms, me) across all spacing and layout rules.",
+      "Do format all prices using formatMoney(minor, locale).",
+      "Do ensure every interactive element has a minimum touch target of 44×44px.",
+      "Do preserve every existing server action, data fetch, Supabase RLS policy, and cart/wishlist sync state."
+    ],
+    "donts": [
+      "Don't use decorative gradients over text or artificial glassmorphism backdrops.",
+      "Don't use raw pure black (#000000) for text; use Ink Primary (#10201e).",
+      "Don't hide essential information or purchasing actions behind desktop-only hover states.",
+      "Don't alter cart calculation keys, variant IDs, or checkout validation contracts.",
+      "Don't compromise the official brand marks for Vodafone Cash and InstaPay Egypt."
+    ]
+  }
+}

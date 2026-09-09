@@ -58,7 +58,7 @@ const initialAuthState: AuthActionState = { status: "idle" };
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
   return (
-    <span className="mt-1 block text-[11px] text-[#a6432b]">{errors[0]}</span>
+    <span className="mt-1.5 block text-[11px] font-medium text-[var(--color-accent)]">{errors[0]}</span>
   );
 }
 
@@ -76,37 +76,40 @@ export function AuthForm({ mode, locale }: { mode: Mode; locale: Locale }) {
     "update-password": t.update,
   }[mode];
 
+  const inputClasses =
+    "mt-2 h-12 w-full rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] px-4 font-normal normal-case outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]";
+
   return (
-    <form action={formAction} className="mt-10 space-y-5" noValidate>
+    <form action={formAction} className="mt-8 space-y-5" noValidate>
       <input type="hidden" name="locale" value={locale} />
       {mode === "sign-up" && (
-        <label className="block text-xs font-bold uppercase tracking-[.12em]">
+        <label className="block text-xs font-bold uppercase tracking-[.12em] text-[var(--text-secondary)]">
           {t.fullName}
           <input
             type="text"
             name="fullName"
             autoComplete="name"
             required
-            className="mt-2 h-12 w-full border border-black/20 bg-transparent px-4 font-normal normal-case outline-none focus:border-black"
+            className={inputClasses}
           />
           <FieldError errors={state.fieldErrors?.fullName} />
         </label>
       )}
       {mode !== "update-password" && (
-        <label className="block text-xs font-bold uppercase tracking-[.12em]">
+        <label className="block text-xs font-bold uppercase tracking-[.12em] text-[var(--text-secondary)]">
           {t.email}
           <input
             type="email"
             name="email"
             autoComplete="email"
             required
-            className="mt-2 h-12 w-full border border-black/20 bg-transparent px-4 font-normal normal-case outline-none focus:border-black"
+            className={inputClasses}
           />
           <FieldError errors={state.fieldErrors?.email} />
         </label>
       )}
       {isPasswordForm && (
-        <label className="block text-xs font-bold uppercase tracking-[.12em]">
+        <label className="block text-xs font-bold uppercase tracking-[.12em] text-[var(--text-secondary)]">
           {t.password}
           <input
             type="password"
@@ -116,13 +119,13 @@ export function AuthForm({ mode, locale }: { mode: Mode; locale: Locale }) {
             }
             required
             minLength={mode === "sign-in" ? 1 : 8}
-            className="mt-2 h-12 w-full border border-black/20 bg-transparent px-4 font-normal normal-case outline-none focus:border-black"
+            className={inputClasses}
           />
           <FieldError errors={state.fieldErrors?.password} />
         </label>
       )}
       {(mode === "sign-up" || mode === "update-password") && (
-        <label className="block text-xs font-bold uppercase tracking-[.12em]">
+        <label className="block text-xs font-bold uppercase tracking-[.12em] text-[var(--text-secondary)]">
           {t.confirmPassword}
           <input
             type="password"
@@ -130,7 +133,7 @@ export function AuthForm({ mode, locale }: { mode: Mode; locale: Locale }) {
             autoComplete="new-password"
             required
             minLength={8}
-            className="mt-2 h-12 w-full border border-black/20 bg-transparent px-4 font-normal normal-case outline-none focus:border-black"
+            className={inputClasses}
           />
           <FieldError errors={state.fieldErrors?.confirmPassword} />
         </label>
@@ -138,10 +141,10 @@ export function AuthForm({ mode, locale }: { mode: Mode; locale: Locale }) {
       {state.message && (
         <p
           aria-live="polite"
-          className={`border px-4 py-3 text-xs leading-5 ${
+          className={`rounded-xs border px-4 py-3 text-xs leading-5 ${
             state.status === "success"
-              ? "border-[#526744]/30 bg-[#526744]/8 text-[#3f5135]"
-              : "border-[#a6432b]/30 bg-[#a6432b]/8 text-[#8c3624]"
+              ? "border-[#0e7468]/30 bg-[#0e7468]/10 text-[#073b36]"
+              : "border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
           }`}
         >
           {state.message}
@@ -150,7 +153,7 @@ export function AuthForm({ mode, locale }: { mode: Mode; locale: Locale }) {
       <button
         type="submit"
         disabled={pending}
-        className="h-12 w-full bg-neutral-950 text-xs font-bold uppercase tracking-[.14em] text-white transition-opacity disabled:cursor-wait disabled:opacity-55"
+        className="h-12 w-full rounded-xs bg-[var(--color-primary)] text-xs font-bold uppercase tracking-[.14em] text-white transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99] disabled:cursor-wait disabled:opacity-55"
       >
         {pending ? t.pending : submitLabel}
       </button>

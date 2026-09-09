@@ -113,6 +113,29 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
           return variant ? [[size.label_en, String(variant.id)]] : [];
         }),
       );
+      const allVariants = Object.fromEntries(
+        sizeValues.flatMap((size) => {
+          const variant = activeVariants.find((item) =>
+            variantHasValues(item, color.id, size.id),
+          );
+          return variant ? [[size.label_en, String(variant.id)]] : [];
+        }),
+      );
+      const stockBySize = Object.fromEntries(
+        sizeValues.map((size) => {
+          const variant = activeVariants.find((item) =>
+            variantHasValues(item, color.id, size.id),
+          );
+          return [
+            size.label_en,
+            Math.max(
+              0,
+              (variant?.inventory?.on_hand ?? 0) -
+                (variant?.inventory?.reserved ?? 0),
+            ),
+          ];
+        }),
+      );
 
       return {
         id: String(color.id),
@@ -121,6 +144,8 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
         name: { en: color.label_en, ar: color.label_ar },
         sizes: availableSizes,
         variants,
+        allVariants,
+        stockBySize,
         inStock: availableSizes.length > 0,
       };
     });
@@ -131,6 +156,8 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
     name: { en: "Natural", ar: "طبيعي" },
     sizes: [],
     variants: {},
+    allVariants: {},
+    stockBySize: {},
     inStock: false,
   };
   const primaryColour =
