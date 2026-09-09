@@ -64,11 +64,11 @@ export default async function ShopPage({
     : t[filters.category ?? "all"];
 
   return (
-    <main className="mx-auto max-w-[1600px] px-5 py-14 md:px-10">
+    <main className="mx-auto max-w-[1440px] px-5 py-10 md:px-10 md:py-16">
       <p className="eyebrow text-[#0e7468]">{t.collection}</p>
-      <div className="mt-3 flex items-end justify-between border-b border-black/15 pb-8">
+      <div className="mt-3 flex items-end justify-between pb-7">
         <div>
-          <h1 className="font-serif text-5xl md:text-7xl">{heading}</h1>
+          <h1 className="max-w-4xl text-balance font-serif text-5xl leading-[.94] md:text-7xl">{heading}</h1>
           <p className="mt-4 text-xs text-neutral-600">
             {products.length} {products.length === 1 ? t.piece : t.pieces}
           </p>
@@ -80,9 +80,9 @@ export default async function ShopPage({
         products={allProducts}
       />
       {products.length ? (
-        <div className="grid grid-cols-2 gap-x-3 gap-y-12 py-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
+        <div className="grid grid-cols-2 gap-x-3 gap-y-10 py-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-7">
+          {products.map((product, index) => (
+            <ProductCard key={product.id} product={product} locale={locale} priority={index < 4} />
           ))}
         </div>
       ) : (

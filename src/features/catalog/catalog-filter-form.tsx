@@ -106,12 +106,19 @@ export function CatalogFilterForm({
   const colors = uniqueColors(products);
 
   return (
-    <details id="catalog-search" open className="border-b border-black/15 py-6">
-      <summary className="flex list-none items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] marker:hidden">
+    <details id="catalog-search" className="group border-b border-black/15 py-5">
+      <summary className="flex min-h-12 list-none items-center justify-between gap-3 border border-black/15 bg-white px-4 text-[11px] font-bold uppercase tracking-[.14em] marker:hidden hover:border-[#0e7468] sm:w-fit">
+        <span className="flex items-center gap-2">
         <SlidersHorizontal size={15} />
         {t.filter}
+        </span>
+        {(filters.sizes.length + filters.colors.length + Number(filters.saleOnly) + Number(filters.inStockOnly) + Number(Boolean(filters.category || filters.price || filters.query))) > 0 && (
+          <span className="grid size-6 place-items-center rounded-full bg-[#0e7468] text-[10px] text-white">
+            {filters.sizes.length + filters.colors.length + Number(filters.saleOnly) + Number(filters.inStockOnly) + Number(Boolean(filters.category || filters.price || filters.query))}
+          </span>
+        )}
       </summary>
-      <Form action={`/${locale}/shop`} className="mt-6 space-y-7">
+      <Form action={`/${locale}/shop`} className="mt-5 space-y-7 border border-black/10 bg-white p-4 sm:p-6">
         <label className="block max-w-2xl text-[10px] font-bold uppercase tracking-[.14em]">
           {t.search}
           <span className="mt-2 flex h-12 items-center border border-black/20 bg-white/30 px-4 focus-within:border-black">
@@ -157,7 +164,7 @@ export function CatalogFilterForm({
                     value={size}
                     defaultChecked={filters.sizes.includes(size)}
                   />
-                  <span className="grid min-w-9 place-items-center border border-black/20 px-2 py-2 text-[10px] peer-checked:border-black peer-checked:bg-neutral-950 peer-checked:text-white">
+                  <span className="grid min-h-11 min-w-11 place-items-center border border-black/20 px-2 py-2 text-[10px] peer-checked:border-[#073b36] peer-checked:bg-[#073b36] peer-checked:text-white">
                     {size}
                   </span>
                 </label>

@@ -8,11 +8,11 @@ export function Button({ className, variant = "solid", ...props }: Props) {
   return (
     <button
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 px-5 text-[11px] font-semibold uppercase tracking-[.16em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 disabled:opacity-45",
-        variant === "solid" && "bg-neutral-950 text-white hover:bg-neutral-800",
+        "inline-flex min-h-12 items-center justify-center gap-2 border px-5 text-[11px] font-bold uppercase tracking-[.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e7468] focus-visible:ring-offset-2 disabled:opacity-45",
+        variant === "solid" && "border-[#073b36] bg-[#073b36] text-white hover:border-[#0e7468] hover:bg-[#0e7468]",
         variant === "outline" &&
-          "border border-current bg-transparent hover:bg-black/5",
-        variant === "ghost" && "bg-transparent hover:bg-black/5",
+          "border-current bg-transparent hover:bg-black/5",
+        variant === "ghost" && "border-transparent bg-transparent hover:bg-black/5",
         className,
       )}
       {...props}

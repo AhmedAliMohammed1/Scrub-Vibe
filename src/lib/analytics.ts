@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseEnvironment } from "@/lib/supabase/config";
 import type { Json } from "@/types/database";
 
 export type StoreEventName =
@@ -73,7 +74,7 @@ export function trackStoreEvent(
     metadata?: Record<string, Json | undefined>;
   } = {},
 ) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !hasSupabaseEnvironment()) return;
 
   const path =
     options.path ?? `${window.location.pathname}${window.location.search}`;

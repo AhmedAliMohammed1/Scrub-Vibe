@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Heart, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { AddProduct } from "@/components/store/add-product";
 import { catalog } from "@/lib/catalog";
 import { discountPercent, formatMoney } from "@/lib/money";
@@ -47,16 +48,21 @@ export default async function ProductPage({ params }: Props) {
   };
   return (
     <main
-      className="mx-auto max-w-[1600px] px-5 py-8 md:px-10 md:py-14"
+      className="mx-auto max-w-[1440px] px-5 py-5 md:px-10 md:py-10"
       data-product-id={p.id}
     >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="grid gap-10 lg:grid-cols-[1.35fr_.65fr]">
+      <nav aria-label={locale === "ar" ? "مسار التنقل" : "Breadcrumb"} className="mb-5 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+        <Link href={`/${locale}/shop`} className="hover:text-[#0e7468]">{locale === "ar" ? "المتجر" : "Shop"}</Link>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page" className="truncate">{p.title[locale]}</span>
+      </nav>
+      <div className="grid gap-7 lg:grid-cols-[1.15fr_.85fr] lg:gap-14">
         <div
-          className="product-art relative min-h-[520px] bg-[#ebe9e4] lg:min-h-[760px]"
+          className="product-art relative aspect-[4/5] min-h-0 bg-[#ebe9e4] lg:aspect-auto lg:min-h-[720px]"
           style={{ position: "relative" }}
         >
           <Image
@@ -68,13 +74,13 @@ export default async function ProductPage({ params }: Props) {
             className="object-cover object-top"
           />
         </div>
-        <div className="lg:sticky lg:top-6 lg:self-start">
+        <div className="min-w-0 lg:sticky lg:top-28 lg:self-start lg:py-4">
           <p className="eyebrow text-[#0e7468]">SCRUB VIBE · {p.category}</p>
-          <h1 className="mt-4 font-serif text-4xl md:text-5xl">
+          <h1 className="mt-3 text-balance font-serif text-4xl leading-[1.02] md:text-5xl">
             {p.title[locale]}
           </h1>
-          <div className="mt-5 flex gap-3 text-sm">
-            <strong>{formatMoney(p.price, locale)}</strong>
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-base">
+            <strong className="text-lg">{formatMoney(p.price, locale)}</strong>
             {p.compareAt && (
               <>
                 <span className="text-neutral-600 line-through">
@@ -84,7 +90,7 @@ export default async function ProductPage({ params }: Props) {
               </>
             )}
           </div>
-          <p className="mt-7 max-w-lg text-sm leading-7 text-neutral-600">
+          <p className="mt-5 max-w-lg text-sm leading-7 text-[var(--text-muted)]">
             {p.description[locale]}
           </p>
           <AddProduct
@@ -121,10 +127,6 @@ export default async function ProductPage({ params }: Props) {
               );
             })}
           </div>
-          <button className="mt-6 flex items-center gap-2 text-xs">
-            <Heart size={17} />
-            {locale === "ar" ? "أضف إلى المفضلة" : "Add to wishlist"}
-          </button>
         </div>
       </div>
     </main>

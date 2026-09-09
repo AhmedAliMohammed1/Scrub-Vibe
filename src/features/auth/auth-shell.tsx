@@ -12,18 +12,20 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto grid min-h-[70vh] max-w-[1200px] items-center gap-12 px-5 py-16 md:grid-cols-[.8fr_1.2fr] md:px-10 md:py-24">
-      <section>
-        <p className="eyebrow text-[#a6432b]">{eyebrow}</p>
-        <h1 className="mt-4 max-w-md font-serif text-5xl leading-none md:text-7xl">
+    <main className="mx-auto grid min-h-[72vh] max-w-[1200px] gap-0 px-5 py-10 md:grid-cols-[.9fr_1.1fr] md:px-10 md:py-20">
+      <section className="flex flex-col justify-end bg-[#073b36] p-7 text-white md:p-12">
+        <p className="eyebrow text-[#81c5b8]">{eyebrow}</p>
+        <h1 className="mt-4 max-w-md text-balance font-serif text-5xl leading-none md:text-7xl">
           {title}
         </h1>
-        <p className="mt-6 max-w-sm text-sm leading-7 text-neutral-600">
+        <p className="mt-6 max-w-sm text-sm leading-7 text-white/70">
           {body}
         </p>
       </section>
-      <section className="border border-black/10 bg-white/35 p-6 shadow-[0_24px_80px_rgba(45,38,28,.08)] md:p-10">
+      <section className="flex items-center border border-black/10 bg-white p-6 md:p-12">
+        <div className="w-full">
         {children}
+        </div>
       </section>
     </main>
   );

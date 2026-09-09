@@ -21,6 +21,7 @@ import {
 } from "@/features/cart/actions";
 import { trackStoreEvent } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseEnvironment } from "@/lib/supabase/config";
 
 export type { CartLine };
 
@@ -120,6 +121,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
 
   // Handle Supabase Auth & Synchronization
   useEffect(() => {
+    if (!hasSupabaseEnvironment()) return;
     let active = true;
     const supabase = createClient();
 

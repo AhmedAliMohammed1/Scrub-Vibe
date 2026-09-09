@@ -37,7 +37,7 @@ type Props = {
   };
 };
 
-const inputClass = "h-12 w-full border border-black/20 bg-white px-4 text-sm outline-none focus:border-[#0e7468]";
+const inputClass = "h-12 w-full border border-black/20 bg-white px-4 text-base outline-none focus:border-[#0e7468] focus:ring-2 focus:ring-[#0e7468]/15";
 const paymentHelpUrl =
   "https://wa.me/201096733209?text=" +
   encodeURIComponent("Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.");
@@ -400,12 +400,12 @@ export function CheckoutForm({
       : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-12 md:px-10 md:py-20">
+    <main className="mx-auto max-w-6xl px-5 py-10 md:px-10 md:py-16">
       <p className="eyebrow text-[#0e7468]">{ar ? "دفع آمن" : "SECURE CHECKOUT"}</p>
       <h1 className="mt-3 font-serif text-5xl md:text-7xl">{ar ? "أكمل طلبك" : "Complete your order"}</h1>
-      <form onSubmit={placeOrder} className="mt-10 grid gap-8 lg:grid-cols-[1fr_390px]">
+      <form onSubmit={placeOrder} className="mt-8 grid gap-6 lg:grid-cols-[1fr_390px] lg:gap-8">
         <div className="grid gap-7">
-          <section className="border border-black/10 bg-white p-5 md:p-7">
+          <section className="border border-[var(--border-subtle)] bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">1</span><h2 className="font-serif text-3xl">{ar ? "بيانات التواصل" : "Contact details"}</h2></div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-xs font-bold">{ar ? "الاسم بالكامل" : "Full name"}<input name="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} required minLength={2} autoComplete="name" /></label>
@@ -419,7 +419,7 @@ export function CheckoutForm({
             </div>
           </section>
 
-          <section className="border border-black/10 bg-white p-5 md:p-7">
+          <section className="border border-[var(--border-subtle)] bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">2</span><h2 className="font-serif text-3xl">{ar ? "عنوان التوصيل" : "Delivery address"}</h2></div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {isAuthenticated && (
@@ -448,7 +448,7 @@ export function CheckoutForm({
             </div>
           </section>
 
-          <section className="border border-black/10 bg-white p-5 md:p-7">
+          <section className="border border-[var(--border-subtle)] bg-white p-5 md:p-7">
             <div className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs text-white">3</span><h2 className="font-serif text-3xl">{ar ? "طريقة الدفع" : "Payment method"}</h2></div>
             <div className="mt-6 grid gap-3">{paymentOptions.map(({ id, title, detail, icon: Icon, disabled }) => <label key={id} className={`flex gap-4 border p-4 ${disabled ? "cursor-not-allowed bg-neutral-50 opacity-55" : "cursor-pointer"} ${paymentMethod === id ? "border-[#0e7468] bg-[#dce9e5]/60" : "border-black/10"}`}><input type="radio" name="paymentMethod" value={id} checked={paymentMethod === id} disabled={disabled} onChange={() => setPaymentMethod(id)} className="mt-1 accent-[#0e7468]" /><Icon size={24} className="shrink-0" /><span><strong className="block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-neutral-600">{detail}</span></span></label>)}</div>
             {paymentMethod === "cod" && codAvailable && <div className="mt-5 border border-[#0e7468]/20 bg-[#dce9e5]/35 p-4"><strong className="text-sm">{ar ? `مقدم مطلوب: ${formatMoney(codDeposit, locale)}` : `Required deposit: ${formatMoney(codDeposit, locale)}`}</strong><p className="mt-1 text-xs text-neutral-600">{ar ? `المتبقي عند الاستلام: ${formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}` : `Balance due on delivery: ${formatMoney(Math.max(0, (shippingQuote?.totalMinor ?? pricingSubtotal) - codDeposit), locale)}`}</p><p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-neutral-600">{ar ? "طريقة دفع المقدم" : "Deposit payment method"}</p><div className="mt-2 grid grid-cols-2 gap-2"><DepositMethodButton selected={codDepositMethod === "vodafone_cash"} onClick={() => setCodDepositMethod("vodafone_cash")} label="Vodafone Cash" icon={VodafoneCashIcon} /><DepositMethodButton selected={codDepositMethod === "instapay"} onClick={() => setCodDepositMethod("instapay")} label="InstaPay" icon={InstaPayIcon} /></div>{transferDestination && <p className="mt-3 text-xs font-semibold text-[#073b36]">{ar ? `حوّل المقدم إلى ${transferDestination}` : `Transfer the deposit to ${transferDestination}`}</p>}</div>}
@@ -456,7 +456,7 @@ export function CheckoutForm({
           </section>
         </div>
 
-        <aside className="h-fit border border-black/10 bg-white p-5 lg:sticky lg:top-24">
+        <aside className="h-fit border border-[#0e7468]/25 bg-white p-5 shadow-[0_16px_45px_rgba(7,59,54,.07)] lg:sticky lg:top-24">
           <h2 className="font-serif text-3xl">{ar ? "ملخص الطلب" : "Order summary"}</h2>
           <div className="mt-5 max-h-80 divide-y divide-black/10 overflow-auto">{cartItems.map((line) => <div key={line.key} className="grid grid-cols-[56px_1fr_auto] gap-3 py-3"><div className="relative aspect-[3/4] overflow-hidden bg-[#ebe9e4]"><Image src={line.image.src} alt={line.image.alt[locale]} fill sizes="56px" className="object-cover" /></div><div><strong className="text-xs">{line.title[locale]}</strong><p className="mt-1 text-[10px] text-neutral-500">{line.colourName[locale]} · {line.size} · ×{line.quantity}</p></div><strong className="text-[11px]">{formatMoney(line.price * line.quantity, locale)}</strong></div>)}</div>
           <div className="mt-5 border-t border-black/10 pt-5"><label htmlFor="discount-code" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.12em]"><BadgePercent size={15} />{ar ? "كود الخصم" : "Discount code"}</label><div className="mt-2 flex gap-2"><input id="discount-code" value={discountInput} onChange={(event) => { setDiscountInput(event.target.value.toUpperCase()); setDiscountError(""); }} maxLength={32} className="h-11 min-w-0 flex-1 border border-black/15 px-3 font-mono text-sm uppercase outline-none focus:border-[#0e7468]" placeholder={ar ? "أدخل الكود" : "Enter code"} />{appliedDiscount ? <button type="button" onClick={removeDiscount} className="flex h-11 items-center gap-2 border border-black/15 px-3 text-[10px] font-bold uppercase"><X size={14} />{ar ? "إزالة" : "Remove"}</button> : <button type="button" onClick={applyDiscount} disabled={discountBusy || !discountInput.trim()} className="flex h-11 min-w-24 items-center justify-center bg-[#0e7468] px-3 text-[10px] font-bold uppercase text-white disabled:opacity-50">{discountBusy ? <Loader2 size={15} className="animate-spin" /> : (ar ? "تطبيق" : "Apply")}</button>}</div>{appliedDiscount && <p className="mt-2 text-xs font-bold text-[#0e7468]">{ar ? `تم تطبيق ${appliedDiscount.code}: وفرت ${formatMoney(appliedDiscount.discountMinor, locale)}` : `${appliedDiscount.code} applied: you save ${formatMoney(appliedDiscount.discountMinor, locale)}`}{(ar ? appliedDiscount.campaignNameAr : appliedDiscount.campaignNameEn) ? ` · ${ar ? appliedDiscount.campaignNameAr : appliedDiscount.campaignNameEn}` : ""}</p>}{discountResult && !appliedDiscount && <p className="mt-2 text-xs text-amber-700">{ar ? "تغيرت بيانات السلة أو الدفع. أعد تطبيق الكود." : "Your basket, phone or payment method changed. Apply the code again."}</p>}{discountError && <p role="alert" className="mt-2 text-xs text-[#a6432b]">{discountError}</p>}</div>
@@ -517,4 +517,3 @@ function InstaPayIcon({ size = 24, className }: PaymentIconProps) {
     </span>
   );
 }
-

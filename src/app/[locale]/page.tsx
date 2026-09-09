@@ -42,7 +42,7 @@ export default async function HomePage({
       {heroBanners.length > 0 ? (
         <HeroCarousel banners={heroBanners} locale={locale} />
       ) : (
-        <section className="relative min-h-[650px] overflow-hidden bg-[#073b36] md:min-h-[780px]">
+        <section className="relative min-h-[620px] overflow-hidden bg-[#073b36] md:min-h-[760px]">
           <Image
             src="/images/scrub-vibe/female-collection.webp"
             alt={
@@ -56,7 +56,7 @@ export default async function HomePage({
             className="object-cover object-[55%_58%] md:object-[60%_55%]"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#062e2a]/95 via-[#062e2a]/55 to-black/10 rtl:bg-gradient-to-l" />
-          <div className="relative mx-auto flex min-h-[650px] max-w-[1600px] items-center px-5 py-24 md:min-h-[780px] md:px-12">
+          <div className="relative mx-auto flex min-h-[620px] max-w-[1440px] items-center px-5 py-20 md:min-h-[760px] md:px-12">
             <div className="max-w-2xl text-white">
               <p className="eyebrow mb-7">{t.eyebrow}</p>
               <h1 className="hero-title max-w-xl">{t.title}</h1>
@@ -79,8 +79,9 @@ export default async function HomePage({
               </div>
             </div>
             <ArrowDown
-              className="absolute bottom-7 start-1/2 animate-bounce text-white"
+              className="absolute bottom-7 start-1/2 text-white"
               size={20}
+              aria-hidden="true"
             />
           </div>
         </section>
@@ -104,8 +105,8 @@ export default async function HomePage({
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} />
+          {products.map((product, index) => (
+            <ProductCard key={product.id} product={product} locale={locale} priority={index < 4} />
           ))}
         </div>
       </section>
@@ -183,16 +184,6 @@ export default async function HomePage({
         })}
       </section>
       <Newsletter locale={locale} />
-      <footer className="flex flex-col justify-between gap-8 px-6 py-10 text-[10px] font-semibold uppercase tracking-[.13em] md:flex-row md:px-10">
-        <span>© 2026 SCRUB VIBE EGYPT</span>
-        <div className="flex flex-wrap gap-6">
-          <Link href="mailto:scrubvibe30@gmail.com">
-            {locale === "ar" ? "تواصل معنا" : "Contact"}
-          </Link>
-          <Link href="tel:01096733209">01096733209</Link>
-          <Link href="https://www.instagram.com/scrubvibe_egy/">Instagram</Link>
-        </div>
-      </footer>
     </main>
   );
 }

@@ -23,17 +23,27 @@ interface HeroCarouselProps {
 
 export function HeroCarousel({ banners, locale }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const total = banners.length;
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (total > 1) {
+    if (total > 1 && !paused && !reducedMotion) {
       timerRef.current = setInterval(() => {
         setCurrent((prev) => (prev + 1) % total);
       }, 6000);
     }
-  }, [total]);
+  }, [paused, reducedMotion, total]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     resetTimer();
@@ -59,8 +69,14 @@ export function HeroCarousel({ banners, locale }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative min-h-[650px] overflow-hidden md:min-h-[780px]"
+      className="relative min-h-[620px] overflow-hidden md:min-h-[760px]"
       style={{ backgroundColor: banner.bgColor }}
+      aria-roledescription="carousel"
+      aria-label={locale === "ar" ? "عروض سكراب فايب" : "Scrub Vibe highlights"}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}
     >
       {/* Background image */}
       {imageUrl && (
@@ -85,14 +101,14 @@ export function HeroCarousel({ banners, locale }: HeroCarouselProps) {
       />
 
       {/* Content */}
-      <div className="relative mx-auto flex min-h-[650px] max-w-[1600px] items-center px-5 py-24 md:min-h-[780px] md:px-12">
+      <div className="relative mx-auto flex min-h-[620px] max-w-[1440px] items-center px-5 py-20 md:min-h-[760px] md:px-12">
         <div className="max-w-2xl" style={{ color: banner.textColor }}>
           {subtitle && (
             <p className="eyebrow mb-7" style={{ color: banner.textColor }}>
               {subtitle}
             </p>
           )}
-          <h1 className="hero-title max-w-xl">{title}</h1>
+          <h1 className="hero-title max-w-xl text-balance">{title}</h1>
           {body && (
             <p className="mt-7 max-w-md text-sm leading-6 md:text-base">
               {body}
@@ -126,9 +142,10 @@ export function HeroCarousel({ banners, locale }: HeroCarouselProps) {
         </div>
 
         <ArrowDown
-          className="absolute bottom-7 start-1/2 animate-bounce"
+          className="absolute bottom-7 start-1/2"
           style={{ color: banner.textColor }}
           size={20}
+          aria-hidden="true"
         />
       </div>
 
