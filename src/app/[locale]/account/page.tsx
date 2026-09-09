@@ -16,6 +16,11 @@ type Props = {
   searchParams: Promise<{ password?: string; error?: string }>;
 };
 
+function isWithinReturnWindow(deliveredAt: string | null): boolean {
+  if (!deliveredAt) return false;
+  return Date.now() <= new Date(deliveredAt).getTime() + 14 * 86400000;
+}
+
 export default async function AccountPage({ params, searchParams }: Props) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
@@ -123,7 +128,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
                       <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
                         <Link href={`/${locale}/track/${order.order_number}` as Route}>{locale === "ar" ? "تتبع" : "Track"}</Link>
                         <Link href={`/${locale}/account/orders/${order.order_number}/invoice` as Route}>{locale === "ar" ? "الفاتورة" : "Invoice"}</Link>
-                        {order.status === "delivered" && order.delivered_at && Date.now() <= new Date(order.delivered_at).getTime() + 14 * 86400000 && <Link href={`/${locale}/account/returns/new?order=${order.id}` as Route}>{locale === "ar" ? "استرجاع / استبدال" : "Return / exchange"}</Link>}
+                        {order.status === "delivered" && isWithinReturnWindow(order.delivered_at) && <Link href={`/${locale}/account/returns/new?order=${order.id}` as Route}>{locale === "ar" ? "استرجاع / استبدال" : "Return / exchange"}</Link>}
                       </span>
                     </div>
                     <div className="text-end">

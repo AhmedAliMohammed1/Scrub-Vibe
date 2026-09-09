@@ -55,7 +55,10 @@ export default async function ProductPage({ params }: Props) {
       "@type": "Offer",
       price: p.price / 100,
       priceCurrency: "EGP",
-      availability: "https://schema.org/InStock",
+      availability: p.inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
     },
   };
 

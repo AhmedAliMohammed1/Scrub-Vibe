@@ -267,7 +267,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
 
       trackStoreEvent("add_to_cart", {
         productId: product.id,
-        metadata: { colour: colour.code, size },
+        metadata: { colour: colour.code, size, value: product.price, name: product.title.en },
       });
     },
     [isAuthenticated, queueCartMutation],

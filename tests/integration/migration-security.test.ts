@@ -138,6 +138,22 @@ const abandonedCartFunctions = readFileSync(
   "utf8",
 );
 
+const commercialGrowth = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260909115338_commercial_growth_suite.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
+const commercialReturnGuardrails = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260909121458_commercial_return_guardrails.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -496,5 +512,36 @@ describe("foundation migration security", () => {
     );
     expect(abandonedCartRecovery).not.toMatch(/auth\.role\s*\(/);
     expect(abandonedCartFunctions).not.toMatch(/auth\.role\s*\(/);
+  });
+
+  it("secures the commercial growth tables and private return evidence", () => {
+    const tables = [
+      "product_bundles",
+      "product_bundle_items",
+      "product_recommendations",
+      "stock_subscriptions",
+      "inventory_alerts",
+      "return_requests",
+      "return_request_items",
+      "return_status_history",
+    ];
+    for (const table of tables) {
+      expect(commercialGrowth).toContain(
+        `alter table public.${table} enable row level security`,
+      );
+    }
+    expect(commercialGrowth).toContain("'return-evidence', 'return-evidence', false");
+    expect(commercialGrowth).not.toMatch(/auth\.role\s*\(/);
+    expect(commercialGrowth).toContain("(select auth.uid()) = user_id");
+  });
+
+  it("indexes foreign keys and prevents duplicate return cases", () => {
+    expect(commercialGrowth).toContain("product_bundle_items_product_idx");
+    expect(commercialGrowth).toContain("stock_subscriptions_active_variant_idx");
+    expect(commercialGrowth).toContain("return_request_items_order_item_idx");
+    expect(commercialGrowth).toContain("return_status_history_actor_idx");
+    expect(commercialReturnGuardrails).toContain(
+      "create unique index return_requests_one_per_order_idx",
+    );
   });
 });

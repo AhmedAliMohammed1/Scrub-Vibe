@@ -10,8 +10,24 @@ export type StoreEventName =
   | "add_to_cart"
   | "wishlist_add"
   | "begin_checkout"
+  | "purchase"
   | "newsletter_signup"
   | "instagram_click";
+
+type AnalyticsWindow = Window & {
+  gtag?: (...args: unknown[]) => void;
+  fbq?: (...args: unknown[]) => void;
+};
+
+function trackMarketing(eventName: StoreEventName, productId: string | number | undefined, metadata: Record<string, Json | undefined>) {
+  const analyticsWindow = window as AnalyticsWindow;
+  const value = typeof metadata.value === "number" ? metadata.value / 100 : undefined;
+  const item = productId === undefined ? undefined : { item_id: String(productId), item_name: typeof metadata.name === "string" ? metadata.name : undefined, item_variant: typeof metadata.colour === "string" ? metadata.colour : undefined, price: value, quantity: 1 };
+  const gaName = eventName === "product_view" ? "view_item" : eventName;
+  if (["page_view", "view_item", "add_to_cart", "begin_checkout", "purchase"].includes(gaName)) analyticsWindow.gtag?.("event", gaName, { currency: "EGP", value, transaction_id: metadata.orderNumber, items: item ? [item] : undefined });
+  const metaName = eventName === "page_view" ? "PageView" : eventName === "product_view" ? "ViewContent" : eventName === "add_to_cart" ? "AddToCart" : eventName === "begin_checkout" ? "InitiateCheckout" : eventName === "purchase" ? "Purchase" : null;
+  if (metaName) analyticsWindow.fbq?.("track", metaName, { content_ids: productId === undefined ? metadata.productIds : [String(productId)], content_type: "product", currency: "EGP", value }, metadata.orderNumber ? { eventID: metadata.orderNumber } : undefined);
+}
 
 const ANONYMOUS_KEY = "scrub-vibe-anonymous-id";
 const SESSION_KEY = "scrub-vibe-analytics-session";
@@ -74,7 +90,10 @@ export function trackStoreEvent(
     metadata?: Record<string, Json | undefined>;
   } = {},
 ) {
-  if (typeof window === "undefined" || !hasSupabaseEnvironment()) return;
+  if (typeof window === "undefined") return;
+
+  trackMarketing(eventName, options.productId, options.metadata ?? {});
+  if (!hasSupabaseEnvironment()) return;
 
   const path =
     options.path ?? `${window.location.pathname}${window.location.search}`;

@@ -17,6 +17,7 @@ import { normalizeDiscountCode, type DiscountPreview } from "@/features/promotio
 import type { CustomerAddress, AddressLabel } from "@/features/addresses/types";
 import { CheckoutAddressSelector } from "@/features/addresses/checkout-address-selector";
 import { createCustomerAddressAction } from "@/features/addresses/actions";
+import { trackStoreEvent } from "@/lib/analytics";
 
 type PaymentMethod = "cod" | "vodafone_cash" | "instapay" | "paymob";
 type DepositMethod = "vodafone_cash" | "instapay";
@@ -330,7 +331,7 @@ export function CheckoutForm({
     const proof = form.get("proof");
     if (proof instanceof File && proof.size) body.set("proof", proof);
     let response: Response;
-    let result: { error?: string; fields?: Record<string, string[]>; orderNumber?: string; trackingToken?: string; paymentUrl?: string | null };
+    let result: { error?: string; fields?: Record<string, string[]>; orderNumber?: string; trackingToken?: string; paymentUrl?: string | null; totalMinor?: number };
     try {
       response = await fetch("/api/checkout/orders", { method: "POST", body });
       result = await response.json() as typeof result;
@@ -367,6 +368,7 @@ export function CheckoutForm({
       saved[result.orderNumber] = result.trackingToken;
       localStorage.setItem("scrub-vibe-order-tokens", JSON.stringify(saved));
     } catch { /* The authenticated account can still open its order. */ }
+    trackStoreEvent("purchase", { metadata: { orderNumber: result.orderNumber, value: result.totalMinor ?? shippingQuote?.totalMinor ?? subtotal, productIds: cartItems.map((item) => item.variantId) } });
     clearCart();
     if (result.paymentUrl) window.location.assign(result.paymentUrl);
     else router.push(`/${locale}/track/${result.orderNumber}` as Route);

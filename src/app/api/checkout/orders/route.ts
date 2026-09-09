@@ -14,6 +14,8 @@ import {
   type OrderEmailData,
 } from "@/features/notifications/email";
 import { markCartRecovered } from "@/features/cart-recovery/repository";
+import { sendMetaPurchase } from "@/features/commercial/meta-conversions";
+import { getSiteOrigin } from "@/features/auth/site-url";
 
 export async function POST(request: Request) {
   const formData = await request.formData().catch(() => null);
@@ -209,6 +211,16 @@ export async function POST(request: Request) {
         `[Scrub Vibe] New order #${order.order_number} — EGP ${(order.total_minor / 100).toFixed(2)}`,
         renderStaffNewOrder(emailOrder).html,
       ),
+      sendMetaPurchase({
+        eventId: order.order_number,
+        sourceUrl: `${getSiteOrigin()}/${checkout.locale}/checkout`,
+        email: checkout.email,
+        phone: checkout.phone,
+        valueMinor: order.total_minor,
+        productIds: checkout.items.map((item) => String(item.variantId)),
+        clientIp: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
+        userAgent: request.headers.get("user-agent") ?? undefined,
+      }),
     ]);
   } catch (emailError) {
     console.error("[email] Failed to send order placed emails:", emailError);
@@ -219,5 +231,6 @@ export async function POST(request: Request) {
     trackingToken,
     paymentUrl,
     paymentWarning,
+    totalMinor: order.total_minor,
   });
 }

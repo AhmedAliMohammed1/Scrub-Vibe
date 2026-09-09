@@ -1,6 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { BadgePercent, ImageIcon, LayoutDashboard, Package, Ruler, ShoppingBag, Truck } from "lucide-react";
+import { BadgePercent, ImageIcon, LayoutDashboard, Package, Ruler, ShoppingBag, TrendingUp, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
 
@@ -14,6 +14,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
     [Package, ar ? "المنتجات" : "Products", `/${locale}/admin#products`],
     [Truck, ar ? "الشحن" : "Shipping", `/${locale}/admin/shipping`],
     [BadgePercent, ar ? "الخصومات" : "Discounts", `/${locale}/admin/discounts`],
+    [TrendingUp, ar ? "النمو التجاري" : "Commercial", `/${locale}/admin/commercial`],
     [ImageIcon, ar ? "المحتوى" : "Content", `/${locale}/admin/banners`],
     [Ruler, ar ? "المقاسات" : "Sizes", `/${locale}/admin/sizes`],
   ] as const;
