@@ -82,7 +82,9 @@ describe("production operations", () => {
       .join("\n");
     expect(workflows).not.toMatch(/actions\/checkout@v4/);
     expect(workflows).not.toMatch(/actions\/setup-node@v4/);
+    expect(workflows).not.toMatch(/pnpm\/action-setup@v4/);
     expect(workflows).not.toMatch(/github\/codeql-action\/[a-z-]+@v3/);
+    expect(workflows).toContain("pnpm/action-setup@v6");
     expect(workflows).toContain("actions/dependency-review-action@v5");
   });
 

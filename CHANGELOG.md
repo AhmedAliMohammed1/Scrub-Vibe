@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Updated CI and security workflows to Node.js 24-compatible Checkout, Setup Node, Dependency Review and CodeQL action majors, removing the Node.js 20 and CodeQL v3 deprecation warnings.
+- Updated CI and security workflows to Node.js 24-compatible Checkout, Setup Node, pnpm Setup, Dependency Review and CodeQL action majors, removing the Node.js 20 and CodeQL v3 deprecation warnings.
 - Implemented the production operations foundation with liveness/readiness endpoints, structured Next.js server-error logging, fail-closed Vercel cron authentication, expired-reservation cleanup and stale payment/proof/webhook escalation.
 - Added SHA-256-verified Supabase database and Storage backup tooling, production-protected restore drills, release/rollback, backup/recovery, monitoring and incident-response runbooks.
 - Added hourly production smoke monitoring plus weekly dependency audit, dependency review and CodeQL workflows.
