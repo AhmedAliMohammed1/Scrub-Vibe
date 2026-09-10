@@ -37,4 +37,5 @@ export type Product = {
   art: "clay" | "olive" | "ink" | "sand";
   image: { src: string; alt: { en: string; ar: string } };
   images?: ProductImage[];
+  rating?: { average: number; count: number };
 };

@@ -4,6 +4,7 @@ import {
   BadgePercent,
   ImageIcon,
   LayoutDashboard,
+  MessageSquareText,
   Package,
   Ruler,
   ShoppingBag,
@@ -26,6 +27,7 @@ export default async function AdminLayout({
   const items = [
     [LayoutDashboard, ar ? "الرئيسية" : "Overview", `/${locale}/admin`],
     [ShoppingBag, ar ? "الطلبات" : "Orders", `/${locale}/admin/orders`],
+    [MessageSquareText, ar ? "التقييمات" : "Reviews", `/${locale}/admin/reviews`],
     [Package, ar ? "المنتجات" : "Products", `/${locale}/admin#products`],
     [Truck, ar ? "الشحن" : "Shipping", `/${locale}/admin/shipping`],
     [BadgePercent, ar ? "الخصومات" : "Discounts", `/${locale}/admin/discounts`],

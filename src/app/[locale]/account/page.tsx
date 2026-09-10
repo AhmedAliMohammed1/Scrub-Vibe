@@ -209,6 +209,11 @@ export default async function AccountPage({ params, searchParams }: Props) {
                                   : "Return / exchange"}
                               </Link>
                             )}
+                          {order.status === "delivered" && (
+                            <Link href={`/${locale}/account/reviews` as Route}>
+                              {locale === "ar" ? "تقييم المنتجات" : "Review items"}
+                            </Link>
+                          )}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-3 text-start sm:block sm:border-0 sm:pt-0 sm:text-end">
@@ -295,6 +300,12 @@ export default async function AccountPage({ params, searchParams }: Props) {
             {locale === "ar"
               ? "طلبات الاسترجاع والاستبدال"
               : "Returns & exchanges"}
+          </Link>
+          <Link
+            href={`/${locale}/account/reviews` as Route}
+            className="mt-4 block text-xs text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--color-primary)]"
+          >
+            {locale === "ar" ? "تقييماتي" : "My product reviews"}
           </Link>
           {canAdmin && (
             <Link

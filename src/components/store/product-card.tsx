@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Check, Heart, Plus } from "lucide-react";
+import { Check, Heart, Plus, Star } from "lucide-react";
 import type { Product } from "@/features/catalog/types";
 import { discountPercent, formatMoney } from "@/lib/money";
 import type { Locale } from "@/lib/i18n";
@@ -155,6 +155,22 @@ export function ProductCard({
           >
             {product.title[locale]}
           </Link>
+
+          {product.rating && product.rating.count > 0 && (
+            <Link
+              href={`/${locale}/products/${product.slug}#reviews`}
+              aria-label={
+                ar
+                  ? `${product.rating.average} من 5، ${product.rating.count} تقييم`
+                  : `${product.rating.average} out of 5, ${product.rating.count} reviews`
+              }
+              className="mt-2 flex min-h-6 w-fit items-center gap-1.5 text-[11px] font-semibold text-[var(--text-muted)] hover:text-[#0e7468]"
+            >
+              <Star size={13} fill="currentColor" className="text-[#bd6b2c]" aria-hidden="true" />
+              <span>{product.rating.average.toFixed(1)}</span>
+              <span className="text-black/35">({product.rating.count})</span>
+            </Link>
+          )}
 
           {/* Color swatches */}
           <div

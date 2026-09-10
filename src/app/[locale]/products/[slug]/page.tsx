@@ -12,8 +12,15 @@ import { discountPercent, formatMoney } from "@/lib/money";
 import { isLocale } from "@/lib/i18n";
 import { getSizeChartForProduct } from "@/features/catalog/size-guide-repository";
 import type { SizeCategory } from "@/features/catalog/size-guide-types";
+import { ProductReviewsSection } from "@/features/reviews/product-reviews-section";
+import { getProductReviewSnapshot } from "@/features/reviews/repository";
+import { ReviewStars } from "@/features/reviews/review-stars";
+import { parsePage } from "@/lib/pagination";
 
-type Props = { params: Promise<{ locale: string; slug: string }> };
+type Props = {
+  params: Promise<{ locale: string; slug: string }>;
+  searchParams?: Promise<{ reviewPage?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
@@ -27,19 +34,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : {};
 }
 
-export default async function ProductPage({ params }: Props) {
-  const { locale, slug } = await params;
+export default async function ProductPage({ params, searchParams }: Props) {
+  const [{ locale, slug }, query] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve({ reviewPage: undefined }),
+  ]);
   if (!isLocale(locale)) notFound();
   const ar = locale === "ar";
   const p = await catalog.bySlug(slug);
   if (!p) notFound();
 
-  const [sizeChartResult, merchandising] = await Promise.all([
+  const productId = Number(p.id);
+  const [sizeChartResult, merchandising, reviewSnapshot] = await Promise.all([
     getSizeChartForProduct({
-      productId: Number(p.id) || null,
+      productId: productId || null,
       category: (p.category as SizeCategory) || "unisex",
     }),
-    getProductMerchandising(Number(p.id)),
+    getProductMerchandising(productId),
+    getProductReviewSnapshot(productId, parsePage(query.reviewPage)),
   ]);
   const sale = discountPercent(p.price, p.compareAt);
 
@@ -59,6 +71,17 @@ export default async function ProductPage({ params }: Props) {
         : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
     },
+    ...(reviewSnapshot.summary.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviewSnapshot.summary.average,
+            reviewCount: reviewSnapshot.summary.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 
   return (
@@ -110,6 +133,27 @@ export default async function ProductPage({ params }: Props) {
             <h1 className="mt-3 font-serif text-3xl sm:text-4xl lg:text-5xl text-[var(--text-strong)] leading-tight">
               {p.title[locale]}
             </h1>
+
+            <a
+              href="#reviews"
+              className="mt-3 inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--text-muted)] underline decoration-transparent underline-offset-4 hover:text-[#0e7468] hover:decoration-current"
+            >
+              <ReviewStars
+                rating={reviewSnapshot.summary.average}
+                label={
+                  ar
+                    ? `${reviewSnapshot.summary.average} من 5`
+                    : `${reviewSnapshot.summary.average} out of 5`
+                }
+              />
+              {reviewSnapshot.summary.count
+                ? ar
+                  ? `${reviewSnapshot.summary.average.toFixed(1)} (${reviewSnapshot.summary.count} تقييم)`
+                  : `${reviewSnapshot.summary.average.toFixed(1)} (${reviewSnapshot.summary.count} reviews)`
+                : ar
+                  ? "لا توجد تقييمات بعد"
+                  : "No reviews yet"}
+            </a>
 
             {/* Pricing Row */}
             <div className="mt-5 flex flex-wrap items-baseline gap-3">
@@ -184,6 +228,13 @@ export default async function ProductPage({ params }: Props) {
       {merchandising.bundles.map((bundle) => (
         <BundleCard key={bundle.id} bundle={bundle} locale={locale} />
       ))}
+
+      <ProductReviewsSection
+        locale={locale}
+        productId={productId}
+        productSlug={p.slug}
+        snapshot={reviewSnapshot}
+      />
 
       {merchandising.related.length > 0 && (
         <section className="mt-20 border-t border-[var(--border-subtle)] pt-10">

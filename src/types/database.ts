@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       abandoned_cart_notifications: {
@@ -1472,6 +1447,143 @@ export type Database = {
           },
         ]
       }
+      product_review_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["product_review_status"]
+            | null
+          id: number
+          moderation_note: string | null
+          review_id: string
+          to_status: Database["public"]["Enums"]["product_review_status"]
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["product_review_status"]
+            | null
+          id?: never
+          moderation_note?: string | null
+          review_id: string
+          to_status: Database["public"]["Enums"]["product_review_status"]
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["product_review_status"]
+            | null
+          id?: never
+          moderation_note?: string | null
+          review_id?: string
+          to_status?: Database["public"]["Enums"]["product_review_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_review_history_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_reviews: {
+        Row: {
+          admin_response: string | null
+          body: string
+          created_at: string
+          fit_feedback: string | null
+          id: string
+          is_featured: boolean
+          is_verified_purchase: boolean
+          order_item_id: number
+          product_id: number
+          published_at: string | null
+          purchased_colour: string | null
+          purchased_size: string | null
+          rating: number
+          responded_at: string | null
+          responded_by: string | null
+          reviewer_locale: string
+          reviewer_name: string
+          status: Database["public"]["Enums"]["product_review_status"]
+          title: string | null
+          updated_at: string
+          user_id: string
+          would_recommend: boolean
+        }
+        Insert: {
+          admin_response?: string | null
+          body: string
+          created_at?: string
+          fit_feedback?: string | null
+          id?: string
+          is_featured?: boolean
+          is_verified_purchase?: boolean
+          order_item_id: number
+          product_id: number
+          published_at?: string | null
+          purchased_colour?: string | null
+          purchased_size?: string | null
+          rating: number
+          responded_at?: string | null
+          responded_by?: string | null
+          reviewer_locale?: string
+          reviewer_name: string
+          status?: Database["public"]["Enums"]["product_review_status"]
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          would_recommend?: boolean
+        }
+        Update: {
+          admin_response?: string | null
+          body?: string
+          created_at?: string
+          fit_feedback?: string | null
+          id?: string
+          is_featured?: boolean
+          is_verified_purchase?: boolean
+          order_item_id?: number
+          product_id?: number
+          published_at?: string | null
+          purchased_colour?: string | null
+          purchased_size?: string | null
+          rating?: number
+          responded_at?: string | null
+          responded_by?: string | null
+          reviewer_locale?: string
+          reviewer_name?: string
+          status?: Database["public"]["Enums"]["product_review_status"]
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          would_recommend?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: true
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_translations: {
         Row: {
           care_instructions: string | null
@@ -2208,7 +2320,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_review_summaries: {
+        Row: {
+          average_rating: number | null
+          product_id: number | null
+          review_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_adjust_inventory: {
@@ -2267,6 +2394,45 @@ export type Database = {
         Returns: number
       }
       admin_delete_product: { Args: { p_product_id: number }; Returns: boolean }
+      admin_moderate_product_review: {
+        Args: {
+          p_admin_response: string
+          p_is_featured: boolean
+          p_moderation_note: string
+          p_review_id: string
+          p_status: Database["public"]["Enums"]["product_review_status"]
+        }
+        Returns: {
+          admin_response: string | null
+          body: string
+          created_at: string
+          fit_feedback: string | null
+          id: string
+          is_featured: boolean
+          is_verified_purchase: boolean
+          order_item_id: number
+          product_id: number
+          published_at: string | null
+          purchased_colour: string | null
+          purchased_size: string | null
+          rating: number
+          responded_at: string | null
+          responded_by: string | null
+          reviewer_locale: string
+          reviewer_name: string
+          status: Database["public"]["Enums"]["product_review_status"]
+          title: string | null
+          updated_at: string
+          user_id: string
+          would_recommend: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "product_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_product_status: {
         Args: {
           p_product_id: number
@@ -2345,9 +2511,41 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_product_review: {
+        Args: { p_review_id: string }
+        Returns: undefined
+      }
       find_abandoned_cart_candidates: {
         Args: { p_delay_hours: number; p_limit?: number; p_stage: string }
         Returns: Json
+      }
+      get_product_review_summary: {
+        Args: { p_product_id: number }
+        Returns: {
+          average_rating: number
+          five_star_count: number
+          four_star_count: number
+          one_star_count: number
+          recommend_percentage: number
+          review_count: number
+          runs_large_count: number
+          runs_small_count: number
+          three_star_count: number
+          true_to_size_count: number
+          two_star_count: number
+        }[]
+      }
+      get_review_admin_summary: {
+        Args: never
+        Returns: {
+          approved_count: number
+          average_rating: number
+          pending_count: number
+          recent_count: number
+          recommend_percentage: number
+          rejected_count: number
+          total_count: number
+        }[]
       }
       preview_discount_code: {
         Args: {
@@ -2373,6 +2571,47 @@ export type Database = {
         Returns: Json
       }
       release_expired_order_reservations: { Args: never; Returns: number }
+      submit_product_review: {
+        Args: {
+          p_body: string
+          p_fit_feedback: string
+          p_locale: string
+          p_order_item_id: number
+          p_rating: number
+          p_title: string
+          p_would_recommend: boolean
+        }
+        Returns: {
+          admin_response: string | null
+          body: string
+          created_at: string
+          fit_feedback: string | null
+          id: string
+          is_featured: boolean
+          is_verified_purchase: boolean
+          order_item_id: number
+          product_id: number
+          published_at: string | null
+          purchased_colour: string | null
+          purchased_size: string | null
+          rating: number
+          responded_at: string | null
+          responded_by: string | null
+          reviewer_locale: string
+          reviewer_name: string
+          status: Database["public"]["Enums"]["product_review_status"]
+          title: string | null
+          updated_at: string
+          user_id: string
+          would_recommend: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "product_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       subscribe_newsletter: {
         Args: { p_email: string; p_locale?: string }
         Returns: undefined
@@ -2397,6 +2636,47 @@ export type Database = {
           p_utm_source?: string
         }
         Returns: undefined
+      }
+      update_product_review: {
+        Args: {
+          p_body: string
+          p_fit_feedback: string
+          p_locale: string
+          p_rating: number
+          p_review_id: string
+          p_title: string
+          p_would_recommend: boolean
+        }
+        Returns: {
+          admin_response: string | null
+          body: string
+          created_at: string
+          fit_feedback: string | null
+          id: string
+          is_featured: boolean
+          is_verified_purchase: boolean
+          order_item_id: number
+          product_id: number
+          published_at: string | null
+          purchased_colour: string | null
+          purchased_size: string | null
+          rating: number
+          responded_at: string | null
+          responded_by: string | null
+          reviewer_locale: string
+          reviewer_name: string
+          status: Database["public"]["Enums"]["product_review_status"]
+          title: string | null
+          updated_at: string
+          user_id: string
+          would_recommend: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "product_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
@@ -2444,6 +2724,7 @@ export type Database = {
         | "cod_collected"
         | "refunded"
       product_relation_kind: "cross_sell" | "complete_the_look"
+      product_review_status: "pending" | "approved" | "rejected"
       product_status: "draft" | "active" | "scheduled" | "archived"
       return_refund_method:
         | "original_payment"
@@ -2587,9 +2868,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       app_role: [
@@ -2640,6 +2918,7 @@ export const Constants = {
         "refunded",
       ],
       product_relation_kind: ["cross_sell", "complete_the_look"],
+      product_review_status: ["pending", "approved", "rejected"],
       product_status: ["draft", "active", "scheduled", "archived"],
       return_refund_method: [
         "original_payment",

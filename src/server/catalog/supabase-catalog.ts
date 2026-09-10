@@ -35,6 +35,35 @@ type ClientFactory = () => SupabaseClient<Database>;
 export class SupabaseCatalog implements CatalogRepository {
   constructor(private readonly clientFactory: ClientFactory) {}
 
+  private async attachReviewSummaries(products: ReturnType<typeof mapCatalogProduct>[]) {
+    if (!products.length) return products;
+    const productIds = products.map((product) => Number(product.id));
+    const { data, error } = await this.clientFactory()
+      .from("product_review_summaries")
+      .select("product_id, review_count, average_rating")
+      .in("product_id", productIds);
+    if (error) throw new Error(`Could not load product ratings: ${error.message}`);
+    const ratings = new Map(
+      (data ?? []).flatMap((row) =>
+        row.product_id === null
+          ? []
+          : [
+              [
+                row.product_id,
+                {
+                  average: Number(row.average_rating ?? 0),
+                  count: Number(row.review_count ?? 0),
+                },
+              ] as const,
+            ],
+      ),
+    );
+    return products.map((product) => ({
+      ...product,
+      rating: ratings.get(Number(product.id)),
+    }));
+  }
+
   async featured() {
     const { data, error } = await this.clientFactory()
       .from("products")
@@ -45,7 +74,9 @@ export class SupabaseCatalog implements CatalogRepository {
 
     if (error)
       throw new Error(`Could not load the catalogue: ${error.message}`);
-    return (data as CatalogProductRow[]).map(mapCatalogProduct);
+    return this.attachReviewSummaries(
+      (data as CatalogProductRow[]).map(mapCatalogProduct),
+    );
   }
 
   async bySlug(slug: string) {
@@ -59,6 +90,10 @@ export class SupabaseCatalog implements CatalogRepository {
 
     if (error)
       throw new Error(`Could not load product ${slug}: ${error.message}`);
-    return data ? mapCatalogProduct(data as CatalogProductRow) : null;
+    if (!data) return null;
+    const [product] = await this.attachReviewSummaries([
+      mapCatalogProduct(data as CatalogProductRow),
+    ]);
+    return product;
   }
 }
