@@ -175,6 +175,14 @@ const completeReturnWorkflow = readFileSync(
   "utf8",
 ).toLowerCase();
 
+const hardenedReturnWorkflow = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260910052930_harden_return_workflow_rpc.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -641,6 +649,29 @@ describe("foundation migration security", () => {
     );
     expect(completeReturnWorkflow).not.toMatch(
       /return_internal_notes_customer_select/,
+    );
+  });
+
+  it("moves privileged return writes behind a private implementation", () => {
+    expect(hardenedReturnWorkflow).toContain(
+      "set schema private",
+    );
+    expect(hardenedReturnWorkflow).toContain(
+      "alter function private.admin_update_return",
+    );
+    expect(hardenedReturnWorkflow).toContain("security definer");
+    expect(hardenedReturnWorkflow).toContain(
+      "create function public.admin_update_return",
+    );
+    expect(hardenedReturnWorkflow).toContain("security invoker");
+    expect(hardenedReturnWorkflow).toContain(
+      "revoke update (",
+    );
+    expect(hardenedReturnWorkflow).toContain(
+      "drop policy if exists return_internal_notes_staff_insert",
+    );
+    expect(hardenedReturnWorkflow).toContain(
+      "return_requests_completed_refund_check",
     );
   });
 });
