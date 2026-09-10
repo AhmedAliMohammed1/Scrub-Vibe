@@ -50,7 +50,7 @@ export const productSchema = z
     sizes: z.string().trim().min(1).max(200),
     stock: z.coerce.number().int().nonnegative().max(1_000_000),
     lowStockThreshold: z.coerce.number().int().nonnegative().max(100_000),
-    imageUrl: z.union([z.literal(""), z.string().url().max(1000)]),
+    imageUrl: z.string().max(1000).optional().default(""),
   })
   .superRefine((value, context) => {
     if (value.compareAt !== "" && value.compareAt < value.price) {
@@ -94,7 +94,7 @@ export const updateProductSchema = z
     fit: z.string().trim().max(120),
     colours: z.string().max(4000),
     sizes: z.string().trim().min(1).max(200),
-    imageUrl: z.union([z.literal(""), z.string().url().max(1000)]),
+    imageUrl: z.string().max(1000).optional().default(""),
   })
   .superRefine((value, context) => {
     if (value.compareAt !== "" && value.compareAt < value.price) {

@@ -238,5 +238,50 @@ describe("Admin Product Edit & Delete Feature", () => {
       delete (createData as Record<string, unknown>).productId;
       expect(productSchema.safeParse(createData).success).toBe(false);
     });
+
+    it("accepts updateProductSchema when imageUrl is omitted, empty, or a relative path", () => {
+      const baseData = {
+        productId: 10,
+        locale: "en",
+        slug: "classic-joggers",
+        titleEn: "Classic Joggers",
+        titleAr: "بناطيل كلاسيك",
+        descriptionEn: "Comfortable medical scrub pants.",
+        descriptionAr: "بنطلون سكراب طبي مريح.",
+        categoryId: 2,
+        gender: "women",
+        status: "draft",
+        price: 650,
+        compareAt: "",
+        cost: "",
+        codDeposit: 100,
+        material: "Poly-viscose",
+        fit: "Jogger",
+        colours: JSON.stringify([{ code: "navy", en: "Navy", ar: "كحلي", hex: "#172c52" }]),
+        sizes: "S, M, L",
+      };
+
+      // 1. imageUrl is omitted entirely (like multi-image form submission)
+      expect(updateProductSchema.safeParse(baseData).success).toBe(true);
+
+      // 2. imageUrl is empty string
+      expect(updateProductSchema.safeParse({ ...baseData, imageUrl: "" }).success).toBe(true);
+
+      // 3. imageUrl is a relative path (e.g. catalog assets)
+      expect(
+        updateProductSchema.safeParse({
+          ...baseData,
+          imageUrl: "/images/scrub-vibe/female-design-2.webp",
+        }).success,
+      ).toBe(true);
+
+      // 4. imageUrl is a full https URL
+      expect(
+        updateProductSchema.safeParse({
+          ...baseData,
+          imageUrl: "https://cdn.example.com/products/item.jpg",
+        }).success,
+      ).toBe(true);
+    });
   });
 });

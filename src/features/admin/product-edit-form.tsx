@@ -221,6 +221,66 @@ export function ProductEditForm({
     setNewUrlInput("");
   };
 
+  const handleColourCodeChange = (index: number, rawVal: string) => {
+    const oldCode = colours[index]?.code;
+    const newCode = rawVal
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    setColours((items) =>
+      items.map((it, i) => (i === index ? { ...it, code: newCode } : it)),
+    );
+
+    if (oldCode && oldCode !== newCode) {
+      setExistingImages((prev) =>
+        prev.map((img) =>
+          img.colourCode === oldCode ? { ...img, colourCode: newCode } : img,
+        ),
+      );
+      setNewFiles((prev) =>
+        prev.map((nf) =>
+          nf.colourCode === oldCode ? { ...nf, colourCode: newCode } : nf,
+        ),
+      );
+      setNewUrls((prev) =>
+        prev.map((nu) =>
+          nu.colourCode === oldCode ? { ...nu, colourCode: newCode } : nu,
+        ),
+      );
+    }
+  };
+
+  const handleColourCodeBlur = (index: number) => {
+    const code = colours[index]?.code ?? "";
+    const cleaned = code.replace(/^-+|-+$/g, "");
+    if (cleaned !== code) {
+      handleColourCodeChange(index, cleaned);
+    }
+  };
+
+  const handleRemoveColour = (index: number) => {
+    const codeToRemove = colours[index]?.code;
+    setColours((items) => items.filter((_, i) => i !== index));
+    if (codeToRemove) {
+      setExistingImages((prev) =>
+        prev.map((img) =>
+          img.colourCode === codeToRemove ? { ...img, colourCode: "" } : img,
+        ),
+      );
+      setNewFiles((prev) =>
+        prev.map((nf) =>
+          nf.colourCode === codeToRemove ? { ...nf, colourCode: "" } : nf,
+        ),
+      );
+      setNewUrls((prev) =>
+        prev.map((nu) =>
+          nu.colourCode === codeToRemove ? { ...nu, colourCode: "" } : nu,
+        ),
+      );
+    }
+  };
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -324,10 +384,27 @@ export function ProductEditForm({
           }`}
           role={state.status === "error" ? "alert" : "status"}
         >
-          {state.status === "success" && (
-            <CheckCircle2 className="me-2 inline" size={18} />
-          )}
-          {state.message}
+          <div className="flex items-start gap-2">
+            {state.status === "success" ? (
+              <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-700" size={18} />
+            ) : (
+              <TriangleAlert className="mt-0.5 shrink-0 text-red-700" size={18} />
+            )}
+            <div>
+              <p className="font-semibold">{state.message}</p>
+              {state.status === "error" && state.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
+                <ul className="mt-2 list-disc ps-5 text-xs space-y-1 text-red-800">
+                  {Object.entries(state.fieldErrors).flatMap(([field, errors]) =>
+                    (errors ?? []).map((err, errIdx) => (
+                      <li key={`${field}-${errIdx}`}>
+                        <strong className="capitalize">{field}</strong>: {err}
+                      </li>
+                    )),
+                  )}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -336,6 +413,7 @@ export function ProductEditForm({
         <input type="hidden" name="productId" value={product.id} />
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="colours" value={JSON.stringify(colours)} />
+        <input type="hidden" name="imageUrl" value="" />
 
         {/* Section 1: Basic Details */}
         <section className="border border-black/10 bg-white p-6 shadow-xs md:p-8">
@@ -1187,19 +1265,15 @@ export function ProductEditForm({
                     placeholder="كحلي"
                   />
                 </Label>
-                <Label text={ar ? "الكود (Code)" : "Code"}>
+                <Label
+                  text={ar ? "الكود (Code)" : "Code"}
+                  hint={ar ? "أحرف وشرطات (مثل: navy, sky-blue)" : "lowercase & hyphens"}
+                >
                   <input
                     required
                     value={c.code}
-                    onChange={(e) =>
-                      setColours((items) =>
-                        items.map((it, i) =>
-                          i === index
-                            ? { ...it, code: slugify(e.target.value) }
-                            : it,
-                        ),
-                      )
-                    }
+                    onChange={(e) => handleColourCodeChange(index, e.target.value)}
+                    onBlur={() => handleColourCodeBlur(index)}
                     className={inputClass}
                     placeholder="navy"
                   />
@@ -1221,9 +1295,7 @@ export function ProductEditForm({
                 <button
                   type="button"
                   disabled={colours.length === 1}
-                  onClick={() =>
-                    setColours((items) => items.filter((_, i) => i !== index))
-                  }
+                  onClick={() => handleRemoveColour(index)}
                   aria-label={ar ? "حذف اللون" : "Remove colour"}
                   className="mb-0.5 grid size-11 place-items-center border border-black/15 bg-white text-neutral-500 hover:text-red-700 disabled:opacity-30 transition"
                 >

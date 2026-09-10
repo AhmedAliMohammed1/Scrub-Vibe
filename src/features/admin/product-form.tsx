@@ -111,6 +111,56 @@ export function ProductForm({
     setNewUrlInput("");
   };
 
+  const handleColourCodeChange = (index: number, rawVal: string) => {
+    const oldCode = colours[index]?.code;
+    const newCode = rawVal
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    setColours((items) =>
+      items.map((it, i) => (i === index ? { ...it, code: newCode } : it)),
+    );
+
+    if (oldCode && oldCode !== newCode) {
+      setNewFiles((prev) =>
+        prev.map((nf) =>
+          nf.colourCode === oldCode ? { ...nf, colourCode: newCode } : nf,
+        ),
+      );
+      setNewUrls((prev) =>
+        prev.map((nu) =>
+          nu.colourCode === oldCode ? { ...nu, colourCode: newCode } : nu,
+        ),
+      );
+    }
+  };
+
+  const handleColourCodeBlur = (index: number) => {
+    const code = colours[index]?.code ?? "";
+    const cleaned = code.replace(/^-+|-+$/g, "");
+    if (cleaned !== code) {
+      handleColourCodeChange(index, cleaned);
+    }
+  };
+
+  const handleRemoveColour = (index: number) => {
+    const codeToRemove = colours[index]?.code;
+    setColours((items) => items.filter((_, i) => i !== index));
+    if (codeToRemove) {
+      setNewFiles((prev) =>
+        prev.map((nf) =>
+          nf.colourCode === codeToRemove ? { ...nf, colourCode: "" } : nf,
+        ),
+      );
+      setNewUrls((prev) =>
+        prev.map((nu) =>
+          nu.colourCode === codeToRemove ? { ...nu, colourCode: "" } : nu,
+        ),
+      );
+    }
+  };
+
   const ar = locale === "ar";
   const [state, formAction, pending] = useActionState(
     async (previousState: AdminActionState, formData: FormData) => {
@@ -138,6 +188,7 @@ export function ProductForm({
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="colours" value={JSON.stringify(colours)} />
+      <input type="hidden" name="imageUrl" value="" />
       <div className="flex items-start justify-between gap-4 border-b border-black/10 pb-6">
         <div>
           <p className="eyebrow text-[#0e7468]">
@@ -156,7 +207,7 @@ export function ProductForm({
       </div>
 
       {state.message && (
-        <p
+        <div
           className={`mt-5 border px-4 py-3 text-xs ${
             state.status === "success"
               ? "border-emerald-700/20 bg-emerald-50 text-emerald-800"
@@ -164,11 +215,26 @@ export function ProductForm({
           }`}
           role={state.status === "error" ? "alert" : "status"}
         >
-          {state.status === "success" && (
-            <CheckCircle2 className="me-2 inline" size={15} />
-          )}
-          {state.message}
-        </p>
+          <div className="flex items-start gap-2">
+            {state.status === "success" && (
+              <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-700" size={15} />
+            )}
+            <div>
+              <p className="font-semibold">{state.message}</p>
+              {state.status === "error" && state.fieldErrors && Object.keys(state.fieldErrors).length > 0 && (
+                <ul className="mt-2 list-disc ps-5 text-[11px] space-y-1 text-red-800">
+                  {Object.entries(state.fieldErrors).flatMap(([field, errors]) =>
+                    (errors ?? []).map((err, errIdx) => (
+                      <li key={`${field}-${errIdx}`}>
+                        <strong className="capitalize">{field}</strong>: {err}
+                      </li>
+                    )),
+                  )}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <fieldset disabled={pending} className="mt-7 grid gap-6">
@@ -447,19 +513,17 @@ export function ProductForm({
                     placeholder="أزرق ملكي"
                   />
                 </Label>
-                <Label text={ar ? "الكود" : "Code"}>
+                <Label
+                  text={ar ? "الكود" : "Code"}
+                  hint={ar ? "أحرف وشرطات (مثل: royal-blue)" : "lowercase & hyphens"}
+                >
                   <input
                     required
                     value={colour.code}
                     onChange={(event) =>
-                      setColours((items) =>
-                        items.map((item, itemIndex) =>
-                          itemIndex === index
-                            ? { ...item, code: slugify(event.target.value) }
-                            : item,
-                        ),
-                      )
+                      handleColourCodeChange(index, event.target.value)
                     }
+                    onBlur={() => handleColourCodeBlur(index)}
                     className={input}
                     placeholder="royal-blue"
                   />
@@ -483,11 +547,7 @@ export function ProductForm({
                 <button
                   type="button"
                   disabled={colours.length === 1}
-                  onClick={() =>
-                    setColours((items) =>
-                      items.filter((_, itemIndex) => itemIndex !== index),
-                    )
-                  }
+                  onClick={() => handleRemoveColour(index)}
                   aria-label={ar ? "حذف اللون" : "Remove colour"}
                   className="mt-5 grid size-11 place-items-center border border-black/15 bg-white text-neutral-500 hover:text-red-700 disabled:opacity-30"
                 >
