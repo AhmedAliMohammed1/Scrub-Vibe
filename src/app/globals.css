@@ -16,11 +16,28 @@
   --status-success: #18794e;
   --status-warning: #a15c00;
   --status-danger: #b42318;
+  /*
+   * Semantic compatibility tokens.
+   *
+   * Account, authentication, address, and checkout components use these
+   * semantic names. Keep them mapped to the canonical brand palette so a
+   * future palette refresh cannot leave interactive controls transparent.
+   */
+  --color-primary: var(--brand-950);
+  --color-primary-hover: var(--brand-700);
+  --color-primary-dark: var(--brand-950);
+  --color-secondary: var(--brand-100);
+  --color-accent: var(--accent-warm);
+  --color-accent-hover: #813320;
+  --surface-sunken: var(--brand-surface);
+  --text-primary: var(--text-strong);
+  --text-secondary: var(--text-muted);
   --paper: var(--surface-canvas);
   --ink: var(--text-strong);
   --clay: var(--brand-700);
   --font-sans: Inter, Aptos, "Segoe UI", "Noto Sans Arabic", Arial, sans-serif;
-  --font-display: "Iowan Old Style", Baskerville, Georgia, "Noto Naskh Arabic", serif;
+  --font-display:
+    "Iowan Old Style", Baskerville, Georgia, "Noto Naskh Arabic", serif;
 }
 * {
   box-sizing: border-box;
@@ -78,7 +95,8 @@ select,
 textarea,
 summary {
   transition-duration: 180ms;
-  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-property:
+    color, background-color, border-color, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 :focus-visible {
@@ -111,7 +129,9 @@ summary {
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
 }
 .skip-link:focus,
 .skip-link:focus-visible {
@@ -258,8 +278,12 @@ summary {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
