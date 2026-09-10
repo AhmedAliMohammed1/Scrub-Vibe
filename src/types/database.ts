@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       abandoned_cart_notifications: {
@@ -1772,7 +1797,9 @@ export type Database = {
           received_at: string | null
           refund_amount_minor: number
           refund_completed_at: string | null
-          refund_method: Database["public"]["Enums"]["return_refund_method"] | null
+          refund_method:
+            | Database["public"]["Enums"]["return_refund_method"]
+            | null
           refund_reference: string | null
           request_type: Database["public"]["Enums"]["return_request_type"]
           requested_at: string
@@ -1794,7 +1821,9 @@ export type Database = {
           received_at?: string | null
           refund_amount_minor?: number
           refund_completed_at?: string | null
-          refund_method?: Database["public"]["Enums"]["return_refund_method"] | null
+          refund_method?:
+            | Database["public"]["Enums"]["return_refund_method"]
+            | null
           refund_reference?: string | null
           request_type: Database["public"]["Enums"]["return_request_type"]
           requested_at?: string
@@ -1816,7 +1845,9 @@ export type Database = {
           received_at?: string | null
           refund_amount_minor?: number
           refund_completed_at?: string | null
-          refund_method?: Database["public"]["Enums"]["return_refund_method"] | null
+          refund_method?:
+            | Database["public"]["Enums"]["return_refund_method"]
+            | null
           refund_reference?: string | null
           request_type?: Database["public"]["Enums"]["return_request_type"]
           requested_at?: string
@@ -2231,6 +2262,7 @@ export type Database = {
         }
         Returns: number
       }
+      admin_delete_product: { Args: { p_product_id: number }; Returns: boolean }
       admin_set_product_status: {
         Args: {
           p_product_id: number
@@ -2250,6 +2282,29 @@ export type Database = {
           p_tracking_url?: string
         }
         Returns: undefined
+      }
+      admin_update_product: {
+        Args: {
+          p_base_price_minor: number
+          p_category_id: number
+          p_cod_deposit_minor: number
+          p_colours: Json
+          p_compare_at_price_minor: number
+          p_cost_minor: number
+          p_description_ar: string
+          p_description_en: string
+          p_fit: string
+          p_gender: string
+          p_image_url?: string
+          p_material: string
+          p_product_id: number
+          p_sizes: string[]
+          p_slug: string
+          p_status: Database["public"]["Enums"]["product_status"]
+          p_title_ar: string
+          p_title_en: string
+        }
+        Returns: boolean
       }
       admin_update_return: {
         Args: {
@@ -2385,6 +2440,12 @@ export type Database = {
         | "refunded"
       product_relation_kind: "cross_sell" | "complete_the_look"
       product_status: "draft" | "active" | "scheduled" | "archived"
+      return_refund_method:
+        | "original_payment"
+        | "vodafone_cash"
+        | "instapay"
+        | "bank_transfer"
+        | "cash"
       return_request_status:
         | "requested"
         | "reviewing"
@@ -2394,12 +2455,6 @@ export type Database = {
         | "completed"
         | "cancelled"
       return_request_type: "return" | "exchange"
-      return_refund_method:
-        | "original_payment"
-        | "vodafone_cash"
-        | "instapay"
-        | "bank_transfer"
-        | "cash"
       return_resolution: "refund" | "exchange" | "store_credit"
       stock_subscription_status: "active" | "notified" | "unsubscribed"
     }
@@ -2527,6 +2582,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: [
@@ -2578,6 +2636,13 @@ export const Constants = {
       ],
       product_relation_kind: ["cross_sell", "complete_the_look"],
       product_status: ["draft", "active", "scheduled", "archived"],
+      return_refund_method: [
+        "original_payment",
+        "vodafone_cash",
+        "instapay",
+        "bank_transfer",
+        "cash",
+      ],
       return_request_status: [
         "requested",
         "reviewing",
@@ -2588,13 +2653,6 @@ export const Constants = {
         "cancelled",
       ],
       return_request_type: ["return", "exchange"],
-      return_refund_method: [
-        "original_payment",
-        "vodafone_cash",
-        "instapay",
-        "bank_transfer",
-        "cash",
-      ],
       return_resolution: ["refund", "exchange", "store_credit"],
       stock_subscription_status: ["active", "notified", "unsubscribed"],
     },

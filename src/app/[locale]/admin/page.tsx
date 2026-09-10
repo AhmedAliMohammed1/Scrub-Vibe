@@ -18,13 +18,14 @@ import {
   Ruler,
   TriangleAlert,
   Users,
+  CheckCircle2,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ProductForm } from "@/features/admin/product-form";
+import { ProductTableActions } from "@/features/admin/product-table-actions";
 import {
   adjustInventoryAction,
   setProductDepositAction,
-  setProductStatusAction,
 } from "@/features/admin/actions";
 import { formatMoney } from "@/lib/money";
 import { isLocale, type Locale } from "@/lib/i18n";
@@ -141,7 +142,7 @@ export default async function AdminPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ period?: string; productPage?: string }>;
+  searchParams: Promise<{ period?: string; productPage?: string; deleted?: string }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
@@ -474,6 +475,17 @@ export default async function AdminPage({
             />
           </div>
 
+          {query.deleted === "1" && (
+            <div className="mt-4 flex items-center gap-3 border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+              <p>
+                {ar
+                  ? "تم حذف المنتج نهائياً بنجاح مع الحفاظ على سجل الطلبات والفواتير السابقة."
+                  : "Product permanently deleted. Past customer orders and invoice records were safely preserved."}
+              </p>
+            </div>
+          )}
+
           <div
             id="products-list"
             className="mt-4 scroll-mt-6 overflow-hidden border border-black/10 bg-white"
@@ -677,41 +689,13 @@ function ProductRow({
         )}
       </td>
       <td className="px-4 py-4">
-        <div className="flex flex-wrap gap-2">
-          {product.status !== "active" && (
-            <StatusButton
-              productId={product.id}
-              status="active"
-              locale={locale}
-              label={ar ? "نشر" : "Publish"}
-            />
-          )}
-          {product.status === "active" && (
-            <StatusButton
-              productId={product.id}
-              status="draft"
-              locale={locale}
-              label={ar ? "إخفاء" : "Unpublish"}
-            />
-          )}
-          {product.status !== "archived" && (
-            <StatusButton
-              productId={product.id}
-              status="archived"
-              locale={locale}
-              label={ar ? "أرشفة" : "Archive"}
-              subtle
-            />
-          )}
-          {product.status === "active" && (
-            <Link
-              href={`/${locale}/products/${product.slug}`}
-              className="border border-black/15 px-3 py-2 text-[10px] font-bold uppercase"
-            >
-              {ar ? "عرض" : "View"}
-            </Link>
-          )}
-        </div>
+        <ProductTableActions
+          productId={product.id}
+          slug={product.slug}
+          title={title}
+          status={product.status}
+          locale={locale}
+        />
         <details className="mt-3">
           <summary className="cursor-pointer text-[11px] font-semibold text-[#0e7468]">
             {ar ? "تعديل مقدم الدفع" : "Edit COD deposit"}
@@ -783,37 +767,6 @@ function ProductRow({
         </details>
       </td>
     </tr>
-  );
-}
-
-function StatusButton({
-  productId,
-  status,
-  locale,
-  label,
-  subtle = false,
-}: {
-  productId: number;
-  status: "draft" | "active" | "archived";
-  locale: Locale;
-  label: string;
-  subtle?: boolean;
-}) {
-  return (
-    <form action={setProductStatusAction}>
-      <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="productId" value={productId} />
-      <input type="hidden" name="status" value={status} />
-      <button
-        className={
-          subtle
-            ? "px-3 py-2 text-[10px] font-bold uppercase text-neutral-500"
-            : "bg-[#0e7468] px-3 py-2 text-[10px] font-bold uppercase text-white"
-        }
-      >
-        {label}
-      </button>
-    </form>
   );
 }
 
