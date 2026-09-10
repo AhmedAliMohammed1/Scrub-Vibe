@@ -233,7 +233,7 @@ export async function updateReturnAction(formData: FormData) {
     })
     .eq("id", parsed.data.id);
   if (error) done(locale, error.message, true);
-  await supabase
+  const { error: historyError } = await supabase
     .from("return_status_history")
     .insert({
       return_request_id: parsed.data.id,
@@ -241,6 +241,7 @@ export async function updateReturnAction(formData: FormData) {
       note: parsed.data.note || null,
       actor_id: userId,
     });
+  if (historyError) done(locale, historyError.message, true);
   const admin = createAdminClient();
   const { data: request } = await admin
     .from("return_requests")

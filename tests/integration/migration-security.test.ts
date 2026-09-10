@@ -151,6 +151,14 @@ const commercialReturnGuardrails = readFileSync(
   "utf8",
 ).toLowerCase();
 
+const returnReviewPermissions = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260910011740_fix_return_review_permissions.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -543,6 +551,34 @@ describe("foundation migration security", () => {
     expect(commercialGrowth).toContain("return_status_history_actor_idx");
     expect(commercialReturnGuardrails).toContain(
       "create unique index return_requests_one_per_order_idx",
+    );
+  });
+
+  it("allows staff return reviews without granting customers broad writes", () => {
+    expect(returnReviewPermissions).toContain(
+      "grant update (\n  status,\n  resolution,\n  staff_note,",
+    );
+    expect(returnReviewPermissions).toContain(
+      ") on public.return_requests to authenticated;",
+    );
+    expect(returnReviewPermissions).not.toContain(
+      "grant update on public.return_requests to authenticated",
+    );
+    expect(returnReviewPermissions).toContain(
+      "create policy return_requests_staff_update",
+    );
+    expect(returnReviewPermissions).toMatch(
+      /return_requests_staff_update[\s\S]*for update[\s\S]*using \([\s\S]*has_any_role[\s\S]*with check \([\s\S]*has_any_role/,
+    );
+    expect(returnReviewPermissions).toContain(
+      "grant insert (\n  return_request_id,\n  status,\n  note,\n  actor_id\n) on public.return_status_history to authenticated;",
+    );
+    expect(returnReviewPermissions).toContain(
+      "create policy return_status_history_staff_insert",
+    );
+    expect(returnReviewPermissions).toContain("actor_id = (select auth.uid())");
+    expect(returnReviewPermissions).toContain(
+      "array['support','warehouse','admin','super_admin']::public.app_role[]",
     );
   });
 });
