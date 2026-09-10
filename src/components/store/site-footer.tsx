@@ -5,8 +5,15 @@ import type { Route } from "next";
 import { Instagram, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
+import type { ViewerAccess } from "@/server/auth/roles";
 
-export function SiteFooter({ locale }: { locale: Locale }) {
+export function SiteFooter({
+  locale,
+  viewer,
+}: {
+  locale: Locale;
+  viewer: ViewerAccess;
+}) {
   const pathname = usePathname();
   if (pathname.includes("/admin")) return null;
   const ar = locale === "ar";
@@ -40,7 +47,9 @@ export function SiteFooter({ locale }: { locale: Locale }) {
 
         {/* Navigation Links */}
         <nav aria-label={ar ? "روابط المتجر" : "Shop links"}>
-          <p className="eyebrow text-[#81c5b8]">{ar ? "تسوق المتجر" : "Shop"}</p>
+          <p className="eyebrow text-[#81c5b8]">
+            {ar ? "تسوق المتجر" : "Shop"}
+          </p>
           <div className="mt-4 grid gap-2.5 text-sm text-white/75">
             <Link
               href={`/${locale}/shop?category=women`}
@@ -70,7 +79,13 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               href={`/${locale}/account`}
               className="transition-colors hover:text-white"
             >
-              {ar ? "تسجيل الدخول / حسابي" : "Sign in / My account"}
+              {viewer.isAuthenticated
+                ? ar
+                  ? "حسابي"
+                  : "My account"
+                : ar
+                  ? "تسجيل الدخول"
+                  : "Sign in"}
             </Link>
             <Link
               href={`/${locale}/account` as Route}
@@ -78,31 +93,43 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             >
               {ar ? "تتبع الطلبات" : "Track an order"}
             </Link>
-            <Link
-              href={`/${locale}/admin` as Route}
-              className="font-medium text-[#81c5b8] transition-colors hover:text-white"
-            >
-              {ar ? "لوحة إدارة المتجر (Admin)" : "Store Admin Dashboard"}
-            </Link>
+            {viewer.canAccessAdmin && (
+              <Link
+                href={`/${locale}/admin` as Route}
+                className="font-medium text-[#81c5b8] transition-colors hover:text-white"
+              >
+                {ar ? "لوحة إدارة المتجر (Admin)" : "Store Admin Dashboard"}
+              </Link>
+            )}
           </div>
         </nav>
 
         {/* Contact & Support */}
         <div>
-          <p className="eyebrow text-[#81c5b8]">{ar ? "خدمة العملاء والتواصل" : "Support"}</p>
+          <p className="eyebrow text-[#81c5b8]">
+            {ar ? "خدمة العملاء والتواصل" : "Support"}
+          </p>
           <div className="mt-4 grid gap-3 text-sm text-white/75">
             <a
               href="tel:01096733209"
               className="flex min-h-10 items-center gap-3 transition-colors hover:text-white"
             >
-              <Phone size={16} className="shrink-0 text-[#81c5b8]" aria-hidden="true" />
+              <Phone
+                size={16}
+                className="shrink-0 text-[#81c5b8]"
+                aria-hidden="true"
+              />
               <span>01096733209</span>
             </a>
             <a
               href="mailto:scrubvibe30@gmail.com"
               className="flex min-h-10 items-center gap-3 transition-colors hover:text-white"
             >
-              <Mail size={16} className="shrink-0 text-[#81c5b8]" aria-hidden="true" />
+              <Mail
+                size={16}
+                className="shrink-0 text-[#81c5b8]"
+                aria-hidden="true"
+              />
               <span>scrubvibe30@gmail.com</span>
             </a>
             <a
@@ -111,11 +138,19 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               rel="noreferrer"
               className="flex min-h-10 items-center gap-3 transition-colors hover:text-white"
             >
-              <Instagram size={16} className="shrink-0 text-[#81c5b8]" aria-hidden="true" />
+              <Instagram
+                size={16}
+                className="shrink-0 text-[#81c5b8]"
+                aria-hidden="true"
+              />
               <span>@scrubvibe_egy</span>
             </a>
             <div className="flex items-center gap-3 text-xs text-white/60">
-              <MapPin size={16} className="shrink-0 text-[#81c5b8]" aria-hidden="true" />
+              <MapPin
+                size={16}
+                className="shrink-0 text-[#81c5b8]"
+                aria-hidden="true"
+              />
               <span>
                 {ar
                   ? "توصيل لجميع محافظات مصر الـ ٢٧"

@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Heart,
   LayoutDashboard,
+  LogOut,
   Menu,
   MessageCircle,
   Search,
@@ -20,8 +21,16 @@ import {
 import { copy, type Locale } from "@/lib/i18n";
 import { useShop } from "./cart-provider";
 import { trackStoreEvent } from "@/lib/analytics";
+import { signOutAction } from "@/features/auth/actions";
+import type { ViewerAccess } from "@/server/auth/roles";
 
-export function Header({ locale }: { locale: Locale }) {
+export function Header({
+  locale,
+  viewer,
+}: {
+  locale: Locale;
+  viewer: ViewerAccess;
+}) {
   const pathname = usePathname();
   const t = copy[locale];
   const { cart, wishlist } = useShop();
@@ -60,6 +69,7 @@ export function Header({ locale }: { locale: Locale }) {
         search: "بحث في المتجر",
         account: "حسابي والطلبات",
         signIn: "تسجيل الدخول",
+        signOut: "تسجيل الخروج",
         admin: "لوحة الإدارة",
         wishlist: `قائمة الأمنيات: ${wishlist.length}`,
         cart: `حقيبة التسوق: ${cart}`,
@@ -75,6 +85,7 @@ export function Header({ locale }: { locale: Locale }) {
         search: "Search catalog",
         account: "My account",
         signIn: "Sign In",
+        signOut: "Sign Out",
         admin: "Admin Dashboard",
         wishlist: `Wishlist (${wishlist.length})`,
         cart: `Bag (${cart})`,
@@ -158,22 +169,45 @@ export function Header({ locale }: { locale: Locale }) {
             <Link
               href={`/${locale}/account` as Route}
               className="flex h-9 items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-2 text-[11px] font-bold uppercase tracking-wider text-[var(--text-strong)] shadow-2xs transition-all hover:border-[#0e7468] hover:text-[#0e7468] active:scale-[0.98] sm:px-2.5"
-              aria-label={labels.account}
-              title={labels.signIn}
+              aria-label={
+                viewer.isAuthenticated ? labels.account : labels.signIn
+              }
+              title={viewer.isAuthenticated ? labels.account : labels.signIn}
             >
               <UserRound size={15} strokeWidth={2} aria-hidden="true" />
-              <span className="hidden min-[480px]:inline">{labels.signIn}</span>
+              <span className="hidden min-[480px]:inline">
+                {viewer.isAuthenticated ? labels.account : labels.signIn}
+              </span>
             </Link>
 
+            {viewer.isAuthenticated && (
+              <form action={signOutAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <button
+                  type="submit"
+                  className="flex size-9 items-center justify-center rounded-xs border border-[var(--border-subtle)] bg-white text-[var(--text-strong)] shadow-2xs hover:border-[#0e7468] hover:text-[#0e7468] sm:size-10 xl:w-auto xl:gap-1.5 xl:px-2.5"
+                  aria-label={labels.signOut}
+                  title={labels.signOut}
+                >
+                  <LogOut size={15} strokeWidth={2} aria-hidden="true" />
+                  <span className="hidden text-[10px] font-bold uppercase tracking-wider xl:inline">
+                    {labels.signOut}
+                  </span>
+                </button>
+              </form>
+            )}
+
             {/* Admin Dashboard button (visible on screens >= md) */}
-            <Link
-              href={`/${locale}/admin` as Route}
-              className="hidden h-9 items-center gap-1.5 rounded-xs bg-[#073b36] px-2.5 text-[10px] font-bold uppercase tracking-[.12em] text-white shadow-2xs transition-all hover:bg-[#0e7468] active:scale-[0.98] md:flex"
-              title={labels.admin}
-            >
-              <LayoutDashboard size={13} strokeWidth={2} aria-hidden="true" />
-              <span>{labels.admin}</span>
-            </Link>
+            {viewer.canAccessAdmin && (
+              <Link
+                href={`/${locale}/admin` as Route}
+                className="hidden h-9 items-center gap-1.5 rounded-xs bg-[#073b36] px-2.5 text-[10px] font-bold uppercase tracking-[.12em] text-white shadow-2xs transition-all hover:bg-[#0e7468] active:scale-[0.98] md:flex"
+                title={labels.admin}
+              >
+                <LayoutDashboard size={13} strokeWidth={2} aria-hidden="true" />
+                <span>{labels.admin}</span>
+              </Link>
+            )}
 
             {/* Wishlist */}
             <Link
@@ -241,14 +275,18 @@ export function Header({ locale }: { locale: Locale }) {
               <Truck size={14} />
               <span>{labels.track}</span>
             </Link>
-            <span className="text-neutral-300">·</span>
-            <Link
-              href={`/${locale}/admin` as Route}
-              className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#073b36] transition-colors hover:text-[#0e7468]"
-            >
-              <Shield size={13} />
-              <span>{labels.admin}</span>
-            </Link>
+            {viewer.canAccessAdmin && (
+              <>
+                <span className="text-neutral-300">·</span>
+                <Link
+                  href={`/${locale}/admin` as Route}
+                  className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#073b36] transition-colors hover:text-[#0e7468]"
+                >
+                  <Shield size={13} aria-hidden="true" />
+                  <span>{labels.admin}</span>
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>
@@ -272,6 +310,8 @@ export function Header({ locale }: { locale: Locale }) {
               : "-translate-x-full"
         }`}
         aria-label="Mobile navigation"
+        aria-hidden={!mobileNavOpen}
+        inert={!mobileNavOpen}
       >
         {/* Drawer Header */}
         <div className="flex h-16 items-center justify-between border-b border-[var(--border-subtle)] px-5">
@@ -295,7 +335,7 @@ export function Header({ locale }: { locale: Locale }) {
 
         {/* Drawer Links */}
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          {/* Quick Hub: Sign In & Admin Access */}
+          {/* Account access */}
           <div className="mb-6 space-y-2.5 border-b border-[var(--border-subtle)] pb-5">
             <Link
               href={`/${locale}/account` as Route}
@@ -308,31 +348,58 @@ export function Header({ locale }: { locale: Locale }) {
                 </div>
                 <div>
                   <strong className="block text-xs font-bold text-[var(--text-primary)]">
-                    {ar ? "تسجيل الدخول / حسابي" : "Sign In / My Account"}
+                    {viewer.isAuthenticated
+                      ? labels.account
+                      : ar
+                        ? "تسجيل الدخول / حسابي"
+                        : "Sign In / My Account"}
                   </strong>
                   <span className="text-[10px] text-[var(--text-muted)]">
-                    {ar ? "متابعة الطلبات وتفاصيل الحساب" : "Orders, addresses & profile"}
+                    {ar
+                      ? "متابعة الطلبات وتفاصيل الحساب"
+                      : "Orders, addresses & profile"}
                   </span>
                 </div>
               </div>
-              <ChevronRight size={16} className="text-neutral-400 rtl:rotate-180" />
+              <ChevronRight
+                size={16}
+                className="text-neutral-400 rtl:rotate-180"
+              />
             </Link>
 
-            <Link
-              href={`/${locale}/admin` as Route}
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center justify-between rounded-xs border border-[#073b36]/25 bg-[#073b36]/5 p-3 transition-colors hover:bg-[#073b36] hover:text-white group"
-            >
-              <div className="flex items-center gap-2.5">
-                <LayoutDashboard size={16} className="text-[#073b36] group-hover:text-white" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#073b36] group-hover:text-white">
-                  {ar ? "لوحة الإدارة والتحكم" : "Admin Dashboard"}
+            {viewer.isAuthenticated && (
+              <form action={signOutAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <button
+                  type="submit"
+                  className="flex min-h-11 w-full items-center gap-2.5 rounded-xs border border-[var(--border-subtle)] bg-white px-3 text-xs font-bold uppercase tracking-wider text-[var(--text-strong)] hover:border-[#0e7468] hover:text-[#0e7468]"
+                >
+                  <LogOut size={16} aria-hidden="true" />
+                  {labels.signOut}
+                </button>
+              </form>
+            )}
+
+            {viewer.canAccessAdmin && (
+              <Link
+                href={`/${locale}/admin` as Route}
+                onClick={() => setMobileNavOpen(false)}
+                className="group flex items-center justify-between rounded-xs border border-[#073b36]/25 bg-[#073b36]/5 p-3 transition-colors hover:bg-[#073b36] hover:text-white"
+              >
+                <div className="flex items-center gap-2.5">
+                  <LayoutDashboard
+                    size={16}
+                    className="text-[#073b36] group-hover:text-white"
+                  />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#073b36] group-hover:text-white">
+                    {ar ? "لوحة الإدارة والتحكم" : "Admin Dashboard"}
+                  </span>
+                </div>
+                <span className="rounded-xs bg-[#073b36]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#073b36] group-hover:bg-white group-hover:text-[#073b36]">
+                  {ar ? "المشرفين" : "Staff"}
                 </span>
-              </div>
-              <span className="rounded-xs bg-[#073b36]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#073b36] group-hover:bg-white group-hover:text-[#073b36]">
-                {ar ? "المشرفين" : "Staff"}
-              </span>
-            </Link>
+              </Link>
+            )}
           </div>
 
           <p className="eyebrow text-[#0e7468]">{labels.categories}</p>

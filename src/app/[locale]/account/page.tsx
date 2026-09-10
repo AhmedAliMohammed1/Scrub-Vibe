@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCustomerAddresses } from "@/features/addresses/repository";
 import { AddressBook } from "@/features/addresses/address-book";
 import { getShippingLocations } from "@/features/shipping/repository";
+import { canAccessAdminDashboard, type AppRole } from "@/server/auth/policy";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -48,17 +49,6 @@ export default async function AccountPage({ params, searchParams }: Props) {
           </p>
         )}
         <AuthForm mode="sign-in" locale={locale} />
-        <div className="mt-8 border-t border-[var(--border-subtle)] pt-6 text-center">
-          <p className="text-xs text-[var(--text-muted)]">
-            {locale === "ar" ? "مشرف أو مدير المتجر؟" : "Store staff or manager?"}
-          </p>
-          <Link
-            href={`/${locale}/admin` as Route}
-            className="mt-2.5 inline-flex items-center gap-2 rounded-xs border border-[#073b36]/30 bg-[#073b36]/5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#073b36] transition-all hover:bg-[#073b36] hover:text-white"
-          >
-            <span>{locale === "ar" ? "الدخول إلى لوحة الإدارة (Staff)" : "Open Admin Dashboard (Staff)"}</span>
-          </Link>
-        </div>
       </AuthShell>
     );
   }
@@ -75,20 +65,19 @@ export default async function AccountPage({ params, searchParams }: Props) {
       .select("email, full_name, preferred_locale")
       .eq("id", userId)
       .maybeSingle(),
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId),
+    supabase.from("user_roles").select("role").eq("user_id", userId),
     supabase
       .from("orders")
-      .select("id, order_number, status, payment_status, total_minor, created_at, delivered_at")
+      .select(
+        "id, order_number, status, payment_status, total_minor, created_at, delivered_at",
+      )
       .order("created_at", { ascending: false })
       .limit(8),
     getCustomerAddresses(supabase, userId),
     getShippingLocations(supabase).catch(() => []),
   ]);
-  const canAdmin = roleRows?.some(
-    ({ role }) => role === "admin" || role === "super_admin",
+  const canAdmin = canAccessAdminDashboard(
+    (roleRows ?? []).map(({ role }) => role as AppRole),
   );
   const email = profile?.email ?? String(claimsData.claims.email ?? "");
   const name = profile?.full_name?.trim() || email.split("@")[0];
@@ -137,9 +126,32 @@ export default async function AccountPage({ params, searchParams }: Props) {
                         {order.payment_status.replaceAll("_", " ")}
                       </small>
                       <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
-                        <Link href={`/${locale}/track/${order.order_number}` as Route}>{locale === "ar" ? "تتبع" : "Track"}</Link>
-                        <Link href={`/${locale}/account/orders/${order.order_number}/invoice` as Route}>{locale === "ar" ? "الفاتورة" : "Invoice"}</Link>
-                        {order.status === "delivered" && isWithinReturnWindow(order.delivered_at) && <Link href={`/${locale}/account/returns/new?order=${order.id}` as Route}>{locale === "ar" ? "استرجاع / استبدال" : "Return / exchange"}</Link>}
+                        <Link
+                          href={
+                            `/${locale}/track/${order.order_number}` as Route
+                          }
+                        >
+                          {locale === "ar" ? "تتبع" : "Track"}
+                        </Link>
+                        <Link
+                          href={
+                            `/${locale}/account/orders/${order.order_number}/invoice` as Route
+                          }
+                        >
+                          {locale === "ar" ? "الفاتورة" : "Invoice"}
+                        </Link>
+                        {order.status === "delivered" &&
+                          isWithinReturnWindow(order.delivered_at) && (
+                            <Link
+                              href={
+                                `/${locale}/account/returns/new?order=${order.id}` as Route
+                              }
+                            >
+                              {locale === "ar"
+                                ? "استرجاع / استبدال"
+                                : "Return / exchange"}
+                            </Link>
+                          )}
                       </span>
                     </div>
                     <div className="text-end">
@@ -147,7 +159,9 @@ export default async function AccountPage({ params, searchParams }: Props) {
                         {formatMoney(order.total_minor, locale)}
                       </strong>
                       <small className="mt-1.5 block text-[10px] text-[var(--text-muted)]">
-                        {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(order.created_at))}
+                        {new Intl.DateTimeFormat(locale, {
+                          dateStyle: "medium",
+                        }).format(new Date(order.created_at))}
                       </small>
                     </div>
                   </article>
@@ -156,7 +170,9 @@ export default async function AccountPage({ params, searchParams }: Props) {
             ) : (
               <div className="mt-5 rounded-xs border border-dashed border-[var(--border-subtle)] bg-[var(--surface-raised)] p-8 text-center">
                 <p className="text-sm text-[var(--text-muted)]">
-                  {locale === "ar" ? "لا توجد طلبات مرتبطة بهذا الحساب بعد." : "No orders are linked to this account yet."}
+                  {locale === "ar"
+                    ? "لا توجد طلبات مرتبطة بهذا الحساب بعد."
+                    : "No orders are linked to this account yet."}
                 </p>
                 <Link
                   href={`/${locale}/shop`}
@@ -183,7 +199,9 @@ export default async function AccountPage({ params, searchParams }: Props) {
               <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]">
                 {locale === "ar" ? "البريد الإلكتروني" : "Email"}
               </dt>
-              <dd className="mt-2 break-all text-[var(--text-primary)] font-mono text-xs">{email}</dd>
+              <dd className="mt-2 break-all text-[var(--text-primary)] font-mono text-xs">
+                {email}
+              </dd>
             </div>
             <div className="py-4">
               <dt className="text-[10px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]">
@@ -200,19 +218,22 @@ export default async function AccountPage({ params, searchParams }: Props) {
           >
             {locale === "ar" ? "تغيير كلمة المرور" : "Change password"}
           </Link>
-          <Link href={`/${locale}/account/returns` as Route} className="mt-4 block text-xs text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--color-primary)]">{locale === "ar" ? "طلبات الاسترجاع والاستبدال" : "Returns & exchanges"}</Link>
           <Link
-            href={`/${locale}/admin` as Route}
-            className="mt-4 block rounded-xs bg-[var(--color-primary)] px-5 py-3.5 text-center text-xs font-bold uppercase tracking-[.14em] text-white shadow-subtle transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99]"
+            href={`/${locale}/account/returns` as Route}
+            className="mt-4 block text-xs text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--color-primary)]"
           >
             {locale === "ar"
-              ? canAdmin
-                ? "لوحة الإدارة والتحكم"
-                : "فتح لوحة الإدارة (Staff)"
-              : canAdmin
-                ? "Admin Dashboard"
-                : "Open Admin Dashboard (Staff)"}
+              ? "طلبات الاسترجاع والاستبدال"
+              : "Returns & exchanges"}
           </Link>
+          {canAdmin && (
+            <Link
+              href={`/${locale}/admin` as Route}
+              className="mt-4 block rounded-xs bg-[var(--color-primary)] px-5 py-3.5 text-center text-xs font-bold uppercase tracking-[.14em] text-white shadow-subtle transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99]"
+            >
+              {locale === "ar" ? "لوحة الإدارة والتحكم" : "Admin Dashboard"}
+            </Link>
+          )}
           <form action={signOutAction} className="mt-6">
             <input type="hidden" name="locale" value={locale} />
             <button className="h-12 w-full rounded-xs border border-[var(--border-subtle)] bg-white text-xs font-bold uppercase tracking-[.14em] text-[var(--text-primary)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-sunken)] active:scale-[0.99]">
