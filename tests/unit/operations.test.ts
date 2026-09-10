@@ -76,6 +76,16 @@ describe("production operations", () => {
     }
   });
 
+  it("uses Node 24-compatible GitHub security actions", () => {
+    const workflows = ["ci.yml", "security.yml"]
+      .map((file) => readFileSync(resolve(`.github/workflows/${file}`), "utf8"))
+      .join("\n");
+    expect(workflows).not.toMatch(/actions\/checkout@v4/);
+    expect(workflows).not.toMatch(/actions\/setup-node@v4/);
+    expect(workflows).not.toMatch(/github\/codeql-action\/[a-z-]+@v3/);
+    expect(workflows).toContain("actions/dependency-review-action@v5");
+  });
+
   it("prevents restore drills from targeting the production project", () => {
     const source = readFileSync(
       resolve("scripts/operations/restore-drill.ps1"),
