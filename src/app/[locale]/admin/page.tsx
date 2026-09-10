@@ -29,6 +29,8 @@ import {
 import { formatMoney } from "@/lib/money";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { requireRoles } from "@/server/auth/roles";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { paginateItems, parsePage } from "@/lib/pagination";
 
 export const metadata: Metadata = {
   title: "Admin dashboard | Scrub Vibe",
@@ -132,13 +134,14 @@ const productSelect = `
     inventory(on_hand, reserved, low_stock_threshold)
   )
 `;
+const PRODUCTS_PER_PAGE = 10;
 
 export default async function AdminPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; productPage?: string }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
@@ -174,6 +177,11 @@ export default async function AdminPage({
   }
 
   const products = productsResult.data as unknown as AdminProduct[];
+  const pagedProducts = paginateItems(
+    products,
+    parsePage(query.productPage),
+    PRODUCTS_PER_PAGE,
+  );
   const analytics = analyticsResult.error
     ? { ...emptyAnalytics, rangeDays: period }
     : (analyticsResult.data as unknown as AnalyticsSummary);
@@ -219,19 +227,28 @@ export default async function AdminPage({
                 href={`/${locale}/admin/discounts` as Route}
                 className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
               >
-                <span className="flex items-center gap-2"><BadgePercent size={14} />{ar ? "الخصومات" : "Discounts"}</span>
+                <span className="flex items-center gap-2">
+                  <BadgePercent size={14} />
+                  {ar ? "الخصومات" : "Discounts"}
+                </span>
               </Link>
               <Link
                 href={`/${locale}/admin/banners` as Route}
                 className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
               >
-                <span className="flex items-center gap-2"><Sparkles size={14} />{ar ? "البانرات" : "Banners"}</span>
+                <span className="flex items-center gap-2">
+                  <Sparkles size={14} />
+                  {ar ? "البانرات" : "Banners"}
+                </span>
               </Link>
               <Link
                 href={`/${locale}/admin/sizes` as Route}
                 className="border border-white/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[.14em]"
               >
-                <span className="flex items-center gap-2"><Ruler size={14} />{ar ? "المقاسات" : "Sizes"}</span>
+                <span className="flex items-center gap-2">
+                  <Ruler size={14} />
+                  {ar ? "المقاسات" : "Sizes"}
+                </span>
               </Link>
               <Link
                 href={`/${locale}/admin/shipping` as Route}
@@ -457,7 +474,10 @@ export default async function AdminPage({
             />
           </div>
 
-          <div className="mt-4 overflow-hidden border border-black/10 bg-white">
+          <div
+            id="products-list"
+            className="mt-4 scroll-mt-6 overflow-hidden border border-black/10 bg-white"
+          >
             <div className="overflow-x-auto">
               <table className="w-full min-w-[920px] text-start text-sm">
                 <thead className="bg-[#073b36] text-[10px] uppercase tracking-[.13em] text-white/70">
@@ -483,7 +503,7 @@ export default async function AdminPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/10">
-                  {products.map((product) => (
+                  {pagedProducts.items.map((product) => (
                     <ProductRow
                       key={product.id}
                       product={product}
@@ -499,6 +519,18 @@ export default async function AdminPage({
               </p>
             )}
           </div>
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin`}
+            searchParams={{ period: String(period) }}
+            currentPage={pagedProducts.pagination.currentPage}
+            totalItems={pagedProducts.pagination.totalItems}
+            pageSize={PRODUCTS_PER_PAGE}
+            pageParam="productPage"
+            anchor="products-list"
+            itemLabel={{ en: "products", ar: "منتج" }}
+            className="mt-4"
+          />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-2">
@@ -612,10 +644,14 @@ function ProductRow({
       </td>
       <td className="px-4 py-4 whitespace-nowrap">
         <strong>{formatMoney(product.base_price_minor, locale)}</strong>
-        <span className={`mt-1 block text-[11px] ${product.cod_deposit_minor ? "text-[#0e7468]" : "font-bold text-amber-700"}`}>
+        <span
+          className={`mt-1 block text-[11px] ${product.cod_deposit_minor ? "text-[#0e7468]" : "font-bold text-amber-700"}`}
+        >
           {product.cod_deposit_minor
             ? `${ar ? "مقدم COD" : "COD deposit"}: ${formatMoney(product.cod_deposit_minor, locale)}`
-            : ar ? "مقدم COD غير محدد" : "COD deposit not configured"}
+            : ar
+              ? "مقدم COD غير محدد"
+              : "COD deposit not configured"}
         </span>
         {product.cost_minor !== null && (
           <span className="mt-1 block text-[11px] text-neutral-500">
@@ -680,14 +716,28 @@ function ProductRow({
           <summary className="cursor-pointer text-[11px] font-semibold text-[#0e7468]">
             {ar ? "تعديل مقدم الدفع" : "Edit COD deposit"}
           </summary>
-          <form action={setProductDepositAction} className="mt-3 flex items-end gap-2 border-s-2 border-[#0e7468]/20 ps-3">
+          <form
+            action={setProductDepositAction}
+            className="mt-3 flex items-end gap-2 border-s-2 border-[#0e7468]/20 ps-3"
+          >
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="productId" value={product.id} />
             <label className="text-[9px] uppercase tracking-wider text-neutral-500">
               {ar ? "المبلغ (ج.م)" : "Amount (EGP)"}
-              <input name="deposit" type="number" min="0.01" max={product.base_price_minor / 100} step="0.01" required defaultValue={product.cod_deposit_minor / 100 || ""} className="mt-1 h-8 w-28 border border-black/15 px-2 text-xs" />
+              <input
+                name="deposit"
+                type="number"
+                min="0.01"
+                max={product.base_price_minor / 100}
+                step="0.01"
+                required
+                defaultValue={product.cod_deposit_minor / 100 || ""}
+                className="mt-1 h-8 w-28 border border-black/15 px-2 text-xs"
+              />
             </label>
-            <button className="h-8 bg-[#073b36] px-3 text-[9px] font-bold uppercase text-white">{ar ? "حفظ" : "Save"}</button>
+            <button className="h-8 bg-[#073b36] px-3 text-[9px] font-bold uppercase text-white">
+              {ar ? "حفظ" : "Save"}
+            </button>
           </form>
         </details>
         <details className="mt-3">

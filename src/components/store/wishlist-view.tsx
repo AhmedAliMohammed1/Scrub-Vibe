@@ -5,19 +5,30 @@ import type { Route } from "next";
 import { ArrowRight, Heart, ShoppingBag } from "lucide-react";
 import type { Product } from "@/features/catalog/types";
 import type { Locale } from "@/lib/i18n";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { paginateItems } from "@/lib/pagination";
 import { useShop } from "./cart-provider";
 import { ProductCard } from "./product-card";
+
+const PRODUCTS_PER_PAGE = 12;
 
 export function WishlistView({
   products,
   locale,
+  initialPage,
 }: {
   products: Product[];
   locale: Locale;
+  initialPage: number;
 }) {
   const { wishlist } = useShop();
   const ar = locale === "ar";
   const savedProducts = products.filter((p) => wishlist.includes(p.id));
+  const pagedProducts = paginateItems(
+    savedProducts,
+    initialPage,
+    PRODUCTS_PER_PAGE,
+  );
 
   return (
     <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 py-10 sm:px-6 md:px-10 md:py-16">
@@ -47,22 +58,51 @@ export function WishlistView({
             className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[.14em] text-[#073b36] transition hover:text-[#0e7468]"
           >
             {ar ? "متابعة التسوق" : "Continue shopping"}
-            <ArrowRight size={14} className="rtl:rotate-180" aria-hidden="true" />
+            <ArrowRight
+              size={14}
+              className="rtl:rotate-180"
+              aria-hidden="true"
+            />
           </Link>
         )}
       </div>
 
       <div className="mt-8">
         {savedProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
-            {savedProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                locale={locale}
-              />
-            ))}
-          </div>
+          <>
+            <PaginationNav
+              locale={locale}
+              pathname={`/${locale}/wishlist`}
+              currentPage={pagedProducts.pagination.currentPage}
+              totalItems={savedProducts.length}
+              pageSize={PRODUCTS_PER_PAGE}
+              anchor="wishlist-grid"
+              itemLabel={{ en: "saved items", ar: "قطعة محفوظة" }}
+            />
+            <div
+              id="wishlist-grid"
+              className="mt-8 grid scroll-mt-6 grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8"
+            >
+              {pagedProducts.items.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  locale={locale}
+                />
+              ))}
+            </div>
+            <PaginationNav
+              locale={locale}
+              pathname={`/${locale}/wishlist`}
+              currentPage={pagedProducts.pagination.currentPage}
+              totalItems={savedProducts.length}
+              pageSize={PRODUCTS_PER_PAGE}
+              anchor="wishlist-grid"
+              itemLabel={{ en: "saved items", ar: "قطعة محفوظة" }}
+              hideWhenSinglePage
+              className="mt-8"
+            />
+          </>
         ) : (
           <div className="my-12 rounded-xs border border-[var(--border-subtle)] bg-white px-6 py-20 text-center shadow-xs">
             <div className="mx-auto grid size-16 place-items-center rounded-full bg-[#f0f5f3] text-[#073b36]">

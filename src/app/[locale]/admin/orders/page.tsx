@@ -18,6 +18,8 @@ import { isLocale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRoles } from "@/server/auth/roles";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { getPagination, parsePage } from "@/lib/pagination";
 
 export const metadata: Metadata = {
   title: "Orders | Scrub Vibe Admin",
@@ -75,18 +77,39 @@ const paymentStatuses: TrackedOrder["payment_status"][] = [
   "cod_collected",
   "refunded",
 ];
+const ORDERS_PER_PAGE = 10;
 
 export default async function AdminOrdersPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: string; error?: string; success?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    page?: string;
+    error?: string;
+    success?: string;
+  }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
   await requireRoles(["support", "warehouse", "admin", "super_admin"]);
   const admin = createAdminClient();
+  const selectedStatus =
+    query.status && statuses.includes(query.status as TrackedOrder["status"])
+      ? (query.status as TrackedOrder["status"])
+      : null;
+  let countRequest = admin
+    .from("orders")
+    .select("id", { count: "exact", head: true });
+  if (selectedStatus) countRequest = countRequest.eq("status", selectedStatus);
+  const countResult = await countRequest;
+  if (countResult.error) throw new Error("Orders could not be counted.");
+  const pagination = getPagination(
+    countResult.count ?? 0,
+    parsePage(query.page),
+    ORDERS_PER_PAGE,
+  );
   let request = admin
     .from("orders")
     .select(
@@ -95,10 +118,9 @@ export default async function AdminOrdersPage({
     payment_proofs(id, storage_path, amount_minor, status, review_note, created_at)
   `,
     )
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (query.status && statuses.includes(query.status as TrackedOrder["status"]))
-    request = request.eq("status", query.status as TrackedOrder["status"]);
+    .order("created_at", { ascending: false });
+  if (selectedStatus) request = request.eq("status", selectedStatus);
+  request = request.range(pagination.from, pagination.to);
   const [ordersResult, webhookResult, recoveryStats] = await Promise.all([
     request,
     admin
@@ -193,12 +215,12 @@ export default async function AdminOrdersPage({
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric
             icon={CircleDollarSign}
-            label={ar ? "الإيراد المحصل" : "Collected revenue"}
+            label={ar ? "إيراد الصفحة" : "Page revenue"}
             value={formatMoney(revenue, locale)}
           />
           <Metric
             icon={Banknote}
-            label={ar ? "متوسط الطلب المدفوع" : "Paid average order"}
+            label={ar ? "متوسط المدفوع بالصفحة" : "Page paid average"}
             value={formatMoney(
               paidOrders.length ? Math.round(revenue / paidOrders.length) : 0,
               locale,
@@ -206,16 +228,21 @@ export default async function AdminOrdersPage({
           />
           <Metric
             icon={Clock3}
-            label={ar ? "إيصالات للمراجعة" : "Proofs to review"}
+            label={ar ? "إيصالات ظاهرة للمراجعة" : "Visible proofs to review"}
             value={awaitingReview.toString()}
             alert={awaitingReview > 0}
           />
           <Metric
             icon={PackageCheck}
-            label={ar ? "قائمة التجهيز" : "Fulfilment queue"}
+            label={ar ? "تجهيز ظاهر بالصفحة" : "Visible fulfilment queue"}
             value={fulfilmentQueue.toString()}
           />
         </section>
+        <p className="mt-2 text-[11px] text-neutral-500">
+          {ar
+            ? "تعكس مؤشرات الطلبات أعلاه الطلبات الظاهرة في الصفحة الحالية."
+            : "Order metrics above reflect the records visible on this page."}
+        </p>
 
         <section className="mt-5 border border-[#0e7468]/30 bg-white p-5 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-4">
@@ -356,7 +383,18 @@ export default async function AdminOrdersPage({
             </Link>
           ))}
         </nav>
-        <div className="mt-6 grid gap-5">
+        <PaginationNav
+          locale={locale}
+          pathname={`/${locale}/admin/orders`}
+          searchParams={{ status: selectedStatus ?? undefined }}
+          currentPage={pagination.currentPage}
+          totalItems={pagination.totalItems}
+          pageSize={ORDERS_PER_PAGE}
+          anchor="orders-list"
+          itemLabel={{ en: "orders", ar: "طلب" }}
+          className="mt-6"
+        />
+        <div id="orders-list" className="mt-6 grid scroll-mt-6 gap-5">
           {orders.map((order) => (
             <article
               key={order.id}
@@ -418,7 +456,9 @@ export default async function AdminOrdersPage({
                   <address className="mt-3 not-italic">
                     {order.street_address}
                     <br />
-                    {[order.building, order.floor, order.apartment].filter(Boolean).length > 0 && (
+                    {[order.building, order.floor, order.apartment].filter(
+                      Boolean,
+                    ).length > 0 && (
                       <>
                         {[order.building, order.floor, order.apartment]
                           .filter(Boolean)
@@ -514,6 +554,11 @@ export default async function AdminOrdersPage({
                     type="hidden"
                     name="currentFilter"
                     value={query.status ?? ""}
+                  />
+                  <input
+                    type="hidden"
+                    name="currentPage"
+                    value={pagination.currentPage}
                   />
                   {["cancelled", "partially_returned", "returned"].includes(
                     order.status,
@@ -635,6 +680,18 @@ export default async function AdminOrdersPage({
             {ar ? "لا توجد طلبات بهذه الحالة." : "No orders match this status."}
           </div>
         )}
+        <PaginationNav
+          locale={locale}
+          pathname={`/${locale}/admin/orders`}
+          searchParams={{ status: selectedStatus ?? undefined }}
+          currentPage={pagination.currentPage}
+          totalItems={pagination.totalItems}
+          pageSize={ORDERS_PER_PAGE}
+          anchor="orders-list"
+          itemLabel={{ en: "orders", ar: "طلب" }}
+          hideWhenSinglePage
+          className="mt-6"
+        />
       </div>
     </main>
   );

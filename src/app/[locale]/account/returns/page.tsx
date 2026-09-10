@@ -14,8 +14,11 @@ import {
   returnResolutionLabel,
   returnStatusLabel,
 } from "@/features/commercial/return-workflow";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { getPagination, parsePage } from "@/lib/pagination";
 
 const terminalStatuses = new Set(["rejected", "completed", "cancelled"]);
+const RETURNS_PER_PAGE = 10;
 
 function formatMoney(minor: number, locale: "en" | "ar") {
   return new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-EG", {
@@ -36,18 +39,28 @@ export default async function ReturnsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ created?: string; error?: string }>;
+  searchParams: Promise<{ created?: string; error?: string; page?: string }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
   const { supabase, userId } = await requireUser();
+  const countResult = await supabase
+    .from("return_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  const pagination = getPagination(
+    countResult.count ?? 0,
+    parsePage(query.page),
+    RETURNS_PER_PAGE,
+  );
   const { data: rows, error } = await supabase
     .from("return_requests")
     .select(
       "id, return_number, request_type, status, resolution, reason_code, customer_note, staff_note, requested_at, reviewed_at, received_at, completed_at, refund_amount_minor, refund_method, refund_reference, refund_completed_at, orders(order_number), return_request_items(id, quantity, received_quantity, requested_colour, requested_size, order_items(title_en, title_ar, colour_en, colour_ar, size)), return_status_history(id, status, note, created_at)",
     )
     .eq("user_id", userId)
-    .order("requested_at", { ascending: false });
+    .order("requested_at", { ascending: false })
+    .range(pagination.from, pagination.to);
   const ar = locale === "ar";
 
   return (
@@ -79,7 +92,7 @@ export default async function ReturnsPage({
             : "Your request was submitted and will be reviewed shortly."}
         </p>
       )}
-      {(query.error || error) && (
+      {(query.error || error || countResult.error) && (
         <p className="mt-5 rounded-xs border border-[#a5472f]/30 bg-[#a5472f]/8 p-4 text-sm text-[#8f3520]">
           {ar
             ? "تعذر تحميل طلبات الاسترجاع الآن. حاول مرة أخرى."
@@ -87,7 +100,18 @@ export default async function ReturnsPage({
         </p>
       )}
 
-      <div className="mt-8 space-y-6">
+      <PaginationNav
+        locale={locale}
+        pathname={`/${locale}/account/returns`}
+        currentPage={pagination.currentPage}
+        totalItems={pagination.totalItems}
+        pageSize={RETURNS_PER_PAGE}
+        anchor="returns-list"
+        itemLabel={{ en: "requests", ar: "طلب" }}
+        className="mt-8"
+      />
+
+      <div id="returns-list" className="mt-6 scroll-mt-6 space-y-6">
         {rows?.length ? (
           rows.map((row) => {
             const history = row.return_status_history.toSorted(
@@ -289,7 +313,7 @@ export default async function ReturnsPage({
                               </p>
                               {entry.note &&
                                 entry.note !== "Customer submitted request" && (
-                                <p className="mt-2 rounded-xs bg-neutral-50 p-3 text-xs leading-5 text-neutral-600">
+                                  <p className="mt-2 rounded-xs bg-neutral-50 p-3 text-xs leading-5 text-neutral-600">
                                     {entry.note}
                                   </p>
                                 )}
@@ -340,6 +364,17 @@ export default async function ReturnsPage({
           </div>
         )}
       </div>
+      <PaginationNav
+        locale={locale}
+        pathname={`/${locale}/account/returns`}
+        currentPage={pagination.currentPage}
+        totalItems={pagination.totalItems}
+        pageSize={RETURNS_PER_PAGE}
+        anchor="returns-list"
+        itemLabel={{ en: "requests", ar: "طلب" }}
+        hideWhenSinglePage
+        className="mt-6"
+      />
     </main>
   );
 }

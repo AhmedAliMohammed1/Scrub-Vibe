@@ -12,15 +12,22 @@ import {
   returnResolutionLabel,
   returnStatusLabel,
 } from "@/features/commercial/return-workflow";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { getPagination, parsePage } from "@/lib/pagination";
 
 const field = "mt-1.5 h-11 w-full border border-black/15 bg-white px-3 text-sm";
+const RETURNS_PER_PAGE = 10;
 
 export default async function CommercialPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ success?: string; error?: string }>;
+  searchParams: Promise<{
+    success?: string;
+    error?: string;
+    returnPage?: string;
+  }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
@@ -54,6 +61,23 @@ export default async function CommercialPage({
   const products = productsResult.data ?? [];
   const bundles = bundlesResult.data ?? [];
   const recommendations = recommendationsResult.data ?? [];
+  const [returnsCountResult, openReturnsResult] = await Promise.all([
+    supabase
+      .from("return_requests")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("return_requests")
+      .select("id", { count: "exact", head: true })
+      .not("status", "in", "(completed,rejected,cancelled)"),
+  ]);
+  if (returnsCountResult.error || openReturnsResult.error) {
+    throw new Error("Return cases could not be counted.");
+  }
+  const returnPagination = getPagination(
+    returnsCountResult.count ?? 0,
+    parsePage(query.returnPage),
+    RETURNS_PER_PAGE,
+  );
   const [subscriptionsResult, alertsResult, returnsResult] = await Promise.all([
     supabase
       .from("stock_subscriptions")
@@ -72,7 +96,7 @@ export default async function CommercialPage({
         "id, return_number, request_type, status, resolution, reason_code, customer_note, staff_note, evidence_paths, requested_at, refund_amount_minor, refund_method, refund_reference, orders(order_number, customer_name, email, status, payment_status, total_minor), return_request_items(id, quantity, received_quantity, restocked_quantity, requested_colour, requested_size, condition_note, order_items(title_en, title_ar, colour_en, colour_ar, size, unit_price_minor)), return_internal_notes(note, created_at)",
       )
       .order("requested_at", { ascending: false })
-      .limit(50),
+      .range(returnPagination.from, returnPagination.to),
   ]);
   const alerts = alertsResult.data ?? [];
   const returns = returnsResult.data ?? [];
@@ -113,13 +137,7 @@ export default async function CommercialPage({
         {[
           ["Active stock alerts", subscriptionsResult.count ?? 0],
           ["Low-stock variants", alerts.length],
-          [
-            "Open return cases",
-            returns.filter(
-              (item) =>
-                !["completed", "rejected", "cancelled"].includes(item.status),
-            ).length,
-          ],
+          ["Open return cases", openReturnsResult.count ?? 0],
         ].map(([label, value]) => (
           <article key={label} className="border border-black/10 bg-white p-5">
             <strong className="font-serif text-4xl text-[#073b36]">
@@ -363,7 +381,19 @@ export default async function CommercialPage({
           <h2 className="font-serif text-2xl">
             {ar ? "الاسترجاع والاستبدال" : "Returns & exchanges"}
           </h2>
-          <div className="mt-4 space-y-4">
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin/commercial`}
+            searchParams={{ returnPage: query.returnPage }}
+            currentPage={returnPagination.currentPage}
+            totalItems={returnPagination.totalItems}
+            pageSize={RETURNS_PER_PAGE}
+            pageParam="returnPage"
+            anchor="admin-return-list"
+            itemLabel={{ en: "cases", ar: "طلب" }}
+            className="mt-4"
+          />
+          <div id="admin-return-list" className="mt-4 scroll-mt-6 space-y-4">
             {returns.length ? (
               returns.map((item) => {
                 const eligibleItemsMinor = item.return_request_items.reduce(
@@ -515,6 +545,19 @@ export default async function CommercialPage({
               </p>
             )}
           </div>
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin/commercial`}
+            searchParams={{ returnPage: query.returnPage }}
+            currentPage={returnPagination.currentPage}
+            totalItems={returnPagination.totalItems}
+            pageSize={RETURNS_PER_PAGE}
+            pageParam="returnPage"
+            anchor="admin-return-list"
+            itemLabel={{ en: "cases", ar: "طلب" }}
+            hideWhenSinglePage
+            className="mt-4"
+          />
         </div>
       </section>
       <section className="mt-6 border border-black/10 bg-[#073b36] p-5 text-white md:p-7">

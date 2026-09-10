@@ -11,10 +11,18 @@ import { getCustomerAddresses } from "@/features/addresses/repository";
 import { AddressBook } from "@/features/addresses/address-book";
 import { getShippingLocations } from "@/features/shipping/repository";
 import { canAccessAdminDashboard, type AppRole } from "@/server/auth/policy";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { getPagination, parsePage } from "@/lib/pagination";
+
+const ORDERS_PER_PAGE = 10;
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ password?: string; error?: string }>;
+  searchParams: Promise<{
+    password?: string;
+    error?: string;
+    orderPage?: string;
+  }>;
 };
 
 function isWithinReturnWindow(deliveredAt: string | null): boolean {
@@ -53,6 +61,19 @@ export default async function AccountPage({ params, searchParams }: Props) {
     );
   }
 
+  const orderCountResult = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if (orderCountResult.error) {
+    throw new Error("Account orders could not be counted.");
+  }
+  const orderPagination = getPagination(
+    orderCountResult.count ?? 0,
+    parsePage(query.orderPage),
+    ORDERS_PER_PAGE,
+  );
+
   const [
     { data: profile },
     { data: roleRows },
@@ -73,7 +94,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(8),
+      .range(orderPagination.from, orderPagination.to),
     getCustomerAddresses(supabase, userId),
     getShippingLocations(supabase).catch(() => []),
   ]);
@@ -108,86 +129,114 @@ export default async function AccountPage({ params, searchParams }: Props) {
               </h2>
             </div>
             {orderRows?.length ? (
-              <div className="mt-5 divide-y divide-[var(--border-subtle)] rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-raised)] shadow-subtle overflow-hidden">
-                {orderRows.map((order) => (
-                  <article
-                    key={order.id}
-                    className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-[var(--surface-sunken)]/60"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <strong className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
-                          {order.order_number}
-                        </strong>
-                        <span className="rounded-xs bg-[var(--color-secondary)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--color-primary-dark)]">
-                          {order.status.replaceAll("_", " ")}
-                        </span>
-                      </div>
-                      {order.payment_status === "rejected" ? (
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span className="rounded-xs border border-[#a5472f]/40 bg-[#a5472f]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#a5472f]">
-                            {locale === "ar"
-                              ? "تم رفض إيصال الدفع"
-                              : "Payment proof rejected"}
+              <>
+                <PaginationNav
+                  locale={locale}
+                  pathname={`/${locale}/account`}
+                  currentPage={orderPagination.currentPage}
+                  totalItems={orderPagination.totalItems}
+                  pageSize={ORDERS_PER_PAGE}
+                  pageParam="orderPage"
+                  anchor="account-orders"
+                  itemLabel={{ en: "orders", ar: "طلب" }}
+                  className="mt-5"
+                />
+                <div
+                  id="account-orders"
+                  className="mt-4 scroll-mt-6 divide-y divide-[var(--border-subtle)] overflow-hidden rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-raised)] shadow-subtle"
+                >
+                  {orderRows.map((order) => (
+                    <article
+                      key={order.id}
+                      className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-[var(--surface-sunken)]/60"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
+                            {order.order_number}
+                          </strong>
+                          <span className="rounded-xs bg-[var(--color-secondary)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--color-primary-dark)]">
+                            {order.status.replaceAll("_", " ")}
                           </span>
-                          <Link
-                            href={
-                              `/${locale}/track/${order.order_number}#reupload-proof` as Route
-                            }
-                            className="text-[10px] font-bold uppercase tracking-wider text-[#a5472f] underline underline-offset-4 hover:text-[#073b36]"
-                          >
-                            {locale === "ar"
-                              ? "إعادة رفع الإيصال ←"
-                              : "Re-upload proof →"}
-                          </Link>
                         </div>
-                      ) : (
-                        <small className="mt-1.5 block text-[10px] uppercase text-[var(--text-muted)]">
-                          {order.payment_status.replaceAll("_", " ")}
-                        </small>
-                      )}
-                      <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
-                        <Link
-                          href={
-                            `/${locale}/track/${order.order_number}` as Route
-                          }
-                        >
-                          {locale === "ar" ? "تتبع" : "Track"}
-                        </Link>
-                        <Link
-                          href={
-                            `/${locale}/account/orders/${order.order_number}/invoice` as Route
-                          }
-                        >
-                          {locale === "ar" ? "الفاتورة" : "Invoice"}
-                        </Link>
-                        {order.status === "delivered" &&
-                          isWithinReturnWindow(order.delivered_at) && (
+                        {order.payment_status === "rejected" ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="rounded-xs border border-[#a5472f]/40 bg-[#a5472f]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#a5472f]">
+                              {locale === "ar"
+                                ? "تم رفض إيصال الدفع"
+                                : "Payment proof rejected"}
+                            </span>
                             <Link
                               href={
-                                `/${locale}/account/returns/new?order=${order.id}` as Route
+                                `/${locale}/track/${order.order_number}#reupload-proof` as Route
                               }
+                              className="text-[10px] font-bold uppercase tracking-wider text-[#a5472f] underline underline-offset-4 hover:text-[#073b36]"
                             >
                               {locale === "ar"
-                                ? "استرجاع / استبدال"
-                                : "Return / exchange"}
+                                ? "إعادة رفع الإيصال ←"
+                                : "Re-upload proof →"}
                             </Link>
-                          )}
-                      </span>
-                    </div>
-                    <div className="text-end">
-                      <strong className="block text-sm font-semibold text-[var(--text-primary)]">
-                        {formatMoney(order.total_minor, locale)}
-                      </strong>
-                      <small className="mt-1.5 block text-[10px] text-[var(--text-muted)]">
-                        {new Intl.DateTimeFormat(locale, {
-                          dateStyle: "medium",
-                        }).format(new Date(order.created_at))}
-                      </small>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                          </div>
+                        ) : (
+                          <small className="mt-1.5 block text-[10px] uppercase text-[var(--text-muted)]">
+                            {order.payment_status.replaceAll("_", " ")}
+                          </small>
+                        )}
+                        <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
+                          <Link
+                            href={
+                              `/${locale}/track/${order.order_number}` as Route
+                            }
+                          >
+                            {locale === "ar" ? "تتبع" : "Track"}
+                          </Link>
+                          <Link
+                            href={
+                              `/${locale}/account/orders/${order.order_number}/invoice` as Route
+                            }
+                          >
+                            {locale === "ar" ? "الفاتورة" : "Invoice"}
+                          </Link>
+                          {order.status === "delivered" &&
+                            isWithinReturnWindow(order.delivered_at) && (
+                              <Link
+                                href={
+                                  `/${locale}/account/returns/new?order=${order.id}` as Route
+                                }
+                              >
+                                {locale === "ar"
+                                  ? "استرجاع / استبدال"
+                                  : "Return / exchange"}
+                              </Link>
+                            )}
+                        </span>
+                      </div>
+                      <div className="text-end">
+                        <strong className="block text-sm font-semibold text-[var(--text-primary)]">
+                          {formatMoney(order.total_minor, locale)}
+                        </strong>
+                        <small className="mt-1.5 block text-[10px] text-[var(--text-muted)]">
+                          {new Intl.DateTimeFormat(locale, {
+                            dateStyle: "medium",
+                          }).format(new Date(order.created_at))}
+                        </small>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <PaginationNav
+                  locale={locale}
+                  pathname={`/${locale}/account`}
+                  currentPage={orderPagination.currentPage}
+                  totalItems={orderPagination.totalItems}
+                  pageSize={ORDERS_PER_PAGE}
+                  pageParam="orderPage"
+                  anchor="account-orders"
+                  itemLabel={{ en: "orders", ar: "طلب" }}
+                  hideWhenSinglePage
+                  className="mt-4"
+                />
+              </>
             ) : (
               <div className="mt-5 rounded-xs border border-dashed border-[var(--border-subtle)] bg-[var(--surface-raised)] p-8 text-center">
                 <p className="text-sm text-[var(--text-muted)]">

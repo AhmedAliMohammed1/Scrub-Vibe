@@ -51,7 +51,25 @@ const schema = z.object({
   trackingUrl: z.union([z.literal(""), z.url().max(1000)]),
   proofStatus: z.enum(["", "approved", "rejected"]),
   currentFilter: z.string().optional(),
+  currentPage: z.coerce.number().int().min(1).optional(),
 });
+
+function adminOrdersQuery({
+  filter,
+  page,
+  messageKey,
+  message,
+}: {
+  filter?: string;
+  page?: number;
+  messageKey: "error" | "success";
+  message: string;
+}) {
+  const params = new URLSearchParams({ [messageKey]: message });
+  if (filter) params.set("status", filter);
+  if (page && page > 1) params.set("page", String(page));
+  return params.toString();
+}
 
 function formatOrderErrorMessage(raw: string, locale: Locale): string {
   const isAr = locale === "ar";
@@ -159,11 +177,8 @@ export async function updateOrderAction(formData: FormData) {
 
   if (error) {
     const friendly = formatOrderErrorMessage(error.message, value.locale);
-    const filterQuery = value.currentFilter
-      ? `&status=${encodeURIComponent(value.currentFilter)}`
-      : "";
     redirect(
-      `/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}${filterQuery}`,
+      `/${value.locale}/admin/orders?${adminOrdersQuery({ filter: value.currentFilter, page: value.currentPage, messageKey: "error", message: friendly })}`,
     );
   }
 
@@ -261,10 +276,7 @@ export async function updateOrderAction(formData: FormData) {
     value.locale === "ar"
       ? "تم تحديث الطلب بنجاح."
       : "Order updated successfully.";
-  const filterQuery = value.currentFilter
-    ? `&status=${encodeURIComponent(value.currentFilter)}`
-    : "";
   redirect(
-    `/${value.locale}/admin/orders?success=${encodeURIComponent(successMsg)}${filterQuery}`,
+    `/${value.locale}/admin/orders?${adminOrdersQuery({ filter: value.currentFilter, page: value.currentPage, messageKey: "success", message: successMsg })}`,
   );
 }

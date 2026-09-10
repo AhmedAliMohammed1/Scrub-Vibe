@@ -16,6 +16,8 @@ import {
 import { isLocale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 import { requireRoles } from "@/server/auth/roles";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { paginateItems, parsePage } from "@/lib/pagination";
 
 export const metadata: Metadata = {
   title: "Discounts & campaigns | Scrub Vibe Admin",
@@ -35,12 +37,16 @@ type CodeWithStats = AdminDiscountCode & {
   discount_redemptions: Redemption[];
 };
 
+const RECORDS_PER_PAGE = 10;
+
 export default async function AdminDiscountsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ campaignPage?: string; codePage?: string }>;
 }) {
-  const { locale } = await params;
+  const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
   const { supabase } = await requireRoles(["admin", "super_admin"]);
   const [campaignsResult, codesResult] = await Promise.all([
@@ -85,6 +91,16 @@ export default async function AdminDiscountsPage({
       (!item.starts_on || item.starts_on <= today) &&
       (!item.ends_on || item.ends_on >= today),
   ).length;
+  const pagedCampaigns = paginateItems(
+    campaigns,
+    parsePage(query.campaignPage),
+    RECORDS_PER_PAGE,
+  );
+  const pagedCodes = paginateItems(
+    codes,
+    parsePage(query.codePage),
+    RECORDS_PER_PAGE,
+  );
   const ar = locale === "ar";
 
   return (
@@ -193,8 +209,20 @@ export default async function AdminDiscountsPage({
                 : "Order value is the total of orders that redeemed a code, not collected revenue."}
             </p>
           </div>
-          <div className="mt-5 grid gap-4">
-            {campaigns.map((campaign) => {
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin/discounts`}
+            searchParams={query}
+            currentPage={pagedCampaigns.pagination.currentPage}
+            totalItems={campaigns.length}
+            pageSize={RECORDS_PER_PAGE}
+            pageParam="campaignPage"
+            anchor="campaign-list"
+            itemLabel={{ en: "campaigns", ar: "حملة" }}
+            className="mt-5"
+          />
+          <div id="campaign-list" className="mt-5 grid scroll-mt-6 gap-4">
+            {pagedCampaigns.items.map((campaign) => {
               const campaignCodes = codes.filter(
                 (code) => code.campaign_id === campaign.id,
               );
@@ -255,7 +283,7 @@ export default async function AdminDiscountsPage({
                         value={formatMoney(spent, locale)}
                       />
                       <Stat
-                      label={ar ? "قيمة الطلبات" : "Order value"}
+                        label={ar ? "قيمة الطلبات" : "Order value"}
                         value={formatMoney(revenue, locale)}
                       />
                     </div>
@@ -311,6 +339,19 @@ export default async function AdminDiscountsPage({
                 : "Create the first campaign to connect codes to a channel and budget."}
             </Empty>
           )}
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin/discounts`}
+            searchParams={query}
+            currentPage={pagedCampaigns.pagination.currentPage}
+            totalItems={campaigns.length}
+            pageSize={RECORDS_PER_PAGE}
+            pageParam="campaignPage"
+            anchor="campaign-list"
+            itemLabel={{ en: "campaigns", ar: "حملة" }}
+            hideWhenSinglePage
+            className="mt-5"
+          />
         </section>
 
         <section>
@@ -320,8 +361,20 @@ export default async function AdminDiscountsPage({
           <h2 className="mt-2 font-serif text-4xl md:text-5xl">
             {ar ? "الاستخدام والحدود" : "Usage & limits"}
           </h2>
-          <div className="mt-5 grid gap-4">
-            {codes.map((code) => {
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin/discounts`}
+            searchParams={query}
+            currentPage={pagedCodes.pagination.currentPage}
+            totalItems={codes.length}
+            pageSize={RECORDS_PER_PAGE}
+            pageParam="codePage"
+            anchor="discount-code-list"
+            itemLabel={{ en: "codes", ar: "كود" }}
+            className="mt-5"
+          />
+          <div id="discount-code-list" className="mt-5 grid scroll-mt-6 gap-4">
+            {pagedCodes.items.map((code) => {
               const used = code.discount_redemptions.length;
               const spent = code.discount_redemptions.reduce(
                 (sum, item) => sum + item.discount_minor,
@@ -408,6 +461,19 @@ export default async function AdminDiscountsPage({
               {ar ? "لا توجد أكواد خصم بعد." : "No discount codes yet."}
             </Empty>
           )}
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/admin/discounts`}
+            searchParams={query}
+            currentPage={pagedCodes.pagination.currentPage}
+            totalItems={codes.length}
+            pageSize={RECORDS_PER_PAGE}
+            pageParam="codePage"
+            anchor="discount-code-list"
+            itemLabel={{ en: "codes", ar: "كود" }}
+            hideWhenSinglePage
+            className="mt-5"
+          />
         </section>
       </div>
     </main>

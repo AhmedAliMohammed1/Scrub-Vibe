@@ -12,6 +12,10 @@ import {
 } from "@/features/catalog/filters";
 import { catalog } from "@/lib/catalog";
 import { isLocale } from "@/lib/i18n";
+import { PaginationNav } from "@/components/ui/pagination-nav";
+import { paginateItems, parsePage } from "@/lib/pagination";
+
+const PRODUCTS_PER_PAGE = 12;
 
 const headings = {
   en: {
@@ -77,6 +81,11 @@ export default async function ShopPage({
   const filters = parseCatalogFilters(query);
   const allProducts = await catalog.featured();
   const products = filterCatalog(allProducts, filters, locale);
+  const pagedProducts = paginateItems(
+    products,
+    parsePage(query.page),
+    PRODUCTS_PER_PAGE,
+  );
   const t = headings[locale];
 
   const heading = filters.query
@@ -88,15 +97,41 @@ export default async function ShopPage({
   // Quick navigation pills
   const activeCategory = filters.category;
   const isSale = filters.saleOnly;
-  const isLabCoat = filters.query?.toLowerCase().includes("lab coat") || filters.query?.toLowerCase().includes("بالطو");
+  const isLabCoat =
+    filters.query?.toLowerCase().includes("lab coat") ||
+    filters.query?.toLowerCase().includes("بالطو");
 
   const categoryPills = [
-    { label: t.categories.all, href: `/${locale}/shop`, active: !activeCategory && !isSale && !isLabCoat && !filters.query },
-    { label: t.categories.women, href: `/${locale}/shop?category=women`, active: activeCategory === "women" },
-    { label: t.categories.men, href: `/${locale}/shop?category=men`, active: activeCategory === "men" },
-    { label: t.categories.new, href: `/${locale}/shop?category=new`, active: activeCategory === "new" },
-    { label: t.categories.labCoat, href: `/${locale}/shop?q=lab+coat`, active: isLabCoat },
-    { label: t.categories.sale, href: `/${locale}/shop?sale=1`, active: Boolean(isSale) },
+    {
+      label: t.categories.all,
+      href: `/${locale}/shop`,
+      active: !activeCategory && !isSale && !isLabCoat && !filters.query,
+    },
+    {
+      label: t.categories.women,
+      href: `/${locale}/shop?category=women`,
+      active: activeCategory === "women",
+    },
+    {
+      label: t.categories.men,
+      href: `/${locale}/shop?category=men`,
+      active: activeCategory === "men",
+    },
+    {
+      label: t.categories.new,
+      href: `/${locale}/shop?category=new`,
+      active: activeCategory === "new",
+    },
+    {
+      label: t.categories.labCoat,
+      href: `/${locale}/shop?q=lab+coat`,
+      active: isLabCoat,
+    },
+    {
+      label: t.categories.sale,
+      href: `/${locale}/shop?sale=1`,
+      active: Boolean(isSale),
+    },
   ];
 
   return (
@@ -143,16 +178,43 @@ export default async function ShopPage({
 
       {/* Product Catalog Grid */}
       {products.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-12 py-8 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
-          {products.map((product, index) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              locale={locale}
-              priority={index < 4}
-            />
-          ))}
-        </div>
+        <>
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/shop`}
+            searchParams={query}
+            currentPage={pagedProducts.pagination.currentPage}
+            totalItems={products.length}
+            pageSize={PRODUCTS_PER_PAGE}
+            anchor="catalog-grid"
+            itemLabel={{ en: "items", ar: "قطعة" }}
+            className="mt-6"
+          />
+          <div
+            id="catalog-grid"
+            className="grid scroll-mt-6 grid-cols-2 gap-x-4 gap-y-12 py-8 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8"
+          >
+            {pagedProducts.items.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                locale={locale}
+                priority={index < 4}
+              />
+            ))}
+          </div>
+          <PaginationNav
+            locale={locale}
+            pathname={`/${locale}/shop`}
+            searchParams={query}
+            currentPage={pagedProducts.pagination.currentPage}
+            totalItems={products.length}
+            pageSize={PRODUCTS_PER_PAGE}
+            anchor="catalog-grid"
+            itemLabel={{ en: "items", ar: "قطعة" }}
+            hideWhenSinglePage
+          />
+        </>
       ) : (
         /* Empty Results State */
         <section className="my-12 rounded-xs border border-[var(--border-subtle)] bg-white px-6 py-20 text-center shadow-xs">
