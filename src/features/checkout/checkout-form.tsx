@@ -41,6 +41,10 @@ import {
 } from "@/features/orders/claim-actions";
 import { createClient } from "@/lib/supabase/client";
 import { trackStoreEvent } from "@/lib/analytics";
+import {
+  isReliableCustomerName,
+  normalizeCustomerName,
+} from "@/features/checkout/validation";
 
 type PaymentMethod = "cod" | "vodafone_cash" | "instapay" | "paymob";
 type DepositMethod = "vodafone_cash" | "instapay";
@@ -131,6 +135,7 @@ export function CheckoutForm({
   const [customerName, setCustomerName] = useState(
     defaultAddress?.recipientName ?? customerProfile?.full_name ?? "",
   );
+  const [customerNameTouched, setCustomerNameTouched] = useState(false);
   const [email, setEmail] = useState(customerProfile?.email ?? "");
   const [phone, setPhone] = useState(defaultAddress?.phone ?? "");
   const [otp, setOtp] = useState("");
@@ -250,6 +255,7 @@ export function CheckoutForm({
     } else {
       setSelectedAddressId(addr.id);
       setCustomerName(addr.recipientName);
+      setCustomerNameTouched(false);
       setPhone(addr.phone);
       setGovernorateCode(addr.governorateCode);
       setCityCode(addr.cityCode);
@@ -386,8 +392,8 @@ export function CheckoutForm({
       "أدخل رقم موبايل مصري صحيح.",
     ],
     invalid_customerName: [
-      "Enter your full name (at least 2 characters).",
-      "أدخل الاسم بالكامل (حرفان على الأقل).",
+      "Enter your first and last name using letters, hyphens, or apostrophes.",
+      "أدخل الاسم الأول واسم العائلة باستخدام الحروف أو الشرطة أو الفاصلة العليا.",
     ],
     invalid_email: [
       "Enter a valid email address or leave it empty.",
@@ -632,6 +638,17 @@ export function CheckoutForm({
 
   async function placeOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const normalizedCustomerName = normalizeCustomerName(customerName);
+    if (!isReliableCustomerName(normalizedCustomerName)) {
+      setCustomerName(normalizedCustomerName);
+      setCustomerNameTouched(true);
+      showError("invalid_customerName");
+      requestAnimationFrame(() => {
+        document.getElementById("customerName")?.focus();
+      });
+      return;
+    }
+    setCustomerName(normalizedCustomerName);
     if (otpEnabled && !verificationToken) {
       setError(
         ar
@@ -724,7 +741,7 @@ export function CheckoutForm({
       verificationToken,
       locale,
       phone,
-      customerName: form.get("customerName"),
+      customerName: normalizedCustomerName,
       email: form.get("email"),
       governorateCode,
       cityCode,
@@ -796,7 +813,7 @@ export function CheckoutForm({
             trackingToken: result.trackingToken,
             email: email.trim(),
             password: accountPassword,
-            fullName: customerName.trim(),
+            fullName: normalizedCustomerName,
             phone: phone.trim(),
             locale,
           });
@@ -819,7 +836,7 @@ export function CheckoutForm({
             "");
       createCustomerAddressAction({
         label: newAddressLabel,
-        recipientName: customerName.trim(),
+        recipientName: normalizedCustomerName,
         phone: phone.trim(),
         governorateCode,
         cityCode,
@@ -984,14 +1001,52 @@ export function CheckoutForm({
               <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
                 {ar ? "الاسم بالكامل" : "Full name"}
                 <input
+                  id="customerName"
                   name="customerName"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className={inputClass}
+                  onChange={(event) => setCustomerName(event.target.value)}
+                  onBlur={() => {
+                    const normalized = normalizeCustomerName(customerName);
+                    setCustomerName(normalized);
+                    setCustomerNameTouched(true);
+                  }}
+                  className={`${inputClass} ${
+                    customerNameTouched && !isReliableCustomerName(customerName)
+                      ? "border-red-500 focus:border-red-600 focus:ring-red-500/20"
+                      : ""
+                  }`}
                   required
-                  minLength={2}
+                  minLength={3}
+                  maxLength={120}
                   autoComplete="name"
+                  autoCapitalize="words"
+                  aria-invalid={
+                    customerNameTouched && !isReliableCustomerName(customerName)
+                  }
+                  aria-describedby={
+                    customerNameTouched && !isReliableCustomerName(customerName)
+                      ? "customerName-error customerName-hint"
+                      : "customerName-hint"
+                  }
                 />
+                <span
+                  id="customerName-hint"
+                  className="text-[11px] font-medium leading-4 text-[var(--text-muted)]"
+                >
+                  {ar
+                    ? "اكتب الاسم الأول واسم العائلة كما سيظهران في بيانات التوصيل."
+                    : "Use your first and last name as they should appear for delivery."}
+                </span>
+                {customerNameTouched &&
+                  !isReliableCustomerName(customerName) && (
+                    <span
+                      id="customerName-error"
+                      role="alert"
+                      className="text-[11px] font-semibold leading-4 text-red-700"
+                    >
+                      {copy.invalid_customerName[ar ? 1 : 0]}
+                    </span>
+                  )}
               </label>
               <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
                 {ar ? "البريد الإلكتروني (اختياري)" : "Email (optional)"}
