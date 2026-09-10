@@ -17,19 +17,32 @@ export function AddProduct({
   locale,
   sizeChartEntries = [],
   isProductOverride = false,
+  selectedColourCode: controlledColourCode,
+  onSelectColourCode,
 }: {
   product: Product;
   locale: Locale;
   sizeChartEntries?: SizeChartEntry[];
   isProductOverride?: boolean;
+  selectedColourCode?: string;
+  onSelectColourCode?: (code: string) => void;
 }) {
   const initialColour =
     product.colors.find((colour) => colour.inStock) ?? product.colors[0];
-  const [colourCode, setColourCode] = useState(initialColour?.code ?? "");
+  const [internalColourCode, setInternalColourCode] = useState(initialColour?.code ?? "");
+  const colourCode =
+    controlledColourCode !== undefined ? controlledColourCode : internalColourCode;
+  const setColourCode = (code: string) => {
+    setInternalColourCode(code);
+    onSelectColourCode?.(code);
+  };
   const selectedColour =
     product.colors.find((colour) => colour.code === colourCode) ??
     initialColour;
-  const [size, setSize] = useState(initialColour?.sizes[0] ?? "");
+  const [selectedSize, setSelectedSize] = useState(initialColour?.sizes[0] ?? "");
+  const size = selectedColour?.sizes.includes(selectedSize)
+    ? selectedSize
+    : (selectedColour?.sizes[0] ?? "");
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const { addToCart, toggleWishlist, wishlist } = useShop();
@@ -78,7 +91,7 @@ export function AddProduct({
                 onClick={() => {
                   setColourCode(colour.code);
                   if (!colour.sizes.includes(size)) {
-                    setSize(colour.sizes[0] ?? "");
+                    setSelectedSize(colour.sizes[0] ?? "");
                   }
                 }}
                 className={`relative size-11 rounded-full border-2 border-white shadow-xs transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-30 ${
@@ -127,7 +140,7 @@ export function AddProduct({
               <button
                 key={s}
                 type="button"
-                onClick={() => setSize(s)}
+                onClick={() => setSelectedSize(s)}
                 aria-pressed={isSelected}
                 className={`min-h-12 rounded-xs border text-xs font-bold transition ${
                   isSelected
@@ -199,7 +212,7 @@ export function AddProduct({
         availableSizes={selectedColour?.sizes ?? product.sizes}
         locale={locale}
         currentSize={size}
-        onSelectSize={(newSize) => setSize(newSize)}
+        onSelectSize={(newSize) => setSelectedSize(newSize)}
       />
     </div>
   );

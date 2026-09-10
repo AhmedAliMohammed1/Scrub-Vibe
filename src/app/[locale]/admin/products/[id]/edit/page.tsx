@@ -49,7 +49,7 @@ export default async function AdminEditProductPage({
           cod_deposit_minor,
           category_id,
           product_translations(locale, title, description),
-          product_images(id, storage_path, alt_en, alt_ar, position),
+          product_images(id, storage_path, alt_en, alt_ar, position, colour_code),
           product_options(
             id, code, name_en, name_ar, position,
             product_option_values(id, code, label_en, label_ar, swatch_hex, position)

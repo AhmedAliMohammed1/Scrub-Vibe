@@ -16,7 +16,7 @@ const catalogSelect = `
   cod_deposit_minor,
   compare_at_price_minor,
   product_translations(locale, title, description),
-  product_images(storage_path, alt_en, alt_ar, position),
+  product_images(id, storage_path, alt_en, alt_ar, position, colour_code),
   product_options(
     code,
     position,

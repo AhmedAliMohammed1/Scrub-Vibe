@@ -8,7 +8,7 @@ type ProductTranslation = Pick<
 
 type ProductImage = Pick<
   Database["public"]["Tables"]["product_images"]["Row"],
-  "storage_path" | "alt_en" | "alt_ar" | "position"
+  "id" | "storage_path" | "alt_en" | "alt_ar" | "position" | "colour_code"
 >;
 
 type OptionValue = Pick<
@@ -174,9 +174,24 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
       inventory.on_hand - inventory.reserved <= inventory.low_stock_threshold
     );
   });
-  const image = row.product_images.toSorted(
-    (a, b) => a.position - b.position,
-  )[0];
+  const mappedImages = (row.product_images ?? [])
+    .toSorted((a, b) => a.position - b.position)
+    .map((img) => ({
+      id: img.id,
+      src: img.storage_path,
+      alt: {
+        en: img.alt_en || titleFor(row.product_translations, "en") || row.slug,
+        ar:
+          img.alt_ar ||
+          titleFor(row.product_translations, "ar") ||
+          img.alt_en ||
+          titleFor(row.product_translations, "en") ||
+          row.slug,
+      },
+      colourCode: img.colour_code,
+      position: img.position,
+    }));
+  const primaryImage = mappedImages[0];
 
   return {
     id: String(row.id),
@@ -210,15 +225,18 @@ export function mapCatalogProduct(row: CatalogProductRow): Product {
         ? "low"
         : "new",
     art: artFor(primaryColour.swatch),
+    images: mappedImages,
     image: {
-      src: image?.storage_path ?? "/images/scrub-vibe/female-collection.webp",
+      src: primaryImage?.src ?? "/images/scrub-vibe/female-collection.webp",
       alt: {
         en:
-          image?.alt_en ?? titleFor(row.product_translations, "en") ?? row.slug,
+          primaryImage?.alt.en ??
+          titleFor(row.product_translations, "en") ??
+          row.slug,
         ar:
-          image?.alt_ar ??
+          primaryImage?.alt.ar ??
           titleFor(row.product_translations, "ar") ??
-          image?.alt_en ??
+          primaryImage?.alt.en ??
           titleFor(row.product_translations, "en") ??
           row.slug,
       },

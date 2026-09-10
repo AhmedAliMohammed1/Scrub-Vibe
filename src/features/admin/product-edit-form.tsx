@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,6 +61,7 @@ export type ProductEditDetails = {
     alt_en: string;
     alt_ar?: string | null;
     position: number;
+    colour_code?: string | null;
   }[];
   product_options: {
     id: number;
@@ -123,10 +124,6 @@ export function ProductEditForm({
     product.product_translations.find((t) => t.locale === "ar")?.description ??
     "";
 
-  const initialImage = product.product_images.toSorted(
-    (a, b) => a.position - b.position,
-  )[0];
-
   // Extract colours from product_options
   const colourOption = product.product_options.find((o) => o.code === "color");
   const initialColours: ColourInput[] = colourOption?.product_option_values
@@ -152,10 +149,78 @@ export function ProductEditForm({
 
   const [slug, setSlug] = useState(product.slug);
   const [colours, setColours] = useState<ColourInput[]>(initialColours);
-  const [fileName, setFileName] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialImage?.storage_path ?? null,
+  const [existingImages, setExistingImages] = useState<{
+    id: number;
+    src: string;
+    colourCode: string;
+    position: number;
+    altEn: string;
+    altAr: string;
+  }[]>(
+    (product.product_images ?? []).map((img, idx) => ({
+      id: img.id ?? idx,
+      src: img.storage_path,
+      colourCode: img.colour_code ?? "",
+      position: img.position ?? (idx + 1) * 10,
+      altEn: img.alt_en ?? "",
+      altAr: img.alt_ar ?? "",
+    })),
   );
+  const [newFiles, setNewFiles] = useState<{
+    id: string;
+    file: File;
+    previewUrl: string;
+    colourCode: string;
+    position: number;
+  }[]>([]);
+  const [newUrls, setNewUrls] = useState<{
+    id: string;
+    url: string;
+    colourCode: string;
+    position: number;
+  }[]>([]);
+  const [batchUploadColour, setBatchUploadColour] = useState<string>("");
+  const [newUrlInput, setNewUrlInput] = useState<string>("");
+  const [newUrlColour, setNewUrlColour] = useState<string>("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (fileInputRef.current) {
+      const dt = new DataTransfer();
+      for (const nf of newFiles) {
+        dt.items.add(nf.file);
+      }
+      fileInputRef.current.files = dt.files;
+    }
+  }, [newFiles]);
+
+  const handleFilesChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const added = files.map((file, idx) => ({
+      id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      colourCode: batchUploadColour,
+      position: (existingImages.length + newFiles.length + newUrls.length + idx + 1) * 10,
+    }));
+    setNewFiles((prev) => [...prev, ...added]);
+    e.target.value = "";
+  };
+
+  const handleAddUrl = () => {
+    if (!newUrlInput.trim()) return;
+    const item = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      url: newUrlInput.trim(),
+      colourCode: newUrlColour,
+      position: (existingImages.length + newFiles.length + newUrls.length + 1) * 10,
+    };
+    setNewUrls((prev) => [...prev, item]);
+    setNewUrlInput("");
+  };
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -549,87 +614,486 @@ export function ProductEditForm({
           </div>
         </section>
 
-        {/* Section 4: Product Image */}
+        {/* Section 4: Product Media & Gallery */}
         <section className="border border-black/10 bg-white p-6 shadow-xs md:p-8">
-          <div className="border-b border-black/10 pb-4">
-            <h2 className="font-serif text-2xl font-bold text-neutral-900">
-              {ar ? "صورة المنتج والوسائط" : "Media & Product Image"}
-            </h2>
-            <p className="mt-1 text-xs text-neutral-500">
-              {ar
-                ? "يمكنك الإبقاء على الصورة الحالية، أو رفع صورة بديلة جديدة، أو إدخال رابط خارجي."
-                : "Keep the current image, upload a replacement image file, or provide an external URL."}
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-4">
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-neutral-900">
+                {ar ? "معرض وصور المنتج والألوان" : "Media & Product Gallery"}
+              </h2>
+              <p className="mt-1 text-xs text-neutral-500">
+                {ar
+                  ? "أضف صوراً متعددة للمنتج وحدد اللون الخاص بكل صورة، أو اجعلها صورة عامة لكافة الألوان. في حال عدم وجود صور لأحد الألوان، سيقوم المتجر تلقائياً بعرض صور لون بديل مع إشعار للمستخدم."
+                  : "Add multiple product images and assign them to specific colours or all colours. If a colour has no images, the storefront displays images from an available colour with a friendly note."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-neutral-500">
+                {existingImages.length + newFiles.length + newUrls.length}{" "}
+                {ar ? "صور" : "images"}
+              </span>
+            </div>
           </div>
 
-          <div className="mt-6 grid gap-6 md:grid-cols-[160px_1fr]">
-            {/* Image Preview */}
-            <div className="relative size-40 overflow-hidden border border-black/15 bg-neutral-100 flex items-center justify-center">
-              {imagePreview ? (
-                <Image
-                  src={imagePreview}
-                  alt={titleEn || "Product"}
-                  fill
-                  sizes="160px"
-                  className="object-cover"
-                />
-              ) : (
-                <Package className="size-12 text-neutral-300" />
-              )}
-            </div>
+          {/* Current / Active Images List */}
+          <div className="mt-6">
+            <label className="block text-[10px] font-bold uppercase tracking-[.14em] text-neutral-600 mb-3">
+              {ar ? "الصور الحالية والمرفوعة" : "Current & Uploaded Images"}
+            </label>
 
-            {/* Upload & URL Controls */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-[.14em] text-neutral-600">
-                  {ar ? "استبدال الصورة بملف جديد" : "Upload Replacement Image"}
+            {existingImages.length === 0 &&
+            newFiles.length === 0 &&
+            newUrls.length === 0 ? (
+              <div className="flex flex-col items-center justify-center border border-dashed border-black/15 bg-neutral-50 py-10 text-center">
+                <Package className="size-10 text-neutral-300 mb-2" />
+                <p className="text-xs text-neutral-500">
+                  {ar
+                    ? "لا توجد صور مضافة بعد. استخدم أدوات الرفع أدناه."
+                    : "No images added yet. Use the upload tools below."}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Existing Saved Images */}
+                {existingImages.map((img, idx) => {
+                  const assignedColour = colours.find(
+                    (c) => c.code === img.colourCode,
+                  );
+                  return (
+                    <div
+                      key={`existing-${img.id}-${idx}`}
+                      className="group relative flex flex-col border border-black/10 bg-[#fafafa] p-3 transition hover:border-[#0e7468]"
+                    >
+                      <div className="relative aspect-square w-full overflow-hidden bg-neutral-200 border border-black/5">
+                        <Image
+                          src={img.src}
+                          alt={img.altEn || "Product"}
+                          fill
+                          sizes="200px"
+                          className="object-cover object-top"
+                        />
+                        {assignedColour ? (
+                          <div className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-neutral-800 shadow-xs backdrop-blur-xs">
+                            <span
+                              className="size-2.5 rounded-full border border-black/20"
+                              style={{ backgroundColor: assignedColour.hex }}
+                            />
+                            <span>
+                              {ar ? assignedColour.ar : assignedColour.en}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="absolute top-2 left-2 rounded-full bg-neutral-900/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-xs backdrop-blur-xs">
+                            {ar ? "كافة الألوان" : "All Colours"}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExistingImages((prev) =>
+                              prev.filter((item) => item.id !== img.id),
+                            )
+                          }
+                          className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/90 text-neutral-600 shadow-xs hover:bg-red-50 hover:text-red-700 transition"
+                          title={ar ? "حذف الصورة" : "Remove image"}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      {/* Card Settings */}
+                      <div className="mt-3 space-y-2">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                            {ar ? "اللون المخصص" : "Assigned Colour"}
+                          </label>
+                          <select
+                            value={img.colourCode}
+                            onChange={(e) =>
+                              setExistingImages((prev) =>
+                                prev.map((item) =>
+                                  item.id === img.id
+                                    ? { ...item, colourCode: e.target.value }
+                                    : item,
+                                ),
+                              )
+                            }
+                            className="mt-1 h-9 w-full border border-black/15 bg-white px-2 text-xs font-medium text-neutral-800 outline-hidden focus:border-[#0e7468]"
+                          >
+                            <option value="">
+                              {ar
+                                ? "كافة الألوان (عامة)"
+                                : "All Colours (General)"}
+                            </option>
+                            {colours.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.en} / {c.ar}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                            {ar ? "الترتيب" : "Position"}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={img.position}
+                            onChange={(e) =>
+                              setExistingImages((prev) =>
+                                prev.map((item) =>
+                                  item.id === img.id
+                                    ? {
+                                        ...item,
+                                        position:
+                                          Number(e.target.value) || 0,
+                                      }
+                                    : item,
+                                ),
+                              )
+                            }
+                            className="h-8 w-20 border border-black/15 bg-white px-2 text-center text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Pending New Files */}
+                {newFiles.map((nf) => {
+                  const assignedColour = colours.find(
+                    (c) => c.code === nf.colourCode,
+                  );
+                  return (
+                    <div
+                      key={`new-file-${nf.id}`}
+                      className="group relative flex flex-col border-2 border-dashed border-[#0e7468]/40 bg-[#f0f9f7] p-3"
+                    >
+                      <div className="relative aspect-square w-full overflow-hidden bg-neutral-200 border border-black/5">
+                        <Image
+                          src={nf.previewUrl}
+                          alt="New upload"
+                          fill
+                          sizes="200px"
+                          className="object-cover object-top"
+                        />
+                        {assignedColour ? (
+                          <div className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-neutral-800 shadow-xs backdrop-blur-xs">
+                            <span
+                              className="size-2.5 rounded-full border border-black/20"
+                              style={{ backgroundColor: assignedColour.hex }}
+                            />
+                            <span>{ar ? assignedColour.ar : assignedColour.en}</span>
+                          </div>
+                        ) : (
+                          <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-[#0e7468] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                            <span>{ar ? "جديد" : "New"}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNewFiles((prev) =>
+                              prev.filter((item) => item.id !== nf.id),
+                            )
+                          }
+                          className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/90 text-neutral-600 shadow-xs hover:bg-red-50 hover:text-red-700 transition"
+                          title={ar ? "إلغاء الصورة" : "Cancel image"}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                            {ar ? "اللون المخصص" : "Assigned Colour"}
+                          </label>
+                          <select
+                            value={nf.colourCode}
+                            onChange={(e) =>
+                              setNewFiles((prev) =>
+                                prev.map((item) =>
+                                  item.id === nf.id
+                                    ? { ...item, colourCode: e.target.value }
+                                    : item,
+                                ),
+                              )
+                            }
+                            className="mt-1 h-9 w-full border border-black/15 bg-white px-2 text-xs font-medium text-neutral-800 outline-hidden focus:border-[#0e7468]"
+                          >
+                            <option value="">
+                              {ar
+                                ? "كافة الألوان (عامة)"
+                                : "All Colours (General)"}
+                            </option>
+                            {colours.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.en} / {c.ar}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                            {ar ? "الترتيب" : "Position"}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={nf.position}
+                            onChange={(e) =>
+                              setNewFiles((prev) =>
+                                prev.map((item) =>
+                                  item.id === nf.id
+                                    ? {
+                                        ...item,
+                                        position:
+                                          Number(e.target.value) || 0,
+                                      }
+                                    : item,
+                                ),
+                              )
+                            }
+                            className="h-8 w-20 border border-black/15 bg-white px-2 text-center text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Pending New URLs */}
+                {newUrls.map((nu) => (
+                  <div
+                    key={`new-url-${nu.id}`}
+                    className="group relative flex flex-col border-2 border-dashed border-blue-400/40 bg-blue-50/40 p-3"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden bg-neutral-200 border border-black/5">
+                      <Image
+                        src={nu.url}
+                        alt="External image"
+                        fill
+                        sizes="200px"
+                        className="object-cover object-top"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewUrls((prev) =>
+                            prev.filter((item) => item.id !== nu.id),
+                          )
+                        }
+                        className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/90 text-neutral-600 shadow-xs hover:bg-red-50 hover:text-red-700 transition"
+                        title={ar ? "إلغاء الرابط" : "Cancel URL"}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                          {ar ? "اللون المخصص" : "Assigned Colour"}
+                        </label>
+                        <select
+                          value={nu.colourCode}
+                          onChange={(e) =>
+                            setNewUrls((prev) =>
+                              prev.map((item) =>
+                                item.id === nu.id
+                                  ? { ...item, colourCode: e.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          className="mt-1 h-9 w-full border border-black/15 bg-white px-2 text-xs font-medium text-neutral-800 outline-hidden focus:border-[#0e7468]"
+                        >
+                          <option value="">
+                            {ar
+                              ? "كافة الألوان (عامة)"
+                              : "All Colours (General)"}
+                          </option>
+                          {colours.map((c) => (
+                            <option key={c.code} value={c.code}>
+                              {c.en} / {c.ar}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                          {ar ? "الترتيب" : "Position"}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={nu.position}
+                          onChange={(e) =>
+                            setNewUrls((prev) =>
+                              prev.map((item) =>
+                                item.id === nu.id
+                                  ? {
+                                      ...item,
+                                      position:
+                                        Number(e.target.value) || 0,
+                                    }
+                                  : item,
+                              ),
+                            )
+                          }
+                          className="h-8 w-20 border border-black/15 bg-white px-2 text-center text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Upload New Images / Add URL Controls */}
+          <div className="mt-8 border-t border-black/10 pt-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900 mb-3">
+              {ar ? "إضافة صور جديدة للمنتج" : "Upload New Images"}
+            </h3>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Multi-file Uploader */}
+              <div className="rounded-xs border border-black/10 bg-[#fafafa] p-4">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-600 mb-2">
+                  {ar
+                    ? "١. حدد اللون المراد الرفع له:"
+                    : "1. Select Colour for Upload:"}
                 </label>
-                <label
-                  className={`${inputClass} flex cursor-pointer items-center gap-2 mt-2`}
+                <select
+                  value={batchUploadColour}
+                  onChange={(e) => setBatchUploadColour(e.target.value)}
+                  className="mb-4 h-10 w-full border border-black/15 bg-white px-3 text-xs font-medium text-neutral-800 outline-hidden focus:border-[#0e7468]"
                 >
-                  <ImagePlus size={17} />
-                  <span className="truncate text-xs">
-                    {fileName ||
-                      (ar
-                        ? "اختر صورة جديدة (JPG, PNG, WebP)"
-                        : "Choose new image file (JPG, PNG, WebP)")}
+                  <option value="">
+                    {ar
+                      ? "كافة الألوان (صور عامة)"
+                      : "All Colours (General Images)"}
+                  </option>
+                  {colours.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.en} / {c.ar}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-600 mb-2">
+                  {ar
+                    ? "٢. اختر ملفات الصور (واحدة أو أكثر):"
+                    : "2. Choose Image Files (One or Multiple):"}
+                </label>
+                <label className="flex h-11 cursor-pointer items-center justify-center gap-2 border border-[#0e7468] bg-[#0e7468]/5 px-4 text-xs font-bold text-[#0e7468] hover:bg-[#0e7468]/10 transition">
+                  <ImagePlus size={16} />
+                  <span>
+                    {ar
+                      ? "اختر صور من جهازك (JPG, PNG, WebP)"
+                      : "Select Images (JPG, PNG, WebP)"}
                   </span>
                   <input
-                    name="image"
                     type="file"
+                    multiple
                     accept="image/jpeg,image/png,image/webp,image/avif"
                     className="sr-only"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFileName(file.name);
-                        setImagePreview(URL.createObjectURL(file));
-                      }
-                    }}
+                    onChange={handleFilesChosen}
                   />
                 </label>
-                {errorFor("image") && (
-                  <p className="mt-1 text-[11px] text-red-700">
-                    {errorFor("image")}
-                  </p>
-                )}
               </div>
 
-              <Label
-                text={ar ? "أو رابط صورة خارجي (URL)" : "Or External Image URL"}
-                hint={ar ? "اختياري" : "Optional"}
-                error={errorFor("imageUrl")}
-              >
-                <input
-                  name="imageUrl"
-                  type="url"
-                  defaultValue={initialImage?.storage_path ?? ""}
-                  placeholder="https://…"
-                  className={inputClass}
-                />
-              </Label>
+              {/* URL Adder */}
+              <div className="rounded-xs border border-black/10 bg-[#fafafa] p-4">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-600 mb-2">
+                  {ar
+                    ? "أو أضف رابط صورة خارجي (URL):"
+                    : "Or Add External Image URL:"}
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="url"
+                    value={newUrlInput}
+                    onChange={(e) => setNewUrlInput(e.target.value)}
+                    placeholder="https://..."
+                    className="h-10 w-full border border-black/15 bg-white px-3 text-xs"
+                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={newUrlColour}
+                      onChange={(e) => setNewUrlColour(e.target.value)}
+                      className="h-10 flex-1 border border-black/15 bg-white px-3 text-xs"
+                    >
+                      <option value="">
+                        {ar ? "كافة الألوان" : "All Colours"}
+                      </option>
+                      {colours.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.en} / {c.ar}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddUrl}
+                      className="inline-flex h-10 items-center gap-1.5 border border-black/20 bg-white px-4 text-xs font-bold hover:bg-neutral-50 transition"
+                    >
+                      <Plus size={14} />
+                      <span>{ar ? "إضافة" : "Add"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Hidden Form Inputs */}
+          <input
+            type="hidden"
+            name="existing_images"
+            value={JSON.stringify(existingImages)}
+          />
+          <input
+            type="hidden"
+            name="new_images_metadata"
+            value={JSON.stringify(
+              newFiles.map((f, idx) => ({
+                index: idx,
+                colourCode: f.colourCode || null,
+                position: f.position,
+              })),
+            )}
+          />
+          <input
+            type="hidden"
+            name="new_image_urls"
+            value={JSON.stringify(
+              newUrls.map((u) => ({
+                src: u.url,
+                colourCode: u.colourCode || null,
+                position: u.position,
+              })),
+            )}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="new_images"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            readOnly
+          />
         </section>
 
         {/* Section 5: Colours & Palette */}

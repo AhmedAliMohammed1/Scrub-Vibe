@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, RotateCcw, ShieldCheck, Truck } from "lucide-react";
-import { AddProduct } from "@/components/store/add-product";
+import { ProductInteractiveSection } from "@/components/store/product-interactive-section";
 import { ProductCard } from "@/components/store/product-card";
 import { BundleCard } from "@/features/commercial/bundle-card";
 import { StockNotifyForm } from "@/features/commercial/stock-notify-form";
@@ -96,94 +95,91 @@ export default async function ProductPage({ params }: Props) {
         </span>
       </nav>
 
-      {/* Main PDP Grid */}
-      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
-        {/* Media Frame */}
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xs border border-[var(--border-subtle)] bg-[#ebe9e4] shadow-xs lg:aspect-auto lg:min-h-[720px]">
-          <Image
-            src={p.image.src}
-            alt={p.image.alt[locale]}
-            fill
-            preload
-            sizes="(min-width: 1024px) 60vw, 100vw"
-            className="object-cover object-top"
-          />
-        </div>
+      {/* Interactive PDP Section: Dynamic Gallery & Purchase Pane */}
+      <ProductInteractiveSection
+        product={p}
+        locale={locale}
+        sizeChartEntries={sizeChartResult.entries}
+        isProductOverride={sizeChartResult.isProductOverride}
+        headerContent={
+          <>
+            <p className="eyebrow text-[#0e7468]">
+              SCRUB VIBE · {p.category}
+            </p>
 
-        {/* Product Purchase Pane */}
-        <div className="min-w-0 lg:sticky lg:top-24 lg:self-start lg:py-2">
-          <p className="eyebrow text-[#0e7468]">
-            SCRUB VIBE · {p.category}
-          </p>
+            <h1 className="mt-3 font-serif text-3xl sm:text-4xl lg:text-5xl text-[var(--text-strong)] leading-tight">
+              {p.title[locale]}
+            </h1>
 
-          <h1 className="mt-3 font-serif text-3xl sm:text-4xl lg:text-5xl text-[var(--text-strong)] leading-tight">
-            {p.title[locale]}
-          </h1>
+            {/* Pricing Row */}
+            <div className="mt-5 flex flex-wrap items-baseline gap-3">
+              <strong className="text-2xl font-bold text-[var(--text-strong)]">
+                {formatMoney(p.price, locale)}
+              </strong>
+              {p.compareAt && (
+                <>
+                  <span className="text-sm text-[var(--text-muted)] line-through">
+                    {formatMoney(p.compareAt, locale)}
+                  </span>
+                  <span className="rounded-xs bg-[#a5472f] px-2 py-0.5 text-xs font-bold text-white shadow-2xs">
+                    -{sale}%
+                  </span>
+                </>
+              )}
+            </div>
 
-          {/* Pricing Row */}
-          <div className="mt-5 flex flex-wrap items-baseline gap-3">
-            <strong className="text-2xl font-bold text-[var(--text-strong)]">
-              {formatMoney(p.price, locale)}
-            </strong>
-            {p.compareAt && (
-              <>
-                <span className="text-sm text-[var(--text-muted)] line-through">
-                  {formatMoney(p.compareAt, locale)}
-                </span>
-                <span className="rounded-xs bg-[#a5472f] px-2 py-0.5 text-xs font-bold text-white shadow-2xs">
-                  -{sale}%
-                </span>
-              </>
-            )}
-          </div>
+            {/* Description */}
+            <p className="mt-5 max-w-lg text-sm leading-relaxed text-[var(--text-muted)] sm:text-base">
+              {p.description[locale]}
+            </p>
+          </>
+        }
+        footerContent={
+          <>
+            {(!p.inStock ||
+              p.colors.some((colour) =>
+                Object.values(colour.stockBySize).some(
+                  (quantity) => quantity <= 0,
+                ),
+              )) && <StockNotifyForm product={p} locale={locale} />}
 
-          {/* Description */}
-          <p className="mt-5 max-w-lg text-sm leading-relaxed text-[var(--text-muted)] sm:text-base">
-            {p.description[locale]}
-          </p>
-
-          {/* Color & Size Selectors with Add to Bag */}
-          <AddProduct
-            product={p}
-            locale={locale}
-            sizeChartEntries={sizeChartResult.entries}
-            isProductOverride={sizeChartResult.isProductOverride}
-          />
-          {(!p.inStock || p.colors.some((colour) =>
-            Object.values(colour.stockBySize).some((quantity) => quantity <= 0),
-          )) && <StockNotifyForm product={p} locale={locale} />}
-
-          {/* Trust Assurances */}
-          <div className="mt-10 divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-strong)]">
-            {(ar
-              ? [
-                  [Truck, "توصيل سريع لجميع محافظات مصر الـ ٢٧"],
-                  [RotateCcw, "استبدال واسترجاع مرن خلال ١٤ يوماً من الاستلام"],
-                  [ShieldCheck, "دفع آمن ومحمي، مع خيار الدفع عند الاستلام بمقدم"],
-                ]
-              : [
-                  [Truck, "Fast delivery across all 27 Egypt governorates"],
-                  [RotateCcw, "14-day hassle-free replacement and returns"],
-                  [
-                    ShieldCheck,
-                    "Secure payment, with cash on delivery with deposit option",
-                  ],
-                ]
-            ).map(([Icon, text]) => {
-              const C = Icon as typeof Truck;
-              return (
-                <div
-                  key={String(text)}
-                  className="flex items-center gap-3.5 py-4"
-                >
-                  <C size={18} className="shrink-0 text-[#0e7468]" strokeWidth={1.8} aria-hidden="true" />
-                  <span>{text as string}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+            {/* Trust Assurances */}
+            <div className="mt-10 divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-strong)]">
+              {(ar
+                ? [
+                    [Truck, "توصيل سريع لجميع محافظات مصر الـ ٢٧"],
+                    [RotateCcw, "استبدال واسترجاع مرن خلال ١٤ يوماً من الاستلام"],
+                    [ShieldCheck, "دفع آمن ومحمي، مع خيار الدفع عند الاستلام بمقدم"],
+                  ]
+                : [
+                    [Truck, "Fast delivery across all 27 Egypt governorates"],
+                    [RotateCcw, "14-day hassle-free replacement and returns"],
+                    [
+                      ShieldCheck,
+                      "Secure payment, with cash on delivery with deposit option",
+                    ],
+                  ]
+              ).map(([Icon, text]) => {
+                const C = Icon as typeof Truck;
+                return (
+                  <div
+                    key={String(text)}
+                    className="flex items-center gap-3.5 py-4"
+                  >
+                    <C
+                      size={18}
+                      className="shrink-0 text-[#0e7468]"
+                      strokeWidth={1.8}
+                      aria-hidden="true"
+                    />
+                    <span>{text as string}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        }
+      />
 
       {merchandising.bundles.map((bundle) => (
         <BundleCard key={bundle.id} bundle={bundle} locale={locale} />

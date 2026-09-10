@@ -1311,6 +1311,7 @@ export type Database = {
         Row: {
           alt_ar: string | null
           alt_en: string
+          colour_code: string | null
           created_at: string
           height: number | null
           id: number
@@ -1322,6 +1323,7 @@ export type Database = {
         Insert: {
           alt_ar?: string | null
           alt_en: string
+          colour_code?: string | null
           created_at?: string
           height?: number | null
           id?: never
@@ -1333,6 +1335,7 @@ export type Database = {
         Update: {
           alt_ar?: string | null
           alt_en?: string
+          colour_code?: string | null
           created_at?: string
           height?: number | null
           id?: never
@@ -2250,7 +2253,8 @@ export type Database = {
           p_description_en: string
           p_fit: string
           p_gender: string
-          p_image_url: string
+          p_image_url?: string
+          p_images?: Json
           p_low_stock_threshold: number
           p_material: string
           p_sizes: string[]
@@ -2287,18 +2291,19 @@ export type Database = {
         Args: {
           p_base_price_minor: number
           p_category_id: number
-          p_cod_deposit_minor: number
-          p_colours: Json
-          p_compare_at_price_minor: number
-          p_cost_minor: number
+          p_cod_deposit_minor?: number
+          p_colours?: Json
+          p_compare_at_price_minor?: number
+          p_cost_minor?: number
           p_description_ar: string
           p_description_en: string
-          p_fit: string
+          p_fit?: string
           p_gender: string
           p_image_url?: string
-          p_material: string
+          p_images?: Json
+          p_material?: string
           p_product_id: number
-          p_sizes: string[]
+          p_sizes?: string[]
           p_slug: string
           p_status: Database["public"]["Enums"]["product_status"]
           p_title_ar: string

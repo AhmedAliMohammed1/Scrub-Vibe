@@ -10,6 +10,14 @@ export type ProductColour = {
   inStock: boolean;
 };
 
+export type ProductImage = {
+  id?: number;
+  src: string;
+  alt: { en: string; ar: string };
+  colourCode?: string | null;
+  position: number;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -28,4 +36,5 @@ export type Product = {
   badge?: "new" | "sale" | "low";
   art: "clay" | "olive" | "ink" | "sand";
   image: { src: string; alt: { en: string; ar: string } };
+  images?: ProductImage[];
 };

@@ -25,10 +25,12 @@ const row: CatalogProductRow = {
   ],
   product_images: [
     {
+      id: 1,
       storage_path: "/images/scrub-vibe/female-design-2.webp",
       alt_en: "Women's Design 2 Scrub Set",
       alt_ar: "طقم سكراب حريمي تصميم ٢",
       position: 10,
+      colour_code: null,
     },
   ],
   product_options: [
@@ -168,6 +170,18 @@ describe("Supabase catalogue mapping", () => {
           ar: "طقم سكراب حريمي تصميم ٢",
         },
       },
+      images: [
+        {
+          id: 1,
+          src: "/images/scrub-vibe/female-design-2.webp",
+          alt: {
+            en: "Women's Design 2 Scrub Set",
+            ar: "طقم سكراب حريمي تصميم ٢",
+          },
+          colourCode: null,
+          position: 10,
+        },
+      ],
     });
   });
 

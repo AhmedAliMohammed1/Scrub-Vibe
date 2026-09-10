@@ -28,6 +28,36 @@ function revalidateCatalogue(locale: Locale) {
   revalidatePath(`/${locale}/shop`);
 }
 
+const allowedImageTypes = new Map([
+  ["image/jpeg", "jpg"],
+  ["image/png", "png"],
+  ["image/webp", "webp"],
+  ["image/avif", "avif"],
+]);
+
+async function uploadProductFile(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  userId: string,
+  file: File,
+  slug: string,
+): Promise<{ path: string; url: string } | { error: string }> {
+  const extension = allowedImageTypes.get(file.type);
+  if (!extension || file.size > 5 * 1024 * 1024) {
+    return { error: "invalid_file" };
+  }
+  const uploadedPath = `${userId}/${slug}-${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from("product-media")
+    .upload(uploadedPath, file, { contentType: file.type, upsert: false });
+  if (uploadError) {
+    return { error: "upload_failed" };
+  }
+  const url = supabase.storage.from("product-media").getPublicUrl(uploadedPath)
+    .data.publicUrl;
+  return { path: uploadedPath, url };
+}
+
 export async function createProductAction(
   _state: AdminActionState,
   formData: FormData,
@@ -91,18 +121,13 @@ export async function createProductAction(
     };
   }
 
+  const uploadedPaths: string[] = [];
   let imageUrl = data.imageUrl;
-  let uploadedPath: string | null = null;
+
   const image = formData.get("image");
   if (image instanceof File && image.size > 0) {
-    const allowed = new Map([
-      ["image/jpeg", "jpg"],
-      ["image/png", "png"],
-      ["image/webp", "webp"],
-      ["image/avif", "avif"],
-    ]);
-    const extension = allowed.get(image.type);
-    if (!extension || image.size > 5 * 1024 * 1024) {
+    const res = await uploadProductFile(supabase, userId, image, data.slug);
+    if ("error" in res) {
       return {
         status: "error",
         message: message(
@@ -115,23 +140,78 @@ export async function createProductAction(
         },
       };
     }
+    uploadedPaths.push(res.path);
+    imageUrl = res.url;
+  }
 
-    uploadedPath = `${userId}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage
-      .from("product-media")
-      .upload(uploadedPath, image, { contentType: image.type, upsert: false });
-    if (uploadError) {
+  const newFiles = formData
+    .getAll("new_images")
+    .filter((item): item is File => item instanceof File && item.size > 0);
+
+  let newImagesMeta: { index: number; colourCode?: string | null; position?: number }[] = [];
+  const newImagesMetaRaw = formData.get("new_images_metadata");
+  if (typeof newImagesMetaRaw === "string" && newImagesMetaRaw.trim()) {
+    try {
+      newImagesMeta = JSON.parse(newImagesMetaRaw);
+    } catch {
+      newImagesMeta = [];
+    }
+  }
+
+  let newUrls: { src: string; colourCode?: string | null; position?: number }[] = [];
+  const newUrlsRaw = formData.get("new_image_urls");
+  if (typeof newUrlsRaw === "string" && newUrlsRaw.trim()) {
+    try {
+      newUrls = JSON.parse(newUrlsRaw);
+    } catch {
+      newUrls = [];
+    }
+  }
+
+  const uploadedNewImages: { url: string; colourCode: string | null; position: number }[] = [];
+  for (let i = 0; i < newFiles.length; i++) {
+    const file = newFiles[i];
+    const res = await uploadProductFile(supabase, userId, file, data.slug);
+    if ("error" in res) {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from("product-media").remove(uploadedPaths);
+      }
       return {
         status: "error",
         message: message(
           locale,
-          "The product image could not be uploaded.",
-          "تعذر رفع صورة المنتج.",
+          "One or more images could not be uploaded. Use JPG, PNG, WebP, or AVIF up to 5 MB.",
+          "تعذر رفع بعض الصور. تأكد من أن الصور بصيغة JPG أو PNG أو WebP أو AVIF وبحجم لا يتجاوز ٥ ميجابايت.",
         ),
       };
     }
-    imageUrl = supabase.storage.from("product-media").getPublicUrl(uploadedPath)
-      .data.publicUrl;
+    uploadedPaths.push(res.path);
+    const meta = newImagesMeta.find((m) => m.index === i);
+    uploadedNewImages.push({
+      url: res.url,
+      colourCode: meta?.colourCode ? meta.colourCode.trim() : null,
+      position: meta?.position ?? (i + 1) * 10,
+    });
+  }
+
+  let pImages: { storage_path: string; colour_code: string | null; position: number; alt_en: string; alt_ar: string }[] | null = null;
+  if (uploadedNewImages.length > 0 || newUrls.length > 0) {
+    pImages = [
+      ...uploadedNewImages.map((img) => ({
+        storage_path: img.url,
+        colour_code: img.colourCode,
+        position: img.position,
+        alt_en: data.titleEn,
+        alt_ar: data.titleAr,
+      })),
+      ...newUrls.map((img, idx) => ({
+        storage_path: img.src,
+        colour_code: img.colourCode ? img.colourCode.trim() : null,
+        position: img.position ?? (uploadedNewImages.length + idx + 1) * 10,
+        alt_en: data.titleEn,
+        alt_ar: data.titleAr,
+      })),
+    ];
   }
 
   const { data: productId, error } = await supabase.rpc("admin_create_product_with_colours", {
@@ -153,12 +233,13 @@ export async function createProductAction(
     p_sizes: sizes,
     p_stock: data.stock,
     p_low_stock_threshold: data.lowStockThreshold,
-    p_image_url: imageUrl,
+    p_image_url: imageUrl || (pImages?.[0]?.storage_path ?? ""),
+    p_images: pImages,
   });
 
   if (error) {
-    if (uploadedPath) {
-      await supabase.storage.from("product-media").remove([uploadedPath]);
+    if (uploadedPaths.length > 0) {
+      await supabase.storage.from("product-media").remove(uploadedPaths);
     }
     const duplicate = error.code === "23505";
     return {
@@ -344,18 +425,13 @@ export async function updateProductAction(
     };
   }
 
+  const uploadedPaths: string[] = [];
   let imageUrl = data.imageUrl;
-  let uploadedPath: string | null = null;
+
   const image = formData.get("image");
   if (image instanceof File && image.size > 0) {
-    const allowed = new Map([
-      ["image/jpeg", "jpg"],
-      ["image/png", "png"],
-      ["image/webp", "webp"],
-      ["image/avif", "avif"],
-    ]);
-    const extension = allowed.get(image.type);
-    if (!extension || image.size > 5 * 1024 * 1024) {
+    const res = await uploadProductFile(supabase, userId, image, data.slug);
+    if ("error" in res) {
       return {
         status: "error",
         message: message(
@@ -368,23 +444,97 @@ export async function updateProductAction(
         },
       };
     }
+    uploadedPaths.push(res.path);
+    imageUrl = res.url;
+  }
 
-    uploadedPath = `${userId}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage
-      .from("product-media")
-      .upload(uploadedPath, image, { contentType: image.type, upsert: false });
-    if (uploadError) {
+  // Multi-image fields
+  const existingImagesRaw = formData.get("existing_images");
+  let existingImages: { id: number; src: string; colourCode?: string | null; position?: number; altEn?: string; altAr?: string }[] | null = null;
+  if (typeof existingImagesRaw === "string" && existingImagesRaw.trim()) {
+    try {
+      existingImages = JSON.parse(existingImagesRaw);
+    } catch {
+      existingImages = null;
+    }
+  }
+
+  const newFiles = formData
+    .getAll("new_images")
+    .filter((item): item is File => item instanceof File && item.size > 0);
+
+  let newImagesMeta: { index: number; colourCode?: string | null; position?: number }[] = [];
+  const newImagesMetaRaw = formData.get("new_images_metadata");
+  if (typeof newImagesMetaRaw === "string" && newImagesMetaRaw.trim()) {
+    try {
+      newImagesMeta = JSON.parse(newImagesMetaRaw);
+    } catch {
+      newImagesMeta = [];
+    }
+  }
+
+  let newUrls: { src: string; colourCode?: string | null; position?: number }[] = [];
+  const newUrlsRaw = formData.get("new_image_urls");
+  if (typeof newUrlsRaw === "string" && newUrlsRaw.trim()) {
+    try {
+      newUrls = JSON.parse(newUrlsRaw);
+    } catch {
+      newUrls = [];
+    }
+  }
+
+  const uploadedNewImages: { url: string; colourCode: string | null; position: number }[] = [];
+  for (let i = 0; i < newFiles.length; i++) {
+    const file = newFiles[i];
+    const res = await uploadProductFile(supabase, userId, file, data.slug);
+    if ("error" in res) {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from("product-media").remove(uploadedPaths);
+      }
       return {
         status: "error",
         message: message(
           locale,
-          "The product image could not be uploaded.",
-          "تعذر رفع صورة المنتج.",
+          "One or more images could not be uploaded. Use JPG, PNG, WebP, or AVIF up to 5 MB.",
+          "تعذر رفع بعض الصور. تأكد من أن الصور بصيغة JPG أو PNG أو WebP أو AVIF وبحجم لا يتجاوز ٥ ميجابايت.",
         ),
       };
     }
-    imageUrl = supabase.storage.from("product-media").getPublicUrl(uploadedPath)
-      .data.publicUrl;
+    uploadedPaths.push(res.path);
+    const meta = newImagesMeta.find((m) => m.index === i);
+    uploadedNewImages.push({
+      url: res.url,
+      colourCode: meta?.colourCode ? meta.colourCode.trim() : null,
+      position: meta?.position ?? (i + 1) * 10 + 100,
+    });
+  }
+
+  let pImages: { id?: number; storage_path: string; colour_code: string | null; position: number; alt_en: string; alt_ar: string }[] | null = null;
+  if (existingImages !== null || uploadedNewImages.length > 0 || newUrls.length > 0) {
+    pImages = [
+      ...(existingImages ?? []).map((img, idx) => ({
+        id: img.id,
+        storage_path: img.src,
+        colour_code: img.colourCode ? img.colourCode.trim() : null,
+        position: img.position ?? (idx + 1) * 10,
+        alt_en: img.altEn || data.titleEn,
+        alt_ar: img.altAr || data.titleAr,
+      })),
+      ...uploadedNewImages.map((img) => ({
+        storage_path: img.url,
+        colour_code: img.colourCode,
+        position: img.position,
+        alt_en: data.titleEn,
+        alt_ar: data.titleAr,
+      })),
+      ...newUrls.map((img, idx) => ({
+        storage_path: img.src,
+        colour_code: img.colourCode ? img.colourCode.trim() : null,
+        position: img.position ?? (idx + 1) * 10 + 200,
+        alt_en: data.titleEn,
+        alt_ar: data.titleAr,
+      })),
+    ];
   }
 
   const { error } = await supabase.rpc("admin_update_product", {
@@ -406,12 +556,13 @@ export async function updateProductAction(
     p_fit: data.fit,
     p_colours: parsedColours.data,
     p_sizes: sizes,
-    p_image_url: imageUrl || undefined,
+    p_image_url: imageUrl || (pImages?.[0]?.storage_path ?? undefined),
+    p_images: pImages,
   });
 
   if (error) {
-    if (uploadedPath) {
-      await supabase.storage.from("product-media").remove([uploadedPath]);
+    if (uploadedPaths.length > 0) {
+      await supabase.storage.from("product-media").remove(uploadedPaths);
     }
     const duplicate = error.code === "23505";
     return {

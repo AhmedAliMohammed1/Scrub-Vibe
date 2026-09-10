@@ -14,6 +14,16 @@ export const colourItemSchema = z.object({
 
 export const colourListSchema = z.array(colourItemSchema).min(1).max(12);
 
+export const imageItemSchema = z.object({
+  id: z.number().int().positive().optional(),
+  src: z.string().trim().min(1),
+  colourCode: z.string().trim().nullable().optional(),
+  position: z.number().int().default(10),
+  altEn: z.string().trim().optional(),
+  altAr: z.string().trim().optional(),
+});
+
+
 export const productSchema = z
   .object({
     locale: z.enum(["en", "ar"]),
