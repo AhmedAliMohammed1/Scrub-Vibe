@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   ChevronRight,
   Heart,
+  Instagram,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -147,7 +148,7 @@ export function Header({
           {/* Logo brand mark */}
           <Link
             href={`/${locale}`}
-            className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-lg font-black tracking-[-.04em] sm:text-2xl"
+            className="absolute left-1/2 inline-flex min-h-11 -translate-x-1/2 items-center whitespace-nowrap text-base font-black tracking-[-.04em] min-[360px]:text-lg sm:text-2xl"
             aria-label={labels.home}
           >
             <span className="text-[#073b36]">SCRUB</span>
@@ -159,7 +160,7 @@ export function Header({
             {/* Search */}
             <Link
               href={`/${locale}/shop#catalog-search`}
-              className="grid size-9 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 sm:size-10"
+              className="hidden size-11 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 lg:grid"
               aria-label={labels.search}
             >
               <Search size={19} strokeWidth={1.8} aria-hidden="true" />
@@ -168,14 +169,14 @@ export function Header({
             {/* Sign In / My Account Button */}
             <Link
               href={`/${locale}/account` as Route}
-              className="flex h-9 items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-2 text-[11px] font-bold uppercase tracking-wider text-[var(--text-strong)] shadow-2xs transition-all hover:border-[#0e7468] hover:text-[#0e7468] active:scale-[0.98] sm:px-2.5"
+              className="hidden min-h-11 items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-2.5 text-[11px] font-bold uppercase tracking-wider text-[var(--text-strong)] shadow-2xs transition-all hover:border-[#0e7468] hover:text-[#0e7468] active:scale-[0.98] lg:flex"
               aria-label={
                 viewer.isAuthenticated ? labels.account : labels.signIn
               }
               title={viewer.isAuthenticated ? labels.account : labels.signIn}
             >
               <UserRound size={15} strokeWidth={2} aria-hidden="true" />
-              <span className="hidden min-[480px]:inline">
+              <span className="hidden xl:inline">
                 {viewer.isAuthenticated ? labels.account : labels.signIn}
               </span>
             </Link>
@@ -185,7 +186,7 @@ export function Header({
                 <input type="hidden" name="locale" value={locale} />
                 <button
                   type="submit"
-                  className="flex size-9 items-center justify-center rounded-xs border border-[var(--border-subtle)] bg-white text-[var(--text-strong)] shadow-2xs hover:border-[#0e7468] hover:text-[#0e7468] sm:size-10 xl:w-auto xl:gap-1.5 xl:px-2.5"
+                  className="hidden size-11 items-center justify-center rounded-xs border border-[var(--border-subtle)] bg-white text-[var(--text-strong)] shadow-2xs hover:border-[#0e7468] hover:text-[#0e7468] lg:flex xl:w-auto xl:gap-1.5 xl:px-2.5"
                   aria-label={labels.signOut}
                   title={labels.signOut}
                 >
@@ -197,11 +198,11 @@ export function Header({
               </form>
             )}
 
-            {/* Admin Dashboard button (visible on screens >= md) */}
+            {/* Admin Dashboard button joins the full desktop navigation. */}
             {viewer.canAccessAdmin && (
               <Link
                 href={`/${locale}/admin` as Route}
-                className="hidden h-9 items-center gap-1.5 rounded-xs bg-[#073b36] px-2.5 text-[10px] font-bold uppercase tracking-[.12em] text-white shadow-2xs transition-all hover:bg-[#0e7468] active:scale-[0.98] md:flex"
+                className="hidden min-h-11 items-center gap-1.5 rounded-xs bg-[#073b36] px-2.5 text-[10px] font-bold uppercase tracking-[.12em] text-white shadow-2xs transition-all hover:bg-[#0e7468] active:scale-[0.98] xl:flex"
                 title={labels.admin}
               >
                 <LayoutDashboard size={13} strokeWidth={2} aria-hidden="true" />
@@ -212,7 +213,7 @@ export function Header({
             {/* Wishlist */}
             <Link
               href={`/${locale}/wishlist`}
-              className="relative grid size-9 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 sm:size-10"
+              className="relative grid size-11 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5"
               aria-label={labels.wishlist}
             >
               <Heart size={19} strokeWidth={1.8} aria-hidden="true" />
@@ -224,7 +225,7 @@ export function Header({
             {/* Cart */}
             <Link
               href={`/${locale}/cart`}
-              className="relative grid size-9 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 sm:size-10"
+              className="relative grid size-11 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5"
               aria-label={labels.cart}
             >
               <ShoppingBag size={19} strokeWidth={1.8} aria-hidden="true" />
@@ -234,7 +235,7 @@ export function Header({
             {/* Language switch */}
             <Link
               href={`/${other}` as Route}
-              className="ms-0.5 flex h-9 items-center rounded-xs border-s border-black/15 ps-2 text-[11px] font-bold uppercase text-[var(--text-strong)] hover:text-[#0e7468] sm:ms-1 sm:ps-3"
+              className="ms-1 hidden min-h-11 items-center rounded-xs border-s border-black/15 ps-3 text-[11px] font-bold uppercase text-[var(--text-strong)] hover:text-[#0e7468] lg:flex"
             >
               {other === "ar" ? "العربية" : "EN"}
             </Link>
@@ -318,7 +319,7 @@ export function Header({
           <Link
             href={`/${locale}`}
             onClick={() => setMobileNavOpen(false)}
-            className="text-lg font-black tracking-[-.04em]"
+            className="inline-flex min-h-11 items-center text-lg font-black tracking-[-.04em]"
           >
             <span className="text-[#073b36]">SCRUB</span>
             <span className="ms-1.5 font-light text-[#0e7468]">VIBE</span>
@@ -326,7 +327,7 @@ export function Header({
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}
-            className="grid size-10 place-items-center rounded-sm hover:bg-black/5"
+            className="grid size-11 place-items-center rounded-sm hover:bg-black/5"
             aria-label={labels.close}
           >
             <X size={20} aria-hidden="true" />
@@ -483,7 +484,7 @@ export function Header({
               }}
               className="flex min-h-11 items-center gap-3 text-xs font-semibold text-[var(--text-strong)] hover:text-[#0e7468]"
             >
-              <span>📷</span>
+              <Instagram size={17} strokeWidth={1.8} aria-hidden="true" />
               {t.nav[4]}
             </a>
           </div>

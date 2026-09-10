@@ -148,10 +148,10 @@ export default async function AccountPage({ params, searchParams }: Props) {
                   {orderRows.map((order) => (
                     <article
                       key={order.id}
-                      className="group flex items-center justify-between gap-4 p-4 transition-colors hover:bg-[var(--surface-sunken)]/60"
+                      className="group flex flex-col items-stretch justify-between gap-4 p-4 transition-colors hover:bg-[var(--surface-sunken)]/60 sm:flex-row sm:items-center"
                     >
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <strong className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
                             {order.order_number}
                           </strong>
@@ -170,7 +170,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
                               href={
                                 `/${locale}/track/${order.order_number}#reupload-proof` as Route
                               }
-                              className="text-[10px] font-bold uppercase tracking-wider text-[#a5472f] underline underline-offset-4 hover:text-[#073b36]"
+                              className="inline-flex min-h-11 items-center text-[10px] font-bold uppercase tracking-wider text-[#a5472f] underline underline-offset-4 hover:text-[#073b36]"
                             >
                               {locale === "ar"
                                 ? "إعادة رفع الإيصال ←"
@@ -182,7 +182,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
                             {order.payment_status.replaceAll("_", " ")}
                           </small>
                         )}
-                        <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
+                        <span className="mt-2 flex flex-wrap gap-x-4 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)] [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center">
                           <Link
                             href={
                               `/${locale}/track/${order.order_number}` as Route
@@ -211,7 +211,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
                             )}
                         </span>
                       </div>
-                      <div className="text-end">
+                      <div className="flex items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-3 text-start sm:block sm:border-0 sm:pt-0 sm:text-end">
                         <strong className="block text-sm font-semibold text-[var(--text-primary)]">
                           {formatMoney(order.total_minor, locale)}
                         </strong>

@@ -25,7 +25,7 @@ export function SiteFooter({
         <div>
           <Link
             href={`/${locale}`}
-            className="text-2xl font-black tracking-[-.04em]"
+            className="inline-flex min-h-11 items-center text-2xl font-black tracking-[-.04em]"
             aria-label={ar ? "سكراب فايب الرئيسية" : "Scrub Vibe home"}
           >
             SCRUB <span className="font-light text-[#81c5b8]">VIBE</span>
@@ -53,31 +53,31 @@ export function SiteFooter({
           <div className="mt-4 grid gap-2.5 text-sm text-white/75">
             <Link
               href={`/${locale}/shop?category=women`}
-              className="transition-colors hover:text-white"
+              className="flex min-h-11 items-center transition-colors hover:text-white"
             >
               {ar ? "سكراب حريمي" : "Female scrubs"}
             </Link>
             <Link
               href={`/${locale}/shop?category=men`}
-              className="transition-colors hover:text-white"
+              className="flex min-h-11 items-center transition-colors hover:text-white"
             >
               {ar ? "سكراب رجالي" : "Male scrubs"}
             </Link>
             <Link
               href={`/${locale}/shop?q=lab+coat`}
-              className="transition-colors hover:text-white"
+              className="flex min-h-11 items-center transition-colors hover:text-white"
             >
               {ar ? "بالطو طبي ولاب كوت" : "Lab coats"}
             </Link>
             <Link
               href={`/${locale}/shop?sale=1`}
-              className="transition-colors hover:text-white text-[#81c5b8]"
+              className="flex min-h-11 items-center text-[#81c5b8] transition-colors hover:text-white"
             >
               {ar ? "العروض الخاصة" : "Special offers"}
             </Link>
             <Link
               href={`/${locale}/account`}
-              className="transition-colors hover:text-white"
+              className="flex min-h-11 items-center transition-colors hover:text-white"
             >
               {viewer.isAuthenticated
                 ? ar
@@ -89,14 +89,14 @@ export function SiteFooter({
             </Link>
             <Link
               href={`/${locale}/account` as Route}
-              className="transition-colors hover:text-white"
+              className="flex min-h-11 items-center transition-colors hover:text-white"
             >
               {ar ? "تتبع الطلبات" : "Track an order"}
             </Link>
             {viewer.canAccessAdmin && (
               <Link
                 href={`/${locale}/admin` as Route}
-                className="font-medium text-[#81c5b8] transition-colors hover:text-white"
+                className="flex min-h-11 items-center font-medium text-[#81c5b8] transition-colors hover:text-white"
               >
                 {ar ? "لوحة إدارة المتجر (Admin)" : "Store Admin Dashboard"}
               </Link>
@@ -112,7 +112,7 @@ export function SiteFooter({
           <div className="mt-4 grid gap-3 text-sm text-white/75">
             <a
               href="tel:01096733209"
-              className="flex min-h-10 items-center gap-3 transition-colors hover:text-white"
+              className="flex min-h-11 items-center gap-3 transition-colors hover:text-white"
             >
               <Phone
                 size={16}
@@ -123,7 +123,7 @@ export function SiteFooter({
             </a>
             <a
               href="mailto:scrubvibe30@gmail.com"
-              className="flex min-h-10 items-center gap-3 transition-colors hover:text-white"
+              className="flex min-h-11 items-center gap-3 transition-colors hover:text-white"
             >
               <Mail
                 size={16}
@@ -136,7 +136,7 @@ export function SiteFooter({
               href="https://www.instagram.com/scrubvibe_egy/"
               target="_blank"
               rel="noreferrer"
-              className="flex min-h-10 items-center gap-3 transition-colors hover:text-white"
+              className="flex min-h-11 items-center gap-3 transition-colors hover:text-white"
             >
               <Instagram
                 size={16}

@@ -88,8 +88,10 @@ export function ProductCard({
           <button
             type="button"
             onClick={() => toggleWishlist(product.id)}
-            className={`absolute end-2.5 top-2.5 z-10 grid size-10 place-items-center rounded-full bg-white/95 shadow-xs transition hover:scale-105 sm:end-3 sm:top-3 ${
-              wished ? "text-[#a5472f]" : "text-[var(--text-strong)] hover:text-[#073b36]"
+            className={`absolute end-2.5 top-2.5 z-10 grid size-11 place-items-center rounded-full bg-white/95 shadow-xs transition hover:scale-105 sm:end-3 sm:top-3 ${
+              wished
+                ? "text-[#a5472f]"
+                : "text-[var(--text-strong)] hover:text-[#073b36]"
             }`}
             aria-label={
               wished
@@ -123,10 +125,16 @@ export function ProductCard({
           >
             <span
               key={feedbackVersion}
-              className={added ? "quick-add-confirm" : "flex items-center gap-2"}
+              className={
+                added ? "quick-add-confirm" : "flex items-center gap-2"
+              }
               aria-hidden="true"
             >
-              {added ? <Check size={16} strokeWidth={2.5} /> : <Plus size={15} />}
+              {added ? (
+                <Check size={16} strokeWidth={2.5} />
+              ) : (
+                <Plus size={15} />
+              )}
               {added ? addedLabel : quickAddLabel}
             </span>
           </Button>

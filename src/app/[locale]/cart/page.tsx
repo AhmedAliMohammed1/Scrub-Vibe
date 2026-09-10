@@ -75,7 +75,11 @@ export default function CartPage({
             className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-xs bg-[#073b36] px-8 text-xs font-bold uppercase tracking-[.14em] text-white shadow-xs hover:bg-[#0e7468]"
           >
             {ar ? "ابدأ التسوق الآن" : "Start shopping now"}
-            <ArrowRight size={15} className="rtl:rotate-180" aria-hidden="true" />
+            <ArrowRight
+              size={15}
+              className="rtl:rotate-180"
+              aria-hidden="true"
+            />
           </Link>
         </section>
       ) : (
@@ -89,7 +93,7 @@ export default function CartPage({
             {cartItems.map((line) => (
               <article
                 key={line.key}
-                className="grid grid-cols-[88px_minmax(0,1fr)_auto] gap-4 p-5 sm:grid-cols-[112px_minmax(0,1fr)_auto] sm:gap-6"
+                className="relative grid grid-cols-[72px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[112px_minmax(0,1fr)_auto] sm:gap-6 sm:p-5"
               >
                 {/* Product Image */}
                 <Link
@@ -106,7 +110,7 @@ export default function CartPage({
                 </Link>
 
                 {/* Details */}
-                <div className="min-w-0">
+                <div className="min-w-0 pe-8 sm:pe-0">
                   <Link
                     href={`/${locale}/products/${line.slug}` as Route}
                     className="line-clamp-2 text-sm font-semibold text-[var(--text-strong)] transition-colors hover:text-[#0e7468]"
@@ -137,7 +141,7 @@ export default function CartPage({
                       onClick={() => updateQuantity(line.key, -1)}
                       disabled={line.quantity <= 1}
                       aria-label={ar ? "تقليل الكمية" : "Decrease quantity"}
-                      className="grid size-10 place-items-center text-[var(--text-strong)] hover:bg-black/5 disabled:opacity-30"
+                      className="grid size-11 place-items-center text-[var(--text-strong)] hover:bg-black/5 disabled:opacity-30"
                     >
                       <Minus size={13} aria-hidden="true" />
                     </button>
@@ -152,7 +156,7 @@ export default function CartPage({
                       onClick={() => updateQuantity(line.key, 1)}
                       disabled={line.quantity >= 10}
                       aria-label={ar ? "زيادة الكمية" : "Increase quantity"}
-                      className="grid size-10 place-items-center text-[var(--text-strong)] hover:bg-black/5 disabled:opacity-30"
+                      className="grid size-11 place-items-center text-[var(--text-strong)] hover:bg-black/5 disabled:opacity-30"
                     >
                       <Plus size={13} aria-hidden="true" />
                     </button>
@@ -160,12 +164,12 @@ export default function CartPage({
                 </div>
 
                 {/* Right price and remove */}
-                <div className="flex flex-col items-end justify-between">
+                <div className="absolute end-2 top-2 flex flex-col items-end justify-between sm:static">
                   <button
                     type="button"
                     onClick={() => removeCartItem(line.key)}
                     aria-label={ar ? "حذف المنتج" : "Remove item"}
-                    className="grid size-10 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[#a5472f]/10 hover:text-[#a5472f]"
+                    className="grid size-11 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[#a5472f]/10 hover:text-[#a5472f]"
                   >
                     <Trash2 size={16} aria-hidden="true" />
                   </button>
@@ -215,7 +219,11 @@ export default function CartPage({
             </Link>
 
             <div className="mt-5 flex items-start gap-2.5 rounded-xs bg-[#f0f5f3] p-3 text-xs leading-relaxed text-[#073b36]">
-              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#0e7468]" aria-hidden="true" />
+              <ShieldCheck
+                size={18}
+                className="mt-0.5 shrink-0 text-[#0e7468]"
+                aria-hidden="true"
+              />
               <span>
                 {ar
                   ? "دفع محمي ومضمون، يدعم فودافون كاش وإنستاباي والدفع عند الاستلام بمقدم."
@@ -227,14 +235,14 @@ export default function CartPage({
               href={`https://wa.me/201096733209?text=${encodeURIComponent(message)}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-5 block text-center text-xs font-semibold text-[var(--text-strong)] underline underline-offset-4 hover:text-[#0e7468]"
+              className="mt-3 flex min-h-11 items-center justify-center text-center text-xs font-semibold text-[var(--text-strong)] underline underline-offset-4 hover:text-[#0e7468]"
             >
               {ar ? "طلب عبر الواتساب مباشرة؟" : "Order via WhatsApp directly?"}
             </a>
 
             <Link
               href={`/${locale}/shop` as Route}
-              className="mt-3 block text-center text-xs font-medium text-[var(--text-muted)] hover:text-[#073b36]"
+              className="flex min-h-11 items-center justify-center text-center text-xs font-medium text-[var(--text-muted)] hover:text-[#073b36]"
             >
               {ar ? "مواصلة التسوق" : "Continue shopping"}
             </Link>

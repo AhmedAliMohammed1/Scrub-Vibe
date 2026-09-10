@@ -984,11 +984,11 @@ export function CheckoutForm({
       </h1>
       <form
         onSubmit={placeOrder}
-        className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]"
+        className="mt-8 grid min-w-0 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_400px]"
       >
-        <div className="grid gap-8">
+        <div className="grid min-w-0 gap-6 sm:gap-8">
           {/* Step 1: Contact Details */}
-          <section className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
+          <section className="min-w-0 rounded-xs border border-[var(--border-subtle)] bg-white p-4 shadow-xs sm:p-8">
             <div className="flex items-center gap-3">
               <span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs font-bold text-white">
                 1
@@ -1060,7 +1060,7 @@ export function CheckoutForm({
                 />
               </label>
               <div className="sm:col-span-2">
-                <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                <label className="grid min-w-0 gap-2 text-xs font-bold text-[var(--text-muted)]">
                   {ar ? "رقم الموبايل المصري" : "Egyptian mobile number"}
                   <span className="flex gap-2">
                     <input
@@ -1262,7 +1262,7 @@ export function CheckoutForm({
           </section>
 
           {/* Step 2: Delivery Address */}
-          <section className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
+          <section className="min-w-0 rounded-xs border border-[var(--border-subtle)] bg-white p-4 shadow-xs sm:p-8">
             <div className="flex items-center gap-3">
               <span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs font-bold text-white">
                 2
@@ -1559,7 +1559,7 @@ export function CheckoutForm({
           </section>
 
           {/* Step 3: Payment Method */}
-          <section className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
+          <section className="min-w-0 rounded-xs border border-[var(--border-subtle)] bg-white p-4 shadow-xs sm:p-8">
             <div className="flex items-center gap-3">
               <span className="grid size-8 place-items-center rounded-full bg-[#073b36] text-xs font-bold text-white">
                 3
@@ -1675,7 +1675,7 @@ export function CheckoutForm({
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     required
-                    className="rounded-xs border border-dashed border-[#0e7468] bg-[#f0f5f3] p-5 text-xs text-[var(--text-strong)]"
+                    className="w-full min-w-0 max-w-full rounded-xs border border-dashed border-[#0e7468] bg-[#f0f5f3] p-3 text-xs text-[var(--text-strong)] sm:p-5"
                   />
                   <span className="font-normal text-[var(--text-muted)]">
                     {ar
@@ -1689,7 +1689,7 @@ export function CheckoutForm({
         </div>
 
         {/* Sidebar Order Summary */}
-        <aside className="h-fit rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs lg:sticky lg:top-24">
+        <aside className="h-fit min-w-0 rounded-xs border border-[var(--border-subtle)] bg-white p-4 shadow-xs sm:p-6 lg:sticky lg:top-24">
           <h2 className="font-serif text-2xl text-[var(--text-strong)]">
             {ar ? "ملخص الطلب" : "Order summary"}
           </h2>

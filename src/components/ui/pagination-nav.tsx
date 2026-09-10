@@ -67,7 +67,7 @@ export function PaginationNav({
       </p>
 
       {pagination.totalPages > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-1.5">
           <PageLink
             href={hrefFor(pagination.currentPage - 1)}
             disabled={pagination.currentPage === 1}
@@ -77,7 +77,7 @@ export function PaginationNav({
             page === "ellipsis" ? (
               <span
                 key={`ellipsis-${index}`}
-                className="grid min-h-11 min-w-8 place-items-center text-sm text-neutral-400"
+                className="hidden min-h-11 min-w-8 place-items-center text-sm text-neutral-400 sm:grid"
                 aria-hidden="true"
               >
                 …
@@ -90,7 +90,7 @@ export function PaginationNav({
                   page === pagination.currentPage ? "page" : undefined
                 }
                 aria-label={ar ? `الصفحة ${page}` : `Page ${page}`}
-                className={`grid min-h-11 min-w-11 place-items-center border px-3 text-xs font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e7468] ${
+                className={`hidden min-h-11 min-w-11 place-items-center border px-3 text-xs font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e7468] sm:grid ${
                   page === pagination.currentPage
                     ? "border-[#073b36] bg-[#073b36] text-white"
                     : "border-black/10 bg-white text-[#073b36] hover:border-[#0e7468] hover:bg-[#edf5f2]"
@@ -121,7 +121,7 @@ function PageLink({
   label: string;
 }) {
   const className =
-    "inline-flex min-h-11 items-center justify-center border px-3 text-[10px] font-bold uppercase tracking-[.08em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e7468]";
+    "inline-flex min-h-11 w-full items-center justify-center border px-3 text-[10px] font-bold uppercase tracking-[.08em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e7468] sm:w-auto";
   if (disabled) {
     return (
       <span

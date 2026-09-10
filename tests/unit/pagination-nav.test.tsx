@@ -65,4 +65,30 @@ describe("PaginationNav", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("uses simple full-width previous and next controls on narrow screens", () => {
+    render(
+      <PaginationNav
+        locale="en"
+        pathname="/en/shop"
+        currentPage={3}
+        totalItems={120}
+        pageSize={10}
+        itemLabel={{ en: "items", ar: "عنصر" }}
+      />,
+    );
+
+    const previous = screen.getByRole("link", { name: "Previous" });
+    const next = screen.getByRole("link", { name: "Next" });
+    const currentPage = screen.getByRole("link", { name: "Page 3" });
+
+    expect(previous).toHaveClass("w-full", "sm:w-auto");
+    expect(next).toHaveClass("w-full", "sm:w-auto");
+    expect(previous.parentElement).toHaveClass(
+      "grid",
+      "grid-cols-2",
+      "sm:flex",
+    );
+    expect(currentPage).toHaveClass("hidden", "sm:grid");
+  });
 });

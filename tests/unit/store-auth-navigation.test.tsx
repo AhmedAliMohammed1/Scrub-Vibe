@@ -71,4 +71,36 @@ describe("store authentication navigation", () => {
     expect(drawer).toHaveAttribute("inert");
     expect(drawer).toHaveAttribute("aria-hidden", "true");
   });
+
+  it("keeps the phone header compact while retaining touch-sized primary actions", () => {
+    const { container } = renderNavigation({
+      isAuthenticated: false,
+      canAccessAdmin: false,
+    });
+
+    expect(screen.getByLabelText("Search catalog")).toHaveClass(
+      "hidden",
+      "size-11",
+      "lg:grid",
+    );
+    expect(screen.getByTitle("Sign In")).toHaveClass(
+      "hidden",
+      "min-h-11",
+      "lg:flex",
+    );
+    expect(screen.getByLabelText("Wishlist (0)")).toHaveClass("size-11");
+    expect(screen.getByLabelText("Bag (0)")).toHaveClass("size-11");
+    expect(
+      container.querySelector('header a[aria-label="Scrub Vibe home"]'),
+    ).toHaveClass("min-h-11");
+    expect(container.querySelector('aside a[href="/ar"]')).toHaveClass(
+      "min-h-12",
+    );
+
+    for (const link of screen
+      .getByRole("navigation", { name: "Shop links" })
+      .querySelectorAll("a")) {
+      expect(link).toHaveClass("min-h-11");
+    }
+  });
 });

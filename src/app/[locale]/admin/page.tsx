@@ -142,7 +142,11 @@ export default async function AdminPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ period?: string; productPage?: string; deleted?: string }>;
+  searchParams: Promise<{
+    period?: string;
+    productPage?: string;
+    deleted?: string;
+  }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) notFound();
@@ -280,7 +284,7 @@ export default async function AdminPage({
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-[1600px] gap-8 px-5 py-8 md:px-10 md:py-12">
+      <div className="mx-auto grid min-w-0 max-w-[1600px] gap-8 px-4 py-8 sm:px-5 md:px-10 md:py-12">
         <section aria-labelledby="overview-heading">
           <SectionHeading
             eyebrow={ar ? "نظرة عامة" : "PERFORMANCE OVERVIEW"}
@@ -445,7 +449,7 @@ export default async function AdminPage({
           </div>
         </section>
 
-        <section>
+        <section className="min-w-0">
           <SectionHeading
             eyebrow={ar ? "صحة الكتالوج" : "CATALOGUE HEALTH"}
             title={ar ? "المنتجات والمخزون" : "Products and inventory"}
@@ -488,9 +492,14 @@ export default async function AdminPage({
 
           <div
             id="products-list"
-            className="mt-4 scroll-mt-6 overflow-hidden border border-black/10 bg-white"
+            className="mt-4 min-w-0 scroll-mt-6 overflow-hidden border border-black/10 bg-white"
           >
-            <div className="overflow-x-auto">
+            <div
+              className="max-w-full overflow-x-auto"
+              role="region"
+              aria-label={ar ? "جدول المنتجات" : "Products table"}
+              tabIndex={0}
+            >
               <table className="w-full min-w-[920px] text-start text-sm">
                 <thead className="bg-[#073b36] text-[10px] uppercase tracking-[.13em] text-white/70">
                   <tr>
