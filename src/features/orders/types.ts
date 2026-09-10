@@ -65,6 +65,12 @@ export type TrackedOrder = {
   landmark?: string | null;
   has_account?: boolean;
   is_owner?: boolean;
+  payment_proof?: {
+    id: string;
+    status: string;
+    review_note: string | null;
+    created_at: string;
+  } | null;
   order_items: {
     id: number;
     sku: string;

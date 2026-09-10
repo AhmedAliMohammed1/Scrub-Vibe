@@ -125,7 +125,7 @@ export async function updateOrderAction(formData: FormData) {
       .from("payment_proofs")
       .select("id")
       .eq("order_id", value.orderId)
-      .eq("status", "submitted")
+      .eq("status", "pending")
       .limit(1)
       .maybeSingle();
 
@@ -137,7 +137,7 @@ export async function updateOrderAction(formData: FormData) {
       .from("payment_proofs")
       .select("id")
       .eq("order_id", value.orderId)
-      .eq("status", "submitted")
+      .eq("status", "pending")
       .limit(1)
       .maybeSingle();
 

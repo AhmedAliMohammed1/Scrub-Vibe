@@ -69,7 +69,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
     supabase
       .from("orders")
       .select(
-        "id, order_number, status, payment_status, total_minor, created_at, delivered_at",
+        "id, order_number, status, payment_status, payment_method, total_minor, created_at, delivered_at",
       )
       .order("created_at", { ascending: false })
       .limit(8),
@@ -122,9 +122,29 @@ export default async function AccountPage({ params, searchParams }: Props) {
                           {order.status.replaceAll("_", " ")}
                         </span>
                       </div>
-                      <small className="mt-1.5 block text-[10px] uppercase text-[var(--text-muted)]">
-                        {order.payment_status.replaceAll("_", " ")}
-                      </small>
+                      {order.payment_status === "rejected" ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="rounded-xs border border-[#a5472f]/40 bg-[#a5472f]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#a5472f]">
+                            {locale === "ar"
+                              ? "تم رفض إيصال الدفع"
+                              : "Payment proof rejected"}
+                          </span>
+                          <Link
+                            href={
+                              `/${locale}/track/${order.order_number}#reupload-proof` as Route
+                            }
+                            className="text-[10px] font-bold uppercase tracking-wider text-[#a5472f] underline underline-offset-4 hover:text-[#073b36]"
+                          >
+                            {locale === "ar"
+                              ? "إعادة رفع الإيصال ←"
+                              : "Re-upload proof →"}
+                          </Link>
+                        </div>
+                      ) : (
+                        <small className="mt-1.5 block text-[10px] uppercase text-[var(--text-muted)]">
+                          {order.payment_status.replaceAll("_", " ")}
+                        </small>
+                      )}
                       <span className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[.08em] text-[var(--color-primary)]">
                         <Link
                           href={

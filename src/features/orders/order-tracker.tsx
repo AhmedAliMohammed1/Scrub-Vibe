@@ -16,6 +16,7 @@ import type { Locale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 import type { TrackedOrder } from "./types";
 import { OrderAccountPrompt } from "./order-account-prompt";
+import { PaymentProofReupload } from "./payment-proof-reupload";
 
 const progress = [
   "confirmed",
@@ -231,6 +232,32 @@ export function OrderTracker({
           }}
         />
       )}
+
+      {/* Payment Proof Re-upload when rejected */}
+      {order.payment_status === "rejected" &&
+        order.status !== "cancelled" &&
+        order.status !== "returned" && (
+          <PaymentProofReupload
+            orderNumber={order.order_number}
+            trackingToken={manualToken || storedToken(order.order_number)}
+            paymentMethod={order.payment_method}
+            codDepositMinor={order.cod_deposit_minor}
+            totalMinor={order.total_minor}
+            reviewNote={order.payment_proof?.review_note}
+            locale={locale}
+            onSuccess={() => {
+              setOrder((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      status: "payment_review",
+                      payment_status: "proof_submitted",
+                    }
+                  : null,
+              );
+            }}
+          />
+        )}
 
       {/* Progress Timeline Stepper */}
       {order.status === "cancelled" ||

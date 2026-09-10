@@ -32,7 +32,8 @@ export async function GET(
       discount_code, discount_campaign_name_en, discount_campaign_name_ar,
       courier, tracking_url, created_at, paid_at, shipped_at, delivered_at,
       order_items(id, sku, title_en, title_ar, colour_en, colour_ar, size, image_url, unit_price_minor, quantity, line_total_minor, cod_deposit_unit_minor, cod_deposit_line_minor),
-      order_status_history(id, status, payment_status, note, created_at)
+      order_status_history(id, status, payment_status, note, created_at),
+      payment_proofs(id, status, review_note, created_at)
     `,
     )
     .eq("order_number", orderNumber.toUpperCase())
@@ -55,6 +56,8 @@ export async function GET(
       { status: 401 },
     );
 
+  const latestProof = (order.payment_proofs as { id: string; status: string; review_note: string | null; created_at: string; }[] | undefined)?.[0] ?? null;
+
   return NextResponse.json(
     {
       ...order,
@@ -62,6 +65,8 @@ export async function GET(
       is_owner: ownsOrder,
       tracking_token_hash: undefined,
       user_id: undefined,
+      payment_proof: latestProof,
+      payment_proofs: undefined,
       order_status_history: order.order_status_history.toSorted(
         (a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
