@@ -71,6 +71,7 @@ export default async function AccountPage({ params, searchParams }: Props) {
       .select(
         "id, order_number, status, payment_status, payment_method, total_minor, created_at, delivered_at",
       )
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(8),
     getCustomerAddresses(supabase, userId),

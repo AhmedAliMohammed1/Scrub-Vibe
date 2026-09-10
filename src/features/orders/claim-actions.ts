@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/features/checkout/security";
 import type { Locale } from "@/lib/i18n";
+import { validateClaimOwnership } from "./claim-validation";
 
 export async function checkEmailExistsAction(
   email: string,
@@ -49,11 +50,12 @@ export async function claimOrderWithPasswordAction({
     };
   }
 
+  const cleanEmail = email.trim().toLowerCase();
   const admin = createAdminClient();
   const { data: order, error: orderError } = await admin
     .from("orders")
     .select(
-      "id, order_number, user_id, tracking_token_hash, customer_name, phone, governorate, city, street_address, building, floor, apartment, landmark",
+      "id, order_number, user_id, email, tracking_token_hash, customer_name, phone, governorate, city, street_address, building, floor, apartment, landmark",
     )
     .eq("order_number", orderNumber.toUpperCase())
     .maybeSingle();
@@ -79,11 +81,28 @@ export async function claimOrderWithPasswordAction({
     };
   }
 
+  // Early ownership validation against order email if present
+  const preCheck = validateClaimOwnership({
+    orderUserId: order.user_id,
+    orderEmail: order.email,
+    claimantEmail: cleanEmail,
+    isNewAccount: false,
+  });
+
+  if (!preCheck.allowed && preCheck.reason === "email_mismatch") {
+    return {
+      success: false,
+      error: ar
+        ? "البريد الإلكتروني لا يتطابق مع البريد المسجل في هذا الطلب."
+        : "The email does not match the email on this order.",
+    };
+  }
+
   // Authenticate user with password
   const supabase = await createClient();
   const { data: authData, error: authError } =
     await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password,
     });
 
@@ -96,20 +115,48 @@ export async function claimOrderWithPasswordAction({
 
   const userId = authData.user.id;
 
-  // Link order to user
-  const { error: updateError } = await admin
-    .from("orders")
-    .update({ user_id: userId })
-    .eq("id", order.id);
+  // Validate that order is not already claimed by another user
+  const userCheck = validateClaimOwnership({
+    orderUserId: order.user_id,
+    orderEmail: order.email,
+    claimantUserId: userId,
+    claimantEmail: cleanEmail,
+    isNewAccount: false,
+  });
 
-  if (updateError) {
-    console.error("[claim-actions] Failed to link order to user", updateError);
+  if (!userCheck.allowed) {
+    if (userCheck.reason === "already_claimed_by_other") {
+      return {
+        success: false,
+        error: ar
+          ? "هذا الطلب مرتبط بحساب آخر بالفعل."
+          : "This order is already linked to another account.",
+      };
+    }
     return {
       success: false,
       error: ar
-        ? "تعذر ربط الطلب بالحساب. حاول مجدداً."
-        : "Could not link order to account. Please try again.",
+        ? "تعذر ربط الطلب بالحساب."
+        : "Cannot link this order to account.",
     };
+  }
+
+  // Link order to user if not already linked
+  if (order.user_id !== userId) {
+    const { error: updateError } = await admin
+      .from("orders")
+      .update({ user_id: userId })
+      .eq("id", order.id);
+
+    if (updateError) {
+      console.error("[claim-actions] Failed to link order to user", updateError);
+      return {
+        success: false,
+        error: ar
+          ? "تعذر ربط الطلب بالحساب. حاول مجدداً."
+          : "Could not link order to account. Please try again.",
+      };
+    }
   }
 
   // Copy order delivery address to user address book if none exists
@@ -191,7 +238,7 @@ export async function createAccountAndClaimOrderAction({
   const { data: order, error: orderError } = await admin
     .from("orders")
     .select(
-      "id, order_number, user_id, tracking_token_hash, customer_name, phone, governorate, city, street_address, building, floor, apartment, landmark",
+      "id, order_number, user_id, email, tracking_token_hash, customer_name, phone, governorate, city, street_address, building, floor, apartment, landmark",
     )
     .eq("order_number", orderNumber.toUpperCase())
     .maybeSingle();
@@ -214,6 +261,37 @@ export async function createAccountAndClaimOrderAction({
       error: ar
         ? "رمز الأمان غير صالح لهذا الطلب."
         : "Invalid tracking security token.",
+    };
+  }
+
+  // Verify claim ownership eligibility before creating account
+  const ownershipCheck = validateClaimOwnership({
+    orderUserId: order.user_id,
+    orderEmail: order.email,
+    claimantEmail: cleanEmail,
+    isNewAccount: true,
+  });
+
+  if (!ownershipCheck.allowed) {
+    if (ownershipCheck.reason === "already_claimed") {
+      return {
+        success: false,
+        error: ar
+          ? "هذا الطلب مرتبط بحساب بالفعل."
+          : "This order is already linked to an account.",
+      };
+    }
+    if (ownershipCheck.reason === "email_mismatch") {
+      return {
+        success: false,
+        error: ar
+          ? "البريد الإلكتروني لا يتطابق مع البريد المسجل في هذا الطلب."
+          : "The email does not match the email on this order.",
+      };
+    }
+    return {
+      success: false,
+      error: ar ? "تعذر ربط هذا الطلب." : "Cannot claim this order.",
     };
   }
 

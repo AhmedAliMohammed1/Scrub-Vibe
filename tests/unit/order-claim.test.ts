@@ -5,6 +5,7 @@ import {
   issuePrivateToken,
 } from "../../src/features/checkout/security";
 import { checkEmailExistsAction } from "../../src/features/orders/claim-actions";
+import { validateClaimOwnership } from "../../src/features/orders/claim-validation";
 
 describe("Guest Order Claim & Account Verification", () => {
   describe("checkEmailExistsAction", () => {
@@ -64,4 +65,93 @@ describe("Guest Order Claim & Account Verification", () => {
       expect(validatePassword("SecurePass2026!")).toBe(true);
     });
   });
+
+  describe("validateClaimOwnership", () => {
+    it("allows claiming an unclaimed order when emails match", () => {
+      const res = validateClaimOwnership({
+        orderUserId: null,
+        orderEmail: "guest@example.com",
+        claimantEmail: "guest@example.com",
+        isNewAccount: true,
+      });
+      expect(res.allowed).toBe(true);
+    });
+
+    it("allows claiming with case-insensitive email matching", () => {
+      const res = validateClaimOwnership({
+        orderUserId: null,
+        orderEmail: "Guest@Example.COM",
+        claimantEmail: "guest@example.com",
+        isNewAccount: true,
+      });
+      expect(res.allowed).toBe(true);
+    });
+
+    it("allows claiming when order has no email (phone-only checkout)", () => {
+      const res = validateClaimOwnership({
+        orderUserId: null,
+        orderEmail: null,
+        claimantEmail: "user@example.com",
+        isNewAccount: true,
+      });
+      expect(res.allowed).toBe(true);
+    });
+
+    it("rejects claim when email does not match order email", () => {
+      const res = validateClaimOwnership({
+        orderUserId: null,
+        orderEmail: "original@example.com",
+        claimantEmail: "hacker@example.com",
+        isNewAccount: true,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.reason).toBe("email_mismatch");
+    });
+
+    it("rejects new account creation claim if order is already linked to any account", () => {
+      const res = validateClaimOwnership({
+        orderUserId: "user-123",
+        orderEmail: "customer@example.com",
+        claimantEmail: "customer@example.com",
+        isNewAccount: true,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.reason).toBe("already_claimed");
+    });
+
+    it("rejects password claim if order is already claimed by another user", () => {
+      const res = validateClaimOwnership({
+        orderUserId: "user-victim-456",
+        orderEmail: "customer@example.com",
+        claimantUserId: "user-attacker-789",
+        claimantEmail: "customer@example.com",
+        isNewAccount: false,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.reason).toBe("already_claimed_by_other");
+    });
+
+    it("allows idempotent password claim if order already belongs to claimant", () => {
+      const res = validateClaimOwnership({
+        orderUserId: "user-same-123",
+        orderEmail: "customer@example.com",
+        claimantUserId: "user-same-123",
+        claimantEmail: "customer@example.com",
+        isNewAccount: false,
+      });
+      expect(res.allowed).toBe(true);
+    });
+
+    it("allows password claim of unclaimed order when claimant logs in", () => {
+      const res = validateClaimOwnership({
+        orderUserId: null,
+        orderEmail: "customer@example.com",
+        claimantUserId: "user-claimer-123",
+        claimantEmail: "customer@example.com",
+        isNewAccount: false,
+      });
+      expect(res.allowed).toBe(true);
+    });
+  });
 });
+
