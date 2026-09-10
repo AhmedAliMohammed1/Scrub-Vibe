@@ -10,7 +10,9 @@ import {
   Loader2,
   LockKeyhole,
   Package,
+  SlidersHorizontal,
   X,
+  Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -57,6 +59,40 @@ const paymentHelpUrl =
     "Hello Scrub Vibe, I need the Vodafone Cash or InstaPay transfer details for my order.",
   );
 
+function synthesizePlainAddress({
+  streetAddress,
+  building,
+  floor,
+  apartment,
+  landmark,
+  isAr,
+}: {
+  streetAddress: string;
+  building?: string | null;
+  floor?: string | null;
+  apartment?: string | null;
+  landmark?: string | null;
+  isAr: boolean;
+}): string {
+  const parts: string[] = [];
+  const street = streetAddress?.trim();
+  if (street) parts.push(street);
+
+  const bldg = building?.trim();
+  if (bldg) parts.push(isAr ? `عمارة/مبنى: ${bldg}` : `Bldg: ${bldg}`);
+
+  const flr = floor?.trim();
+  if (flr) parts.push(isAr ? `الدور: ${flr}` : `Floor: ${flr}`);
+
+  const apt = apartment?.trim();
+  if (apt) parts.push(isAr ? `عيادة/شقة: ${apt}` : `Apt/Clinic: ${apt}`);
+
+  const mark = landmark?.trim();
+  if (mark) parts.push(isAr ? `علامة مميزة: ${mark}` : `Landmark: ${mark}`);
+
+  return parts.join(isAr ? "، " : ", ");
+}
+
 export function CheckoutForm({
   locale,
   payments,
@@ -94,6 +130,16 @@ export function CheckoutForm({
     useState<PaymentMethod>("vodafone_cash");
   const [codDepositMethod, setCodDepositMethod] =
     useState<DepositMethod>("vodafone_cash");
+  const hasGranularInitial = Boolean(
+    defaultAddress &&
+      (defaultAddress.building ||
+        defaultAddress.floor ||
+        defaultAddress.apartment ||
+        defaultAddress.landmark),
+  );
+  const [addressMode, setAddressMode] = useState<"quick" | "detailed">(
+    hasGranularInitial ? "detailed" : "quick",
+  );
   const [streetAddress, setStreetAddress] = useState(
     defaultAddress?.streetAddress ?? "",
   );
@@ -101,7 +147,43 @@ export function CheckoutForm({
   const [floor, setFloor] = useState(defaultAddress?.floor ?? "");
   const [apartment, setApartment] = useState(defaultAddress?.apartment ?? "");
   const [landmark, setLandmark] = useState(defaultAddress?.landmark ?? "");
+  const [plainAddress, setPlainAddress] = useState(
+    defaultAddress
+      ? hasGranularInitial
+        ? synthesizePlainAddress({
+            streetAddress: defaultAddress.streetAddress,
+            building: defaultAddress.building,
+            floor: defaultAddress.floor,
+            apartment: defaultAddress.apartment,
+            landmark: defaultAddress.landmark,
+            isAr: ar,
+          })
+        : defaultAddress.streetAddress
+      : "",
+  );
   const [customerNotes, setCustomerNotes] = useState("");
+
+  const handleSwitchAddressMode = (nextMode: "quick" | "detailed") => {
+    if (nextMode === addressMode) return;
+    if (nextMode === "quick") {
+      const synthesized = synthesizePlainAddress({
+        streetAddress,
+        building,
+        floor,
+        apartment,
+        landmark,
+        isAr: ar,
+      });
+      if (synthesized) {
+        setPlainAddress(synthesized);
+      }
+    } else {
+      if (!streetAddress.trim() && plainAddress.trim()) {
+        setStreetAddress(plainAddress.trim());
+      }
+    }
+    setAddressMode(nextMode);
+  };
 
   const [governorateCode, setGovernorateCode] = useState(
     defaultAddress?.governorateCode ?? "",
@@ -121,6 +203,8 @@ export function CheckoutForm({
       setFloor("");
       setApartment("");
       setLandmark("");
+      setPlainAddress("");
+      setAddressMode("quick");
     } else {
       setSelectedAddressId(addr.id);
       setCustomerName(addr.recipientName);
@@ -133,6 +217,21 @@ export function CheckoutForm({
       setFloor(addr.floor ?? "");
       setApartment(addr.apartment ?? "");
       setLandmark(addr.landmark ?? "");
+      const hasGranular = Boolean(
+        addr.building || addr.floor || addr.apartment || addr.landmark,
+      );
+      const combined = hasGranular
+        ? synthesizePlainAddress({
+            streetAddress: addr.streetAddress,
+            building: addr.building,
+            floor: addr.floor,
+            apartment: addr.apartment,
+            landmark: addr.landmark,
+            isAr: ar,
+          })
+        : addr.streetAddress;
+      setPlainAddress(combined);
+      setAddressMode(hasGranular ? "detailed" : "quick");
       setVerificationToken("");
       setOtpSent(false);
 
@@ -510,6 +609,27 @@ export function CheckoutForm({
     setBusy("order");
     setError("");
     const form = new FormData(event.currentTarget);
+    const effectiveStreet =
+      addressMode === "quick"
+        ? plainAddress.trim()
+        : ((form.get("streetAddress") as string) || streetAddress).trim();
+    const effectiveBuilding =
+      addressMode === "quick"
+        ? ""
+        : ((form.get("building") as string) || building).trim();
+    const effectiveFloor =
+      addressMode === "quick"
+        ? ""
+        : ((form.get("floor") as string) || floor).trim();
+    const effectiveApartment =
+      addressMode === "quick"
+        ? ""
+        : ((form.get("apartment") as string) || apartment).trim();
+    const effectiveLandmark =
+      addressMode === "quick"
+        ? ""
+        : ((form.get("landmark") as string) || landmark).trim();
+
     const payload = {
       verificationToken,
       locale,
@@ -523,11 +643,11 @@ export function CheckoutForm({
           ? customCity
           : (selectedGovernorate?.cities.find((item) => item.code === cityCode)
               ?.nameEn ?? ""),
-      streetAddress: form.get("streetAddress"),
-      building: form.get("building"),
-      floor: form.get("floor"),
-      apartment: form.get("apartment"),
-      landmark: form.get("landmark"),
+      streetAddress: effectiveStreet,
+      building: effectiveBuilding,
+      floor: effectiveFloor,
+      apartment: effectiveApartment,
+      landmark: effectiveLandmark,
       customerNotes: form.get("customerNotes"),
       paymentMethod,
       codDepositMethod: paymentMethod === "cod" ? codDepositMethod : "",
@@ -579,11 +699,11 @@ export function CheckoutForm({
         governorateCode,
         cityCode,
         city: targetCity,
-        streetAddress: streetAddress.trim(),
-        building: building.trim() || null,
-        floor: floor.trim() || null,
-        apartment: apartment.trim() || null,
-        landmark: landmark.trim() || null,
+        streetAddress: effectiveStreet,
+        building: effectiveBuilding || null,
+        floor: effectiveFloor || null,
+        apartment: effectiveApartment || null,
+        landmark: effectiveLandmark || null,
         isDefault: (savedAddresses?.length ?? 0) === 0,
       }).catch((err) =>
         console.warn("[checkout] Failed to auto-save address", err),
@@ -956,54 +1076,174 @@ export function CheckoutForm({
                   )}
                 </div>
               )}
-              <label className="grid gap-2 text-xs font-bold sm:col-span-2 text-[var(--text-muted)]">
-                {ar ? "اسم الشارع والعنوان" : "Street address"}
-                <input
-                  name="streetAddress"
-                  value={streetAddress}
-                  onChange={(e) => setStreetAddress(e.target.value)}
-                  className={inputClass}
-                  required
-                  minLength={5}
-                  autoComplete="street-address"
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
-                {ar ? "المبنى" : "Building"}
-                <input
-                  name="building"
-                  value={building}
-                  onChange={(e) => setBuilding(e.target.value)}
-                  className={inputClass}
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
-                {ar ? "الدور" : "Floor"}
-                <input
-                  name="floor"
-                  value={floor}
-                  onChange={(e) => setFloor(e.target.value)}
-                  className={inputClass}
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
-                {ar ? "العيادة / الشقة" : "Clinic / Apt"}
-                <input
-                  name="apartment"
-                  value={apartment}
-                  onChange={(e) => setApartment(e.target.value)}
-                  className={inputClass}
-                />
-              </label>
-              <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
-                {ar ? "علامة مميزة" : "Landmark"}
-                <input
-                  name="landmark"
-                  value={landmark}
-                  onChange={(e) => setLandmark(e.target.value)}
-                  className={inputClass}
-                />
-              </label>
+              {/* Address Mode Segmented Control */}
+              <div className="sm:col-span-2">
+                <div className="rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] p-3.5">
+                  <div className="mb-2.5 flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]">
+                      {ar ? "طريقة كتابة العنوان" : "Address Format Preference"}
+                    </span>
+                    <span className="text-[11px] text-[var(--text-muted)]">
+                      {ar ? "اختر ما يناسبك" : "Select preferred format"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchAddressMode("quick")}
+                      className={`flex items-center justify-center gap-2 rounded-xs py-2.5 px-3 text-xs font-bold transition-all ${
+                        addressMode === "quick"
+                          ? "bg-[#073b36] text-white shadow-xs"
+                          : "border border-[var(--border-subtle)] bg-white text-[var(--text-secondary)] hover:border-[#0e7468] hover:text-[var(--text-strong)]"
+                      }`}
+                    >
+                      <Zap
+                        size={14}
+                        className={
+                          addressMode === "quick"
+                            ? "text-[#81c5b8]"
+                            : "text-neutral-400"
+                        }
+                      />
+                      <span>
+                        {ar
+                          ? "عنوان سريع (نص موحد)"
+                          : "Quick Address (Single field)"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchAddressMode("detailed")}
+                      className={`flex items-center justify-center gap-2 rounded-xs py-2.5 px-3 text-xs font-bold transition-all ${
+                        addressMode === "detailed"
+                          ? "bg-[#073b36] text-white shadow-xs"
+                          : "border border-[var(--border-subtle)] bg-white text-[var(--text-secondary)] hover:border-[#0e7468] hover:text-[var(--text-strong)]"
+                      }`}
+                    >
+                      <SlidersHorizontal
+                        size={14}
+                        className={
+                          addressMode === "detailed"
+                            ? "text-[#81c5b8]"
+                            : "text-neutral-400"
+                        }
+                      />
+                      <span>
+                        {ar
+                          ? "تفصيلي (حقول مقسمة)"
+                          : "Detailed (Separate fields)"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {addressMode === "quick" ? (
+                <div className="sm:col-span-2">
+                  <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                    <span className="flex items-center justify-between">
+                      <span>
+                        {ar
+                          ? "العنوان بالتفصيل (في مكان واحد)"
+                          : "Full address details (single field)"}
+                      </span>
+                      <span
+                        className={`text-[10px] font-mono ${
+                          plainAddress.length > 280
+                            ? "font-bold text-[var(--color-accent)]"
+                            : "text-[var(--text-muted)]"
+                        }`}
+                      >
+                        {plainAddress.length}/300 {ar ? "حرف" : "chars"}
+                      </span>
+                    </span>
+                    <textarea
+                      name="streetAddress"
+                      value={plainAddress}
+                      onChange={(e) => setPlainAddress(e.target.value)}
+                      className="min-h-28 w-full rounded-xs border border-[var(--border-subtle)] bg-white p-4 text-sm leading-relaxed text-[var(--text-strong)] outline-none transition focus:border-[#0e7468] focus:ring-2 focus:ring-[#0e7468]/20 placeholder:text-xs placeholder:text-neutral-400"
+                      required
+                      minLength={5}
+                      maxLength={300}
+                      placeholder={
+                        ar
+                          ? "اكتب الشارع والمبنى والدور والعيادة/الشقة وأي علامة مميزة...\nمثال: شارع مصطفى النحاس، برج الأطباء عمارة ١٥، الدور الرابع، عيادة د. أحمد، بجوار مسجد السلام"
+                          : "Enter street, building, floor, clinic/apt & landmark...\ne.g. 15 Mustafa El-Nahas St, Doctors Tower, 4th floor, Clinic 402, next to El-Salam Mosque"
+                      }
+                    />
+                  </label>
+                  <p className="mt-2 text-[11px] leading-normal text-[var(--text-muted)]">
+                    {ar
+                      ? "💡 يمكنك كتابة أو لصق عنوانك بالكامل في هذا الحقل بكل سهولة دون الحاجة لتعبئة خانات متعددة."
+                      : "💡 You can type or paste your complete address here at once without needing to fill multiple separate fields."}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <label className="grid gap-2 text-xs font-bold sm:col-span-2 text-[var(--text-muted)]">
+                    {ar ? "اسم الشارع والعنوان" : "Street address"}
+                    <input
+                      name="streetAddress"
+                      value={streetAddress}
+                      onChange={(e) => setStreetAddress(e.target.value)}
+                      className={inputClass}
+                      required
+                      minLength={5}
+                      maxLength={300}
+                      placeholder={
+                        ar
+                          ? "اسم الشارع والمنطقة"
+                          : "Street name & area"
+                      }
+                      autoComplete="street-address"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                    {ar ? "المبنى / البرج" : "Building / Tower"}
+                    <input
+                      name="building"
+                      value={building}
+                      onChange={(e) => setBuilding(e.target.value)}
+                      placeholder={ar ? "رقم أو اسم المبنى" : "Bldg # or name"}
+                      maxLength={50}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                    {ar ? "الدور / الطابق" : "Floor"}
+                    <input
+                      name="floor"
+                      value={floor}
+                      onChange={(e) => setFloor(e.target.value)}
+                      placeholder={ar ? "مثال: الرابع" : "e.g. 4th"}
+                      maxLength={30}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                    {ar ? "العيادة / الشقة" : "Clinic / Apt"}
+                    <input
+                      name="apartment"
+                      value={apartment}
+                      onChange={(e) => setApartment(e.target.value)}
+                      placeholder={ar ? "رقم العيادة أو الشقة" : "Clinic or apt #"}
+                      maxLength={50}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-bold text-[var(--text-muted)]">
+                    {ar ? "علامة مميزة (اختياري)" : "Landmark (optional)"}
+                    <input
+                      name="landmark"
+                      value={landmark}
+                      onChange={(e) => setLandmark(e.target.value)}
+                      placeholder={ar ? "بجوار، أمام، خلف..." : "Near, opposite, behind..."}
+                      maxLength={200}
+                      className={inputClass}
+                    />
+                  </label>
+                </>
+              )}
               <label className="grid gap-2 text-xs font-bold sm:col-span-2 text-[var(--text-muted)]">
                 {ar ? "ملاحظات إضافية على الطلب" : "Order notes"}
                 <textarea

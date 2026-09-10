@@ -6,9 +6,11 @@ import {
   Home,
   Briefcase,
   MapPin,
+  SlidersHorizontal,
   X,
   Loader2,
   Check,
+  Zap,
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import type { ShippingGovernorateOption } from "@/features/shipping/types";
@@ -21,6 +23,40 @@ import {
   type AddressLabel,
   type CustomerAddress,
 } from "./types";
+
+function synthesizePlainAddress({
+  streetAddress,
+  building,
+  floor,
+  apartment,
+  landmark,
+  isAr,
+}: {
+  streetAddress: string;
+  building?: string | null;
+  floor?: string | null;
+  apartment?: string | null;
+  landmark?: string | null;
+  isAr: boolean;
+}): string {
+  const parts: string[] = [];
+  const street = streetAddress?.trim();
+  if (street) parts.push(street);
+
+  const bldg = building?.trim();
+  if (bldg) parts.push(isAr ? `عمارة/مبنى: ${bldg}` : `Bldg: ${bldg}`);
+
+  const flr = floor?.trim();
+  if (flr) parts.push(isAr ? `الدور: ${flr}` : `Floor: ${flr}`);
+
+  const apt = apartment?.trim();
+  if (apt) parts.push(isAr ? `عيادة/شقة: ${apt}` : `Apt/Clinic: ${apt}`);
+
+  const mark = landmark?.trim();
+  if (mark) parts.push(isAr ? `علامة مميزة: ${mark}` : `Landmark: ${mark}`);
+
+  return parts.join(isAr ? "، " : ", ");
+}
 
 type Props = {
   isOpen: boolean;
@@ -152,6 +188,16 @@ function AddressForm({
   const [customCity, setCustomCity] = useState(
     addressToEdit?.cityCode === "other" ? addressToEdit.city : "",
   );
+  const hasGranularInitial = Boolean(
+    addressToEdit &&
+      (addressToEdit.building ||
+        addressToEdit.floor ||
+        addressToEdit.apartment ||
+        addressToEdit.landmark),
+  );
+  const [addressMode, setAddressMode] = useState<"quick" | "detailed">(
+    hasGranularInitial ? "detailed" : "quick",
+  );
   const [streetAddress, setStreetAddress] = useState(
     addressToEdit?.streetAddress ?? "",
   );
@@ -159,7 +205,43 @@ function AddressForm({
   const [floor, setFloor] = useState(addressToEdit?.floor ?? "");
   const [apartment, setApartment] = useState(addressToEdit?.apartment ?? "");
   const [landmark, setLandmark] = useState(addressToEdit?.landmark ?? "");
+  const [plainAddress, setPlainAddress] = useState(
+    addressToEdit
+      ? hasGranularInitial
+        ? synthesizePlainAddress({
+            streetAddress: addressToEdit.streetAddress,
+            building: addressToEdit.building,
+            floor: addressToEdit.floor,
+            apartment: addressToEdit.apartment,
+            landmark: addressToEdit.landmark,
+            isAr,
+          })
+        : addressToEdit.streetAddress
+      : "",
+  );
   const [isDefault, setIsDefault] = useState(addressToEdit?.isDefault ?? false);
+
+  const handleSwitchAddressMode = (nextMode: "quick" | "detailed") => {
+    if (nextMode === addressMode) return;
+    if (nextMode === "quick") {
+      const synthesized = synthesizePlainAddress({
+        streetAddress,
+        building,
+        floor,
+        apartment,
+        landmark,
+        isAr,
+      });
+      if (synthesized) {
+        setPlainAddress(synthesized);
+      }
+    } else {
+      if (!streetAddress.trim() && plainAddress.trim()) {
+        setStreetAddress(plainAddress.trim());
+      }
+    }
+    setAddressMode(nextMode);
+  };
 
   const selectedGovernorate =
     shippingLocations.find((item) => item.code === governorateCode) ?? null;
@@ -181,6 +263,17 @@ function AddressForm({
         ? customCity.trim()
         : (selectedGovernorate?.cities.find((c) => c.code === cityCode)?.nameEn ?? "");
 
+    const effectiveStreet =
+      addressMode === "quick" ? plainAddress.trim() : streetAddress.trim();
+    const effectiveBuilding =
+      addressMode === "quick" ? null : building.trim() || null;
+    const effectiveFloor =
+      addressMode === "quick" ? null : floor.trim() || null;
+    const effectiveApartment =
+      addressMode === "quick" ? null : apartment.trim() || null;
+    const effectiveLandmark =
+      addressMode === "quick" ? null : landmark.trim() || null;
+
     const payload = {
       label,
       customLabel: label === "other" && customLabel.trim() ? customLabel.trim() : null,
@@ -189,11 +282,11 @@ function AddressForm({
       governorateCode,
       cityCode,
       city: cityName,
-      streetAddress: streetAddress.trim(),
-      building: building.trim() || null,
-      floor: floor.trim() || null,
-      apartment: apartment.trim() || null,
-      landmark: landmark.trim() || null,
+      streetAddress: effectiveStreet,
+      building: effectiveBuilding,
+      floor: effectiveFloor,
+      apartment: effectiveApartment,
+      landmark: effectiveLandmark,
       isDefault,
     };
 
@@ -363,80 +456,185 @@ function AddressForm({
         </div>
       )}
 
-      {/* Street Address */}
+      {/* Address Mode Segmented Control */}
       <div>
-        <label className="block text-xs font-bold">
-          {isAr ? "اسم الشارع وتفاصيل العنوان" : "Street Address"}
-        </label>
-        <input
-          type="text"
-          required
-          minLength={5}
-          maxLength={300}
-          placeholder={isAr ? "شارع التحرير، بجوار المركز الطبي" : "El Tahrir St, Near Medical Center"}
-          value={streetAddress}
-          onChange={(e) => setStreetAddress(e.target.value)}
-          className={`mt-1 ${inputClass}`}
-        />
+        <div className="rounded-xs border border-black/10 bg-neutral-50 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-[.14em] text-neutral-500">
+              {isAr ? "طريقة كتابة العنوان" : "Address Format Preference"}
+            </span>
+            <span className="text-[11px] text-neutral-500">
+              {isAr ? "اختر ما يناسبك" : "Select preferred format"}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleSwitchAddressMode("quick")}
+              className={`flex items-center justify-center gap-2 rounded-xs py-2 px-3 text-xs font-bold transition-all ${
+                addressMode === "quick"
+                  ? "bg-[#073b36] text-white shadow-xs"
+                  : "border border-black/10 bg-white text-neutral-600 hover:border-[#0e7468] hover:text-black"
+              }`}
+            >
+              <Zap
+                size={14}
+                className={
+                  addressMode === "quick"
+                    ? "text-[#81c5b8]"
+                    : "text-neutral-400"
+                }
+              />
+              <span>
+                {isAr
+                  ? "عنوان سريع (نص موحد)"
+                  : "Quick Address (Single field)"}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchAddressMode("detailed")}
+              className={`flex items-center justify-center gap-2 rounded-xs py-2 px-3 text-xs font-bold transition-all ${
+                addressMode === "detailed"
+                  ? "bg-[#073b36] text-white shadow-xs"
+                  : "border border-black/10 bg-white text-neutral-600 hover:border-[#0e7468] hover:text-black"
+              }`}
+            >
+              <SlidersHorizontal
+                size={14}
+                className={
+                  addressMode === "detailed"
+                    ? "text-[#81c5b8]"
+                    : "text-neutral-400"
+                }
+              />
+              <span>
+                {isAr
+                  ? "تفصيلي (حقول مقسمة)"
+                  : "Detailed (Separate fields)"}
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Building / Floor / Clinic # */}
-      <div className="grid grid-cols-3 gap-3">
+      {addressMode === "quick" ? (
         <div>
           <label className="block text-xs font-bold">
-            {isAr ? "المبنى" : "Building"}
+            <span className="flex items-center justify-between">
+              <span>
+                {isAr
+                  ? "العنوان بالتفصيل (في مكان واحد)"
+                  : "Full address details (single field)"}
+              </span>
+              <span
+                className={`text-[10px] font-mono ${
+                  plainAddress.length > 280
+                    ? "font-bold text-[#a5472f]"
+                    : "text-neutral-500"
+                }`}
+              >
+                {plainAddress.length}/300 {isAr ? "حرف" : "chars"}
+              </span>
+            </span>
           </label>
-          <input
-            type="text"
-            maxLength={50}
-            value={building}
-            onChange={(e) => setBuilding(e.target.value)}
-            placeholder={isAr ? "عمارة ١٢" : "Bldg 12"}
-            className={`mt-1 ${inputClass}`}
+          <textarea
+            required
+            minLength={5}
+            maxLength={300}
+            value={plainAddress}
+            onChange={(e) => setPlainAddress(e.target.value)}
+            className="mt-1 min-h-24 w-full border border-black/20 bg-white p-3 text-sm leading-relaxed outline-none transition focus:border-[#0e7468] placeholder:text-xs placeholder:text-neutral-400"
+            placeholder={
+              isAr
+                ? "اكتب الشارع والمبنى والدور والعيادة/الشقة وأي علامة مميزة...\nمثال: شارع مصطفى النحاس، برج الأطباء عمارة ١٥، الدور الرابع، عيادة د. أحمد، بجوار مسجد السلام"
+                : "Enter street, building, floor, clinic/apt & landmark...\ne.g. 15 Mustafa El-Nahas St, Doctors Tower, 4th floor, Clinic 402, next to El-Salam Mosque"
+            }
           />
+          <p className="mt-1.5 text-[11px] leading-normal text-neutral-500">
+            {isAr
+              ? "💡 يمكنك كتابة أو لصق عنوانك كاملاً هنا بكل سهولة دون الحاجة لتعبئة خانات منفصلة."
+              : "💡 Enter your complete address at once without filling separate fields for building, floor, and apartment."}
+          </p>
         </div>
-        <div>
-          <label className="block text-xs font-bold">
-            {isAr ? "الطابق" : "Floor"}
-          </label>
-          <input
-            type="text"
-            maxLength={30}
-            value={floor}
-            onChange={(e) => setFloor(e.target.value)}
-            placeholder={isAr ? "الدور ٣" : "Fl 3"}
-            className={`mt-1 ${inputClass}`}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold">
-            {isAr ? "العيادة / الشقة" : "Clinic / Apt"}
-          </label>
-          <input
-            type="text"
-            maxLength={50}
-            value={apartment}
-            onChange={(e) => setApartment(e.target.value)}
-            placeholder={isAr ? "عيادة ٥" : "Clinic 5"}
-            className={`mt-1 ${inputClass}`}
-          />
-        </div>
-      </div>
+      ) : (
+        <>
+          {/* Street Address */}
+          <div>
+            <label className="block text-xs font-bold">
+              {isAr ? "اسم الشارع وتفاصيل العنوان" : "Street Address"}
+            </label>
+            <input
+              type="text"
+              required
+              minLength={5}
+              maxLength={300}
+              placeholder={isAr ? "شارع التحرير، بجوار المركز الطبي" : "El Tahrir St, Near Medical Center"}
+              value={streetAddress}
+              onChange={(e) => setStreetAddress(e.target.value)}
+              className={`mt-1 ${inputClass}`}
+            />
+          </div>
 
-      {/* Landmark */}
-      <div>
-        <label className="block text-xs font-bold">
-          {isAr ? "علامة مميزة (اختياري)" : "Landmark (optional)"}
-        </label>
-        <input
-          type="text"
-          maxLength={200}
-          placeholder={isAr ? "أمام المستشفى العام" : "Opposite General Hospital"}
-          value={landmark}
-          onChange={(e) => setLandmark(e.target.value)}
-          className={`mt-1 ${inputClass}`}
-        />
-      </div>
+          {/* Building / Floor / Clinic # */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold">
+                {isAr ? "المبنى" : "Building"}
+              </label>
+              <input
+                type="text"
+                maxLength={50}
+                value={building}
+                onChange={(e) => setBuilding(e.target.value)}
+                placeholder={isAr ? "عمارة ١٢" : "Bldg 12"}
+                className={`mt-1 ${inputClass}`}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold">
+                {isAr ? "الطابق" : "Floor"}
+              </label>
+              <input
+                type="text"
+                maxLength={30}
+                value={floor}
+                onChange={(e) => setFloor(e.target.value)}
+                placeholder={isAr ? "الدور ٣" : "Fl 3"}
+                className={`mt-1 ${inputClass}`}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold">
+                {isAr ? "العيادة / الشقة" : "Clinic / Apt"}
+              </label>
+              <input
+                type="text"
+                maxLength={50}
+                value={apartment}
+                onChange={(e) => setApartment(e.target.value)}
+                placeholder={isAr ? "عيادة ٥" : "Clinic 5"}
+                className={`mt-1 ${inputClass}`}
+              />
+            </div>
+          </div>
+
+          {/* Landmark */}
+          <div>
+            <label className="block text-xs font-bold">
+              {isAr ? "علامة مميزة (اختياري)" : "Landmark (optional)"}
+            </label>
+            <input
+              type="text"
+              maxLength={200}
+              placeholder={isAr ? "أمام المستشفى العام" : "Opposite General Hospital"}
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+              className={`mt-1 ${inputClass}`}
+            />
+          </div>
+        </>
+      )}
 
       {/* Is Default Checkbox */}
       <div className="pt-2">

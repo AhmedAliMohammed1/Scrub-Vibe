@@ -418,10 +418,14 @@ export default async function AdminOrdersPage({
                   <address className="mt-3 not-italic">
                     {order.street_address}
                     <br />
-                    {[order.building, order.floor, order.apartment]
-                      .filter(Boolean)
-                      .join(" · ")}
-                    <br />
+                    {[order.building, order.floor, order.apartment].filter(Boolean).length > 0 && (
+                      <>
+                        {[order.building, order.floor, order.apartment]
+                          .filter(Boolean)
+                          .join(" · ")}
+                        <br />
+                      </>
+                    )}
                     {ar
                       ? (order.shipping_city_name_ar ?? order.city)
                       : (order.shipping_city_name_en ?? order.city)}

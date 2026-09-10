@@ -92,4 +92,80 @@ describe("Egypt checkout validation", () => {
     expect(checkoutOrderSchema.safeParse({ ...base, city: "" }).success).toBe(false);
     expect(checkoutOrderSchema.safeParse({ ...base, city: "Daraw" }).success).toBe(true);
   });
+
+  it("accepts a comprehensive plain-text street address with empty granular fields", () => {
+    const plainTextOrder = {
+      verificationToken: "",
+      locale: "ar" as const,
+      customerName: "د. سارة محمود",
+      email: "dr.sara@example.com",
+      phone: "01098765432",
+      governorateCode: "cairo",
+      cityCode: "nasr_city",
+      city: "Nasr City",
+      streetAddress:
+        "شارع مصطفى النحاس، عمارة الأطباء رقم ١٥، الدور الرابع، عيادة ٤٠٢، أمام مستشفى المروة",
+      building: "",
+      floor: "",
+      apartment: "",
+      landmark: "",
+      customerNotes: "الاتصال قبل التوصيل بنصف ساعة",
+      paymentMethod: "vodafone_cash" as const,
+      codDepositMethod: "",
+      discountCode: "",
+      items: [{ variantId: "1", quantity: 2 }],
+    };
+    const result = checkoutOrderSchema.safeParse(plainTextOrder);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.streetAddress).toBe(plainTextOrder.streetAddress);
+      expect(result.data.building).toBe("");
+      expect(result.data.floor).toBe("");
+    }
+  });
+
+  it("validates streetAddress boundaries in quick plain-text mode (5 to 300 chars)", () => {
+    const base = {
+      verificationToken: "",
+      locale: "en" as const,
+      customerName: "Dr. Mona",
+      email: "",
+      phone: "01012345678",
+      governorateCode: "cairo",
+      cityCode: "nasr_city",
+      city: "Nasr City",
+      building: "",
+      floor: "",
+      apartment: "",
+      landmark: "",
+      customerNotes: "",
+      paymentMethod: "instapay" as const,
+      codDepositMethod: "",
+      items: [{ variantId: "1", quantity: 1 }],
+    };
+
+    // Too short (< 5 chars)
+    expect(
+      checkoutOrderSchema.safeParse({ ...base, streetAddress: "St" }).success,
+    ).toBe(false);
+    // Exact minimum (5 chars)
+    expect(
+      checkoutOrderSchema.safeParse({ ...base, streetAddress: "15 St" }).success,
+    ).toBe(true);
+    // Too long (> 300 chars)
+    expect(
+      checkoutOrderSchema.safeParse({
+        ...base,
+        streetAddress: "A".repeat(301),
+      }).success,
+    ).toBe(false);
+    // At maximum boundary (300 chars)
+    expect(
+      checkoutOrderSchema.safeParse({
+        ...base,
+        streetAddress: "A".repeat(300),
+      }).success,
+    ).toBe(true);
+  });
 });
+
