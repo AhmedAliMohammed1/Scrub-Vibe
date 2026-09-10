@@ -48,6 +48,17 @@ export default async function AccountPage({ params, searchParams }: Props) {
           </p>
         )}
         <AuthForm mode="sign-in" locale={locale} />
+        <div className="mt-8 border-t border-[var(--border-subtle)] pt-6 text-center">
+          <p className="text-xs text-[var(--text-muted)]">
+            {locale === "ar" ? "مشرف أو مدير المتجر؟" : "Store staff or manager?"}
+          </p>
+          <Link
+            href={`/${locale}/admin` as Route}
+            className="mt-2.5 inline-flex items-center gap-2 rounded-xs border border-[#073b36]/30 bg-[#073b36]/5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#073b36] transition-all hover:bg-[#073b36] hover:text-white"
+          >
+            <span>{locale === "ar" ? "الدخول إلى لوحة الإدارة (Staff)" : "Open Admin Dashboard (Staff)"}</span>
+          </Link>
+        </div>
       </AuthShell>
     );
   }
@@ -190,14 +201,18 @@ export default async function AccountPage({ params, searchParams }: Props) {
             {locale === "ar" ? "تغيير كلمة المرور" : "Change password"}
           </Link>
           <Link href={`/${locale}/account/returns` as Route} className="mt-4 block text-xs text-[var(--text-secondary)] underline underline-offset-4 hover:text-[var(--color-primary)]">{locale === "ar" ? "طلبات الاسترجاع والاستبدال" : "Returns & exchanges"}</Link>
-          {canAdmin && (
-            <Link
-              href={`/${locale}/admin` as Route}
-              className="mt-4 block rounded-xs bg-[var(--color-primary)] px-5 py-3.5 text-center text-xs font-bold uppercase tracking-[.14em] text-white shadow-subtle transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99]"
-            >
-              {locale === "ar" ? "فتح لوحة الإدارة" : "Open admin dashboard"}
-            </Link>
-          )}
+          <Link
+            href={`/${locale}/admin` as Route}
+            className="mt-4 block rounded-xs bg-[var(--color-primary)] px-5 py-3.5 text-center text-xs font-bold uppercase tracking-[.14em] text-white shadow-subtle transition-all hover:bg-[var(--color-primary-hover)] active:scale-[0.99]"
+          >
+            {locale === "ar"
+              ? canAdmin
+                ? "لوحة الإدارة والتحكم"
+                : "فتح لوحة الإدارة (Staff)"
+              : canAdmin
+                ? "Admin Dashboard"
+                : "Open Admin Dashboard (Staff)"}
+          </Link>
           <form action={signOutAction} className="mt-6">
             <input type="hidden" name="locale" value={locale} />
             <button className="h-12 w-full rounded-xs border border-[var(--border-subtle)] bg-white text-xs font-bold uppercase tracking-[.14em] text-[var(--text-primary)] transition-all hover:border-[var(--border-strong)] hover:bg-[var(--surface-sunken)] active:scale-[0.99]">

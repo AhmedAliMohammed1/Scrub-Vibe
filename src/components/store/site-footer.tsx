@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { Instagram, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
@@ -69,7 +70,19 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               href={`/${locale}/account`}
               className="transition-colors hover:text-white"
             >
-              {ar ? "حسابي وسجل الطلبات" : "Account & order history"}
+              {ar ? "تسجيل الدخول / حسابي" : "Sign in / My account"}
+            </Link>
+            <Link
+              href={`/${locale}/account` as Route}
+              className="transition-colors hover:text-white"
+            >
+              {ar ? "تتبع الطلبات" : "Track an order"}
+            </Link>
+            <Link
+              href={`/${locale}/admin` as Route}
+              className="font-medium text-[#81c5b8] transition-colors hover:text-white"
+            >
+              {ar ? "لوحة إدارة المتجر (Admin)" : "Store Admin Dashboard"}
             </Link>
           </div>
         </nav>

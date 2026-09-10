@@ -5,11 +5,15 @@ import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import {
+  ChevronRight,
   Heart,
+  LayoutDashboard,
   Menu,
   MessageCircle,
   Search,
+  Shield,
   ShoppingBag,
+  Truck,
   UserRound,
   X,
 } from "lucide-react";
@@ -55,6 +59,8 @@ export function Header({ locale }: { locale: Locale }) {
         home: "الصفحة الرئيسية لسكراب فايب",
         search: "بحث في المتجر",
         account: "حسابي والطلبات",
+        signIn: "تسجيل الدخول",
+        admin: "لوحة الإدارة",
         wishlist: `قائمة الأمنيات: ${wishlist.length}`,
         cart: `حقيبة التسوق: ${cart}`,
         categories: "الأقسام",
@@ -68,6 +74,8 @@ export function Header({ locale }: { locale: Locale }) {
         home: "Scrub Vibe home",
         search: "Search catalog",
         account: "My account",
+        signIn: "Sign In",
+        admin: "Admin Dashboard",
         wishlist: `Wishlist (${wishlist.length})`,
         cart: `Bag (${cart})`,
         categories: "Collections",
@@ -137,41 +145,62 @@ export function Header({ locale }: { locale: Locale }) {
 
           {/* Utility actions */}
           <div className="flex items-center gap-1 sm:gap-2">
+            {/* Search */}
             <Link
               href={`/${locale}/shop#catalog-search`}
-              className="hidden size-10 place-items-center rounded-sm text-[var(--text-strong)] hover:bg-black/5 min-[420px]:grid"
+              className="grid size-9 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 sm:size-10"
               aria-label={labels.search}
             >
-              <Search size={20} strokeWidth={1.8} aria-hidden="true" />
+              <Search size={19} strokeWidth={1.8} aria-hidden="true" />
             </Link>
+
+            {/* Sign In / My Account Button */}
             <Link
-              href={`/${locale}/account`}
-              className="hidden size-10 place-items-center rounded-sm text-[var(--text-strong)] hover:bg-black/5 sm:grid"
+              href={`/${locale}/account` as Route}
+              className="flex h-9 items-center gap-1.5 rounded-xs border border-[var(--border-subtle)] bg-white px-2 text-[11px] font-bold uppercase tracking-wider text-[var(--text-strong)] shadow-2xs transition-all hover:border-[#0e7468] hover:text-[#0e7468] active:scale-[0.98] sm:px-2.5"
               aria-label={labels.account}
+              title={labels.signIn}
             >
-              <UserRound size={20} strokeWidth={1.8} aria-hidden="true" />
+              <UserRound size={15} strokeWidth={2} aria-hidden="true" />
+              <span className="hidden min-[480px]:inline">{labels.signIn}</span>
             </Link>
+
+            {/* Admin Dashboard button (visible on screens >= md) */}
+            <Link
+              href={`/${locale}/admin` as Route}
+              className="hidden h-9 items-center gap-1.5 rounded-xs bg-[#073b36] px-2.5 text-[10px] font-bold uppercase tracking-[.12em] text-white shadow-2xs transition-all hover:bg-[#0e7468] active:scale-[0.98] md:flex"
+              title={labels.admin}
+            >
+              <LayoutDashboard size={13} strokeWidth={2} aria-hidden="true" />
+              <span>{labels.admin}</span>
+            </Link>
+
+            {/* Wishlist */}
             <Link
               href={`/${locale}/wishlist`}
-              className="relative grid size-10 place-items-center rounded-sm text-[var(--text-strong)] hover:bg-black/5"
+              className="relative grid size-9 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 sm:size-10"
               aria-label={labels.wishlist}
             >
-              <Heart size={20} strokeWidth={1.8} aria-hidden="true" />
+              <Heart size={19} strokeWidth={1.8} aria-hidden="true" />
               {wishlist.length > 0 && (
                 <span className="counter">{wishlist.length}</span>
               )}
             </Link>
+
+            {/* Cart */}
             <Link
               href={`/${locale}/cart`}
-              className="relative grid size-10 place-items-center rounded-sm text-[var(--text-strong)] hover:bg-black/5"
+              className="relative grid size-9 place-items-center rounded-xs text-[var(--text-strong)] hover:bg-black/5 sm:size-10"
               aria-label={labels.cart}
             >
-              <ShoppingBag size={20} strokeWidth={1.8} aria-hidden="true" />
+              <ShoppingBag size={19} strokeWidth={1.8} aria-hidden="true" />
               {cart > 0 && <span className="counter">{cart}</span>}
             </Link>
+
+            {/* Language switch */}
             <Link
               href={`/${other}` as Route}
-              className="ms-1 flex h-9 items-center rounded-sm border-s border-black/15 ps-2 text-[11px] font-bold uppercase text-[var(--text-strong)] hover:text-[#0e7468] sm:ms-2 sm:ps-3"
+              className="ms-0.5 flex h-9 items-center rounded-xs border-s border-black/15 ps-2 text-[11px] font-bold uppercase text-[var(--text-strong)] hover:text-[#0e7468] sm:ms-1 sm:ps-3"
             >
               {other === "ar" ? "العربية" : "EN"}
             </Link>
@@ -179,29 +208,48 @@ export function Header({ locale }: { locale: Locale }) {
         </div>
 
         {/* Secondary desktop bar */}
-        <nav className="mx-auto hidden max-w-[1440px] justify-center gap-8 border-t border-black/5 py-2.5 lg:flex">
-          {t.nav.slice(4).map((item, i) => (
+        <nav className="mx-auto hidden max-w-[1440px] items-center justify-between border-t border-black/5 px-6 py-2.5 lg:flex">
+          <div className="flex items-center gap-7">
+            {t.nav.slice(4).map((item, i) => (
+              <Link
+                key={item}
+                href={
+                  i === 0
+                    ? "https://www.instagram.com/scrubvibe_egy/"
+                    : i === 1
+                      ? `/${locale}#quality`
+                      : i === 2
+                        ? `/${locale}/shop?sale=1`
+                        : `/${locale}/shop`
+                }
+                target={i === 0 ? "_blank" : undefined}
+                rel={i === 0 ? "noreferrer" : undefined}
+                onClick={
+                  i === 0 ? () => trackStoreEvent("instagram_click") : undefined
+                }
+                className={i === 2 ? "nav-sale" : "nav-secondary"}
+              >
+                {item}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-5 text-xs">
             <Link
-              key={item}
-              href={
-                i === 0
-                  ? "https://www.instagram.com/scrubvibe_egy/"
-                  : i === 1
-                    ? `/${locale}#quality`
-                    : i === 2
-                      ? `/${locale}/shop?sale=1`
-                      : `/${locale}/shop`
-              }
-              target={i === 0 ? "_blank" : undefined}
-              rel={i === 0 ? "noreferrer" : undefined}
-              onClick={
-                i === 0 ? () => trackStoreEvent("instagram_click") : undefined
-              }
-              className={i === 2 ? "nav-sale" : "nav-secondary"}
+              href={`/${locale}/account` as Route}
+              className="flex items-center gap-1.5 font-semibold text-neutral-600 transition-colors hover:text-[#0e7468]"
             >
-              {item}
+              <Truck size={14} />
+              <span>{labels.track}</span>
             </Link>
-          ))}
+            <span className="text-neutral-300">·</span>
+            <Link
+              href={`/${locale}/admin` as Route}
+              className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#073b36] transition-colors hover:text-[#0e7468]"
+            >
+              <Shield size={13} />
+              <span>{labels.admin}</span>
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -246,7 +294,47 @@ export function Header({ locale }: { locale: Locale }) {
         </div>
 
         {/* Drawer Links */}
-        <div className="flex-1 overflow-y-auto px-5 py-6">
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          {/* Quick Hub: Sign In & Admin Access */}
+          <div className="mb-6 space-y-2.5 border-b border-[var(--border-subtle)] pb-5">
+            <Link
+              href={`/${locale}/account` as Route}
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center justify-between rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] p-3 transition-colors hover:border-[#0e7468]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid size-9 place-items-center rounded-xs bg-[#073b36] text-white">
+                  <UserRound size={17} strokeWidth={2} />
+                </div>
+                <div>
+                  <strong className="block text-xs font-bold text-[var(--text-primary)]">
+                    {ar ? "تسجيل الدخول / حسابي" : "Sign In / My Account"}
+                  </strong>
+                  <span className="text-[10px] text-[var(--text-muted)]">
+                    {ar ? "متابعة الطلبات وتفاصيل الحساب" : "Orders, addresses & profile"}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-neutral-400 rtl:rotate-180" />
+            </Link>
+
+            <Link
+              href={`/${locale}/admin` as Route}
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center justify-between rounded-xs border border-[#073b36]/25 bg-[#073b36]/5 p-3 transition-colors hover:bg-[#073b36] hover:text-white group"
+            >
+              <div className="flex items-center gap-2.5">
+                <LayoutDashboard size={16} className="text-[#073b36] group-hover:text-white" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#073b36] group-hover:text-white">
+                  {ar ? "لوحة الإدارة والتحكم" : "Admin Dashboard"}
+                </span>
+              </div>
+              <span className="rounded-xs bg-[#073b36]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#073b36] group-hover:bg-white group-hover:text-[#073b36]">
+                {ar ? "المشرفين" : "Staff"}
+              </span>
+            </Link>
+          </div>
+
           <p className="eyebrow text-[#0e7468]">{labels.categories}</p>
           <nav className="mt-4 grid gap-1">
             {t.nav.slice(0, 4).map((item, i) => (
@@ -290,8 +378,16 @@ export function Header({ locale }: { locale: Locale }) {
               onClick={() => setMobileNavOpen(false)}
               className="flex min-h-11 items-center gap-3 text-xs font-semibold text-[var(--text-strong)] hover:text-[#0e7468]"
             >
-              <UserRound size={17} strokeWidth={1.8} aria-hidden="true" />
-              {labels.account}
+              <Truck size={17} strokeWidth={1.8} aria-hidden="true" />
+              {labels.track}
+            </Link>
+            <Link
+              href={`/${locale}/account/returns` as Route}
+              onClick={() => setMobileNavOpen(false)}
+              className="flex min-h-11 items-center gap-3 text-xs font-semibold text-[var(--text-strong)] hover:text-[#0e7468]"
+            >
+              <Shield size={17} strokeWidth={1.8} aria-hidden="true" />
+              {ar ? "الاسترجاع والاستبدال" : "Returns & Exchanges"}
             </Link>
             <Link
               href={`/${locale}/shop#catalog-search` as Route}
