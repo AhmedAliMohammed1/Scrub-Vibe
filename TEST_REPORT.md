@@ -1,5 +1,16 @@
 # Test report
 
+## Current verification baseline — 2026-09-11
+
+- Customer Product Reviews & Star Ratings checkpoint: PASS — 32 files, 319 tests.
+- Lint: PASS — zero warnings at the reviews checkpoint.
+- Typecheck: PASS — strict TypeScript at the reviews checkpoint.
+- Build: PASS — Next.js 16.3.3 production build at the reviews checkpoint.
+- Live Supabase review verification: PASS — RLS/grants and anonymous/authenticated function boundaries checked on `iqufqtjotgpmhhtvlxwf`.
+- Browser QA: PASS — English, Arabic/RTL and 390px product/review/admin flows without horizontal overflow or framework overlays.
+- Subsequent change: the product-page back-in-stock notification dialog includes dedicated Vitest coverage; run the full release gate again before the next production sign-off.
+- Remaining release gap: no committed Playwright end-to-end suite yet.
+
 ## Foundation checkpoint — 2026-08-29
 
 - Unit: PASS — 2 files, 4 tests
@@ -276,7 +287,3 @@
 - Lint: PASS — zero warnings (`eslint . --max-warnings=0`).
 - Typecheck: PASS — strict TypeScript (`tsc --noEmit`).
 - Build: PASS — Next.js 16.3.3 Turbopack production build (`npm run build`).
-
-
-
-

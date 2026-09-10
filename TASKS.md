@@ -49,5 +49,13 @@
 - [ ] **TODO** Configure and validate production Twilio credentials if phone OTP should be enabled.
 - [ ] **TODO** Implement WhatsApp notifications via Twilio/WhatsApp Business API.
 - [x] **DONE** Implement Automated Abandoned-Cart Recovery Sequence with database-backed `abandoned_cart_notifications` tracking, `cart_recovery_opt_out` profile flag, index-backed RPC candidate selection, 3-stage bilingual email sequence (2h, 24h, 48h), single-use recovery discount codes (`RECOVER-XXXX`), 30-minute Vercel Cron, HMAC-signed 1-click unsubscribe, checkout URL prefill, non-blocking order conversion attribution, and admin operations dashboard metrics. Tests: PASS (196 total + live Supabase verification).
+- [x] **DONE** Implement commercial growth and after-sales operations: product bundles, recommendations, stock subscriptions/alerts, returns/refunds, invoices, exports, Merchant feed and optional GA4/Meta integrations.
+- [x] **DONE** Complete the customer return lifecycle with evidence, notes, role-scoped settlement, partial quantities, restocking and terminal order synchronization.
+- [x] **DONE** Add full admin product editing/deletion, colour-specific multi-image galleries, pagination and hardened mobile/RTL layouts.
+- [x] **DONE** Implement verified-purchase Customer Product Reviews & Star Ratings with customer management, moderation, responses, aggregates, catalogue ratings and structured SEO. Tests: PASS (319 total + live Supabase verification).
+- [x] **DONE** Add an accessible product-page back-in-stock notification dialog for unavailable variants with dedicated tests.
 - [ ] **TODO** Add Resend sender domain verification and update `RESEND_FROM_EMAIL` in Vercel env vars.
 - [ ] **TODO** Add production observability/monitoring (Sentry DSN, Upstash Redis rate limiting).
+- [ ] **TODO** Configure GA4, Meta Pixel and Meta CAPI credentials and validate event deduplication.
+- [ ] **TODO** Add committed Playwright end-to-end journeys for critical customer and staff workflows.
+- [ ] **TODO** Complete and rehearse backup/restore, rollback and incident-response runbooks.

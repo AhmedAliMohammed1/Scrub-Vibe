@@ -1,24 +1,65 @@
 # Project state
 
-- **Current phase:** Phase 7 — Payments, fulfilment and customer communications
-- **Current task:** Automated Abandoned-Cart Recovery Sequence completed from A to Z; Paymob remains intentionally held pending merchant credentials (activate it using `PAYMOB_ACTIVATION.md` when ready)
-- **Last successful task:** Implemented Automated Abandoned-Cart Recovery Sequence with `abandoned_cart_notifications` table, `cart_recovery_opt_out` profile flag, index-backed PostgreSQL RPC `find_abandoned_cart_candidates`, 3-stage bilingual email sequence (2h reminder, 24h urgency, 48h discount offer), single-use recovery discount codes (`RECOVER-XXXX`), 30-minute Vercel Cron, HMAC-signed 1-click unsubscribe, checkout URL discount prefill, non-blocking order conversion attribution, and admin operations metrics
+- **Current phase:** Production hardening and external-provider activation
 - **Current branch:** `main`
-- **Latest relevant commit:** current checkpoint (see `git log -1` for the immutable hash)
-- **Implemented:** Phase 1 storefront foundation; pinned Supabase CLI 2.116.0, SSR 0.12.5 and JS 2.112.4; normalized identity/catalogue/variant/inventory/order schema live on project `iqufqtjotgpmhhtvlxwf`; least-privilege grants and RLS; private RBAC helper; auth-user profile/customer-role trigger; generated live database types; typed public Supabase catalogue repository; nine localized Scrub Vibe products with real brand photography and colour/size inventory; localized catalogue filters and sorting; bilingual customer authentication/account pages; admin commerce and marketing dashboard; transactional Egypt-only checkout with server-priced variant snapshots and inventory reservations; Egyptian phone OTP; per-product COD deposits paid through Vodafone Cash or InstaPay with private proof review; full Vodafone Cash/InstaPay transfer options; Paymob Unified Checkout/webhook integration; customer order timeline and shipment tracking; admin fulfilment workflow; shipping-zone pricing and admin management; persistent database-backed cart and wishlist sync with owner-scoped RLS, automatic login merge, optimistic UI, cart quantity controls, and rich wishlist gallery view; transactional email notifications (Order Placed, Payment Approved, Processing, Shipped, Out for Delivery, Delivered, Cancelled) via Resend with bilingual EN/AR HTML templates and staff alert emails; Interactive Medical Scrub Size Guide and admin measurement editor; admin-managed bilingual discount campaigns/codes with percentage/fixed discounts, schedules, minimum spends, caps, usage/customer limits, campaign budgets, atomic checkout redemption, immutable order snapshots and campaign performance reporting; customer saved delivery addresses with address book management in Account dashboard, clinical location presets (Clinic/Hospital, Home, Work, Other), default address triggers, and 1-click checkout prefill with automated shipping zone and fee updates; idempotent cart synchronization preventing quantity inflation on browser tab focus / visibility changes; official original brand iconography for Vodafone Cash and InstaPay Egypt; Storefront Merchandising CMS with announcement tickers, hero carousels, editorial promo blocks, image uploads, color/opacity customization, scheduling and admin control; **Automated Abandoned-Cart Recovery with 3-stage bilingual email escalation, automated recovery discount codes, 30-min Vercel Cron, signed unsubscribe, checkout prefill, order conversion attribution, and operations dashboard metrics**; migration, auth, catalogue, shipping, cart, email, size-guide, address, promotion, cms-banners, cart-recovery and cart-idempotency tests.
-- **Remaining:** production Twilio and Paymob credential validation; customer product reviews; WhatsApp notifications; Paymob sandbox/live acceptance and reconciliation operations; final production monitoring/security validation.
-- **Known bugs:** none confirmed in the implemented scope.
-- **Blocked tasks:** Live OTP and automated payment validation require Twilio Verify and Paymob merchant credentials. Custom sender domain for emails requires a verified Resend domain (free tier uses `onboarding@resend.dev`).
-- **Required inputs:** Supabase server secret (`SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`); Twilio Verify credentials; Paymob public/secret/HMAC/integration credentials when onboarding completes; Vodafone Cash destination; InstaPay address; `STAFF_EMAIL` for alert routing; `RESEND_FROM_EMAIL` once domain is verified.
-- **Latest tests:** PASS — 19 files, 196 tests, including Cart Recovery config/types/security/emails/migration security, CMS banner types, validation, scheduling, image URL resolution, storage security, production-site URL fallbacks, cart idempotency calculations, customer address validation and formatting, address migration security, promotion validation/mapping, discount migration security, checkout code validation, order/email discount snapshots, interactive size recommendations, lifecycle emails, cart/wishlist sync, shipping, payments, OTP, authentication and catalogue behavior
-- **Latest build:** PASS — Next.js 16.3.3 production build
-- **Latest local browser verification:** PASS — English/Arabic storefront, catalogue filtering, product options, size calculator, cart, checkout payment/deposit/shipping/discount states with authentic Vodafone Cash and InstaPay Egypt logos, tracking, protected admin routing, authenticated production admin modules, 390px RTL layout and six axe-core WCAG 2 A/AA scans; no browser console errors or framework overlays
-- **Latest deployment:** Workspace is linked to Vercel `scrub-vibe` and Supabase `iqufqtjotgpmhhtvlxwf`.
-- **Exact next action:** Continue with Customer Product Reviews & Ratings or WhatsApp notifications.
+- **Hosted application:** `https://scrub-vibe-tau.vercel.app`
+- **Supabase project:** `iqufqtjotgpmhhtvlxwf`
+- **Latest feature:** Customer Product Reviews & Star Ratings, followed by the product-page back-in-stock notification dialog
+- **Known application bugs:** None confirmed in the implemented scope
 
-## Latest visual QA
+## Implemented
 
-PASS for the rebranded English LTR and Arabic RTL home/catalogue/product flows. Real Scrub Vibe photography, Supabase prices, product descriptions and size options render on production. A tablet-width header collision found during live QA was corrected with a functional responsive menu.
+- Responsive bilingual English/Arabic storefront with LTR/RTL layouts, accessible navigation, catalogue search/filter/sort, SEO metadata and mobile-first product discovery.
+- Normalized Supabase catalogue with localized products, multi-colour and multi-size variants, colour-specific multi-image galleries, live inventory and safe admin creation/editing/deletion.
+- Supabase Auth with PKCE sessions, registration, sign-in/out, password recovery, server-validated RBAC and owner-scoped account data.
+- Persistent authenticated cart and wishlist with guest merge, optimistic updates, quantity controls and idempotent synchronization.
+- Egypt-only transactional checkout with validated customer names and mobile numbers, simple/detailed addresses, saved-address prefill, shipping zones, promotions, stock reservation and actionable bilingual errors.
+- COD with per-product deposits, Vodafone Cash and InstaPay private proof verification, replacement proof upload, and a complete but intentionally dormant Paymob integration.
+- Customer order history, guest/account tracking, invoices, shipment details, fulfilment timeline and bilingual lifecycle email notifications.
+- Customer returns/exchanges with evidence, item quantities, status history and customer-facing notes; role-scoped admin approval, receiving, restocking and refund/store-credit/exchange settlement.
+- Verified-purchase product reviews with star ratings, fit and recommendation feedback, customer edit/delete, admin moderation/responses/featured reviews, aggregates and structured SEO data.
+- Interactive size calculator and database-backed category/product size-chart administration.
+- Admin-managed campaigns and discount codes with schedules, eligibility, caps, usage limits, budgets, atomic redemption and reporting.
+- Storefront CMS for announcements, hero carousels and promotional sections with Supabase Storage media.
+- Product bundles, cross-sell/complete-the-look recommendations, low-stock alerts, back-in-stock subscriptions and notification automation.
+- First-party commerce analytics, admin dashboards, CSV exports, Google Merchant feed, optional GA4/Meta scripts and Meta Conversions API integration.
+- Three-stage abandoned-cart recovery with signed unsubscribe, recovery discounts, conversion attribution and Vercel Cron scheduling.
+- Pagination for long customer and admin collections, responsive admin tools and role-aware navigation.
+- RLS, least-privilege grants, private storage, server-authoritative commerce operations, idempotent callbacks and security regression coverage.
+
+## Remaining or externally blocked
+
+1. Activate and acceptance-test Paymob with merchant sandbox/live credentials and registered webhook.
+2. Configure and validate production Twilio Verify credentials if checkout phone OTP is enabled.
+3. Implement automated WhatsApp Business notifications; current WhatsApp usage is link-based only.
+4. Verify a Scrub Vibe sender domain in Resend and set `RESEND_FROM_EMAIL`.
+5. Configure GA4, Meta Pixel and Meta CAPI credentials and validate event deduplication in production.
+6. Configure/confirm `CRON_SECRET` and monitor the recovery and commercial cron executions.
+7. Add production observability and distributed rate limiting (Sentry and Upstash Redis are reserved in the environment contract but not integrated).
+8. Add committed Playwright end-to-end journeys for authentication, checkout, proof review, returns, reviews and admin operations.
+9. Complete production backup/restore, rollback, incident-response and monitoring runbooks.
+10. Re-run final live Supabase security/performance advisors and verify Auth leaked-password protection before launch sign-off.
+
+## External configuration required
+
+- Supabase URL, publishable key and server secret.
+- Vodafone Cash destination and InstaPay address.
+- Resend API key, verified sender and staff destination.
+- `CRON_SECRET` for scheduled automation.
+- Twilio Verify credentials only when OTP is enabled.
+- Paymob keys/HMAC/integration IDs only when Paymob is activated.
+- Optional GA4 and Meta credentials for external marketing attribution.
+
+## Verification baseline
+
+- Customer Reviews checkpoint: **32 test files / 319 tests passed**, ESLint passed, strict TypeScript passed and Next.js 16.3.3 production build passed.
+- Review security was checked against the hosted Supabase project, including anonymous/authenticated execution boundaries.
+- Responsive English, Arabic/RTL and 390px product/review/admin flows passed browser QA without horizontal overflow or framework overlays.
+- The subsequent back-in-stock PDP notification UI includes dedicated Vitest coverage.
+
+## Next action
+
+Choose the next production-hardening or customer-growth feature after reviewing the remaining list above.
 
 ## Resume protocol
 

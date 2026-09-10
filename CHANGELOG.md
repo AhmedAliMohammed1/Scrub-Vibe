@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added verified-purchase Customer Product Reviews & Star Ratings with customer management, moderation, staff responses, aggregate summaries, catalogue ratings and product structured data.
+- Added an accessible back-in-stock notification dialog to product pages for unavailable colour/size selections.
+- Added colour-specific multi-image product galleries, complete admin product editing/deletion, pagination and strengthened mobile/RTL layouts.
+- Completed returns/refunds and the commercial growth suite: bundles, recommendations, stock subscriptions, inventory alerts, exports, Merchant feed and optional GA4/Meta integrations.
+
 - Implemented Automated Abandoned-Cart Recovery Sequence from A to Z:
   - Created `public.abandoned_cart_notifications` PostgreSQL table with escalation stages (`first_reminder`, `second_reminder`, `discount_offer`), customer cart snapshots, recovery discount tracking, and conversion attribution (`recovered_at`, `recovered_order_id`).
   - Added `cart_recovery_opt_out` boolean flag to `public.profiles` allowing shoppers to opt out of reminders.
