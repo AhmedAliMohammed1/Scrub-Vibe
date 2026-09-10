@@ -852,7 +852,10 @@ export function CheckoutForm({
     });
     clearCart();
     if (result.paymentUrl) window.location.assign(result.paymentUrl);
-    else router.push(`/${locale}/track/${result.orderNumber}` as Route);
+    else
+      router.push(
+        `/${locale}/track/${result.orderNumber}?token=${encodeURIComponent(result.trackingToken)}` as Route,
+      );
   }
 
   if (!cartItems.length)

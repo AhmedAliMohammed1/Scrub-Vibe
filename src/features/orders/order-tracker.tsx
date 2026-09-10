@@ -4,16 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import {
+  AlertCircle,
   Check,
   Clock3,
   ExternalLink,
+  Eye,
+  EyeOff,
+  KeyRound,
   Lock,
   PackageCheck,
+  Phone,
+  ShieldCheck,
   Truck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
+import { createClient } from "@/lib/supabase/client";
 import type { TrackedOrder } from "./types";
 import { OrderAccountPrompt } from "./order-account-prompt";
 import { PaymentProofReupload } from "./payment-proof-reupload";
@@ -27,6 +34,17 @@ const progress = [
   "delivered",
 ] as const;
 
+type LockedInfo = {
+  hasAccount: boolean;
+  email: string | null;
+  phoneHint: string | null;
+};
+
+type FetchResult =
+  | { state: "ready"; order: TrackedOrder; lockedInfo: null }
+  | { state: "locked"; order: null; lockedInfo: LockedInfo }
+  | { state: "error"; order: null; lockedInfo: null };
+
 function storedToken(orderNumber: string) {
   try {
     const saved = JSON.parse(
@@ -38,52 +56,236 @@ function storedToken(orderNumber: string) {
   }
 }
 
-async function fetchTrackedOrder(orderNumber: string, token: string) {
+async function fetchTrackedOrder(
+  orderNumber: string,
+  token?: string,
+  phone?: string,
+): Promise<FetchResult> {
+  const query = new URLSearchParams();
+  if (token) query.set("token", token);
+  if (phone) query.set("phone", phone);
+
   const response = await fetch(
-    `/api/orders/${encodeURIComponent(orderNumber)}?token=${encodeURIComponent(token)}`,
+    `/api/orders/${encodeURIComponent(orderNumber)}${query.toString() ? `?${query.toString()}` : ""}`,
     { cache: "no-store" },
   );
-  if (response.status === 401) return { state: "locked" as const, order: null };
-  if (!response.ok) return { state: "error" as const, order: null };
+  if (response.status === 401) {
+    const data = (await response.json().catch(() => ({}))) as {
+      has_account?: boolean;
+      email?: string | null;
+      phone_hint?: string | null;
+    };
+    return {
+      state: "locked",
+      order: null,
+      lockedInfo: {
+        hasAccount: Boolean(data.has_account),
+        email: data.email ?? null,
+        phoneHint: data.phone_hint ?? null,
+      },
+    };
+  }
+  if (!response.ok) return { state: "error", order: null, lockedInfo: null };
   return {
-    state: "ready" as const,
+    state: "ready",
     order: (await response.json()) as TrackedOrder,
+    lockedInfo: null,
   };
 }
 
 export function OrderTracker({
   locale,
   orderNumber,
+  initialToken,
+  initialPhone,
 }: {
   locale: Locale;
   orderNumber: string;
+  initialToken?: string;
+  initialPhone?: string;
 }) {
   const ar = locale === "ar";
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "locked" | "error">(
     "loading",
   );
-  const [manualToken, setManualToken] = useState("");
+  const [lockedInfo, setLockedInfo] = useState<LockedInfo | null>(null);
+  const [activeToken, setActiveToken] = useState<string>(initialToken || "");
+  const [activePhone, setActivePhone] = useState<string>(initialPhone || "");
+
+  // Unlocking method and form inputs
+  const [unlockMethod, setUnlockMethod] = useState<"password" | "phone" | "token">("password");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [phoneInput, setPhoneInput] = useState(initialPhone || "");
+  const [manualToken, setManualToken] = useState(initialToken || "");
+  const [unlockError, setUnlockError] = useState("");
+  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     let active = true;
-    void fetchTrackedOrder(orderNumber, storedToken(orderNumber)).then(
+    const urlParams =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search)
+        : null;
+    const resolvedToken =
+      initialToken || urlParams?.get("token") || storedToken(orderNumber);
+    const resolvedPhone = initialPhone || urlParams?.get("phone") || "";
+
+    if (resolvedToken) {
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("scrub-vibe-order-tokens") ?? "{}",
+        ) as Record<string, string>;
+        saved[orderNumber] = resolvedToken;
+        localStorage.setItem("scrub-vibe-order-tokens", JSON.stringify(saved));
+      } catch {}
+    }
+
+    void fetchTrackedOrder(orderNumber, resolvedToken, resolvedPhone).then(
       (result) => {
         if (!active) return;
+        if (resolvedToken) setActiveToken(resolvedToken);
+        if (resolvedPhone) setActivePhone(resolvedPhone);
         setOrder(result.order);
         setState(result.state);
+        if (result.lockedInfo) {
+          setLockedInfo(result.lockedInfo);
+          if (result.lockedInfo.email) {
+            setLoginEmail(result.lockedInfo.email);
+          }
+          if (!result.lockedInfo.hasAccount) {
+            setUnlockMethod("phone");
+          }
+        }
       },
     );
     return () => {
       active = false;
     };
-  }, [orderNumber]);
+  }, [orderNumber, initialToken, initialPhone]);
 
-  async function unlockOrder() {
-    setState("loading");
-    const result = await fetchTrackedOrder(orderNumber, manualToken);
-    setOrder(result.order);
-    setState(result.state);
+  async function handleUnlockWithPassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setUnlockError("");
+    const targetEmail = (loginEmail || lockedInfo?.email || "").trim();
+    if (!targetEmail || !loginPassword) {
+      setUnlockError(
+        ar
+          ? "يرجى كتابة البريد الإلكتروني وكلمة المرور."
+          : "Please enter both email and password.",
+      );
+      return;
+    }
+    setUnlocking(true);
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: targetEmail.toLowerCase(),
+        password: loginPassword,
+      });
+      if (authError) {
+        setUnlockError(
+          ar
+            ? "كلمة المرور أو البريد الإلكتروني غير صحيح."
+            : "Incorrect password or email.",
+        );
+        setUnlocking(false);
+        return;
+      }
+      const result = await fetchTrackedOrder(orderNumber, activeToken, activePhone);
+      setOrder(result.order);
+      setState(result.state);
+      if (result.lockedInfo) setLockedInfo(result.lockedInfo);
+    } catch {
+      setUnlockError(
+        ar
+          ? "حدث خطأ في الاتصال بالخادم."
+          : "Server connection error. Please try again.",
+      );
+    } finally {
+      setUnlocking(false);
+    }
+  }
+
+  async function handleUnlockWithPhone(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setUnlockError("");
+    const candidatePhone = phoneInput.trim();
+    if (!candidatePhone) {
+      setUnlockError(
+        ar
+          ? "يرجى كتابة رقم الهاتف المستخدم في الطلب."
+          : "Please enter the phone number used at checkout.",
+      );
+      return;
+    }
+    setUnlocking(true);
+    try {
+      const result = await fetchTrackedOrder(orderNumber, activeToken, candidatePhone);
+      if (result.state === "ready") {
+        setActivePhone(candidatePhone);
+        setOrder(result.order);
+        setState("ready");
+      } else {
+        setUnlockError(
+          ar
+            ? "رقم الهاتف غير مطابق لبيانات هذا الطلب."
+            : "Phone number does not match this order.",
+        );
+      }
+    } catch {
+      setUnlockError(
+        ar
+          ? "حدث خطأ في الاتصال بالخادم."
+          : "Server connection error. Please try again.",
+      );
+    } finally {
+      setUnlocking(false);
+    }
+  }
+
+  async function handleUnlockWithToken(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setUnlockError("");
+    const candidateToken = manualToken.trim();
+    if (!candidateToken) {
+      setUnlockError(
+        ar ? "يرجى إدخال رمز التتبع." : "Please enter your tracking token.",
+      );
+      return;
+    }
+    setUnlocking(true);
+    try {
+      const result = await fetchTrackedOrder(orderNumber, candidateToken, activePhone);
+      if (result.state === "ready") {
+        setActiveToken(candidateToken);
+        try {
+          const saved = JSON.parse(
+            localStorage.getItem("scrub-vibe-order-tokens") ?? "{}",
+          ) as Record<string, string>;
+          saved[orderNumber] = candidateToken;
+          localStorage.setItem("scrub-vibe-order-tokens", JSON.stringify(saved));
+        } catch {}
+        setOrder(result.order);
+        setState("ready");
+      } else {
+        setUnlockError(
+          ar
+            ? "رمز التتبع غير صحيح أو منتهي الصلاحية."
+            : "Invalid or expired tracking token.",
+        );
+      }
+    } catch {
+      setUnlockError(
+        ar
+          ? "حدث خطأ في الاتصال بالخادم."
+          : "Server connection error. Please try again.",
+      );
+    } finally {
+      setUnlocking(false);
+    }
   }
 
   if (state === "loading") {
@@ -100,6 +302,7 @@ export function OrderTracker({
   }
 
   if (state === "locked") {
+    const hasAccount = Boolean(lockedInfo?.hasAccount);
     return (
       <main className="mx-auto min-h-[65vh] max-w-lg px-5 py-16 sm:py-24">
         <div className="rounded-xs border border-[var(--border-subtle)] bg-white p-6 shadow-xs sm:p-8">
@@ -107,48 +310,234 @@ export function OrderTracker({
             <Lock size={22} strokeWidth={1.8} aria-hidden="true" />
           </div>
           <p className="eyebrow mt-4 text-center text-[#a5472f]">
-            {ar ? "طلب محمي بكلمة مرور" : "PROTECTED ORDER"}
+            {hasAccount
+              ? ar
+                ? "طلب مرتبط بحساب مسجل"
+                : "ACCOUNT-LINKED ORDER"
+              : ar
+                ? "طلب محمي بخصوصية"
+                : "PROTECTED ORDER"}
           </p>
-          <h1 className="mt-2 text-center font-serif text-3xl text-[var(--text-strong)]">
-            {ar ? "افتح تتبع طلبك" : "Unlock order tracking"}
+          <h1 className="mt-2 text-center font-serif text-2xl sm:text-3xl text-[var(--text-strong)]">
+            {ar ? "افتح تتبع طلبك" : "Unlock Order Tracking"}
           </h1>
-          <p className="mt-3 text-center text-xs leading-relaxed text-[var(--text-muted)]">
-            {ar
-              ? "لحماية خصوصية طلباتك، يرجى تسجيل الدخول بالحساب المستخدم في الطلب، أو إدخال رمز التتبع السري الخاص بك."
-              : "To protect your order privacy, please sign in with the account used at checkout, or enter your tracking security token."}
+          <p className="mt-2 text-center text-xs leading-relaxed text-[var(--text-muted)]">
+            {hasAccount
+              ? ar
+                ? "هذا الطلب مسجل بحساب على متجرنا. يرجى إدخال كلمة المرور أو تأكيد رقم هاتفك لعرض حالة الطلب وتحديث إيصال الدفع."
+                : "This order is linked to a registered customer account. Sign in with your password or confirm your mobile number to view details and re-upload payment proof."
+              : ar
+                ? "لحماية خصوصية بياناتك، يرجى تأكيد رقم هاتفك المستخدم في الطلب أو إدخال رمز التتبع."
+                : "To protect your order details, please confirm the phone number used at checkout or enter your tracking token."}
           </p>
-          <form
-            className="mt-6 grid gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void unlockOrder();
-            }}
-          >
-            <label
-              className="text-[11px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]"
-              htmlFor="tracking-token"
-            >
-              {ar ? "رمز التتبع السري" : "Tracking token"}
-            </label>
-            <input
-              id="tracking-token"
-              value={manualToken}
-              onChange={(event) => setManualToken(event.target.value)}
-              className="h-12 rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] px-4 text-sm text-[var(--text-strong)] outline-none focus:border-[#0e7468]"
-              required
-            />
+
+          {/* Unlock Method Segmented Tabs */}
+          <div className="mt-6 flex rounded-xs border border-[var(--border-subtle)] bg-[#f6f7f4] p-1 text-xs">
+            {hasAccount && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUnlockMethod("password");
+                  setUnlockError("");
+                }}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xs py-2 font-bold transition ${
+                  unlockMethod === "password"
+                    ? "bg-white text-[#073b36] shadow-xs"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-strong)]"
+                }`}
+              >
+                <KeyRound size={14} />
+                <span>{ar ? "كلمة المرور" : "Password"}</span>
+              </button>
+            )}
             <button
-              type="submit"
-              className="mt-2 h-12 rounded-xs bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white shadow-xs hover:bg-[#0e7468]"
+              type="button"
+              onClick={() => {
+                setUnlockMethod("phone");
+                setUnlockError("");
+              }}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xs py-2 font-bold transition ${
+                unlockMethod === "phone"
+                  ? "bg-white text-[#073b36] shadow-xs"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-strong)]"
+              }`}
             >
-              {ar ? "فتح بيانات الطلب" : "Open order"}
+              <Phone size={14} />
+              <span>{ar ? "رقم الهاتف" : "Phone"}</span>
             </button>
-          </form>
+            <button
+              type="button"
+              onClick={() => {
+                setUnlockMethod("token");
+                setUnlockError("");
+              }}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xs py-2 font-bold transition ${
+                unlockMethod === "token"
+                  ? "bg-white text-[#073b36] shadow-xs"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-strong)]"
+              }`}
+            >
+              <ShieldCheck size={14} />
+              <span>{ar ? "رمز التتبع" : "Token"}</span>
+            </button>
+          </div>
+
+          {/* Error Banner */}
+          {unlockError && (
+            <div className="mt-4 flex items-center gap-2 rounded-xs border border-[#a5472f]/30 bg-[#a5472f]/10 p-3 text-xs font-semibold text-[#a5472f]">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{unlockError}</span>
+            </div>
+          )}
+
+          {/* Form 1: Password Unlock */}
+          {unlockMethod === "password" && (
+            <form onSubmit={handleUnlockWithPassword} className="mt-5 space-y-3">
+              <div>
+                <label
+                  className="block text-[11px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]"
+                  htmlFor="unlock-email"
+                >
+                  {ar ? "البريد الإلكتروني" : "Email Address"}
+                </label>
+                <input
+                  id="unlock-email"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="doctor@example.com"
+                  className="mt-1 h-11 w-full rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] px-3.5 text-xs text-[var(--text-strong)] outline-none focus:border-[#0e7468]"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  className="block text-[11px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]"
+                  htmlFor="unlock-password"
+                >
+                  {ar ? "كلمة المرور الخاصة بحسابك" : "Account Password"}
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="unlock-password"
+                    type={showPassword ? "text" : "password"}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="h-11 w-full rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] px-3.5 pr-10 text-xs text-[var(--text-strong)] outline-none focus:border-[#0e7468]"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 grid w-10 place-items-center text-neutral-400 hover:text-neutral-700"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={unlocking}
+                className="mt-2 h-11 w-full rounded-xs bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white shadow-xs transition hover:bg-[#0e7468] disabled:opacity-50"
+              >
+                {unlocking
+                  ? ar
+                    ? "جارٍ التحقق…"
+                    : "Verifying…"
+                  : ar
+                    ? "تسجيل الدخول وفتح بيانات الطلب"
+                    : "Sign In & Unlock Order"}
+              </button>
+            </form>
+          )}
+
+          {/* Form 2: Phone Unlock */}
+          {unlockMethod === "phone" && (
+            <form onSubmit={handleUnlockWithPhone} className="mt-5 space-y-3">
+              <div>
+                <label
+                  className="block text-[11px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]"
+                  htmlFor="unlock-phone"
+                >
+                  {ar ? "رقم الهاتف المستخدم في الطلب" : "Checkout Mobile Number"}
+                </label>
+                {lockedInfo?.phoneHint && (
+                  <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
+                    {ar
+                      ? `رقم الهاتف ينتهي بالأرقام: ••••${lockedInfo.phoneHint}`
+                      : `Registered phone ends in: ••••${lockedInfo.phoneHint}`}
+                  </p>
+                )}
+                <input
+                  id="unlock-phone"
+                  type="tel"
+                  dir="ltr"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  placeholder="01012345678"
+                  className="mt-1 h-11 w-full rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] px-3.5 text-xs text-[var(--text-strong)] outline-none focus:border-[#0e7468]"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={unlocking}
+                className="mt-2 h-11 w-full rounded-xs bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white shadow-xs transition hover:bg-[#0e7468] disabled:opacity-50"
+              >
+                {unlocking
+                  ? ar
+                    ? "جارٍ التحقق…"
+                    : "Verifying…"
+                  : ar
+                    ? "تأكيد رقم الهاتف وفتح الطلب"
+                    : "Confirm Phone & Unlock Order"}
+              </button>
+            </form>
+          )}
+
+          {/* Form 3: Token Unlock */}
+          {unlockMethod === "token" && (
+            <form onSubmit={handleUnlockWithToken} className="mt-5 space-y-3">
+              <div>
+                <label
+                  className="block text-[11px] font-bold uppercase tracking-[.14em] text-[var(--text-muted)]"
+                  htmlFor="tracking-token"
+                >
+                  {ar ? "رمز التتبع السري" : "Tracking Security Token"}
+                </label>
+                <input
+                  id="tracking-token"
+                  dir="ltr"
+                  value={manualToken}
+                  onChange={(e) => setManualToken(e.target.value)}
+                  placeholder="••••••••••••••••••••••••••••••••"
+                  className="mt-1 h-11 w-full rounded-xs border border-[var(--border-subtle)] bg-[var(--surface-canvas)] px-3.5 text-xs text-[var(--text-strong)] outline-none focus:border-[#0e7468]"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={unlocking}
+                className="mt-2 h-11 w-full rounded-xs bg-[#073b36] text-xs font-bold uppercase tracking-[.14em] text-white shadow-xs transition hover:bg-[#0e7468] disabled:opacity-50"
+              >
+                {unlocking
+                  ? ar
+                    ? "جارٍ التحقق…"
+                    : "Verifying…"
+                  : ar
+                    ? "فتح بيانات الطلب بالرمز"
+                    : "Unlock Order with Token"}
+              </button>
+            </form>
+          )}
+
           <Link
             href={`/${locale}/account` as Route}
             className="mt-5 block text-center text-xs font-semibold text-[var(--text-muted)] underline underline-offset-4 hover:text-[#073b36]"
           >
-            {ar ? "تسجيل الدخول بالحساب" : "Sign in to account"}
+            {ar ? "الانتقال لصفحة تسجيل الدخول" : "Go to Account Sign In"}
           </Link>
         </div>
       </main>
@@ -220,7 +609,7 @@ export function OrderTracker({
       {!order.has_account && (
         <OrderAccountPrompt
           orderNumber={order.order_number}
-          trackingToken={manualToken || storedToken(order.order_number)}
+          trackingToken={activeToken || manualToken || storedToken(order.order_number)}
           customerName={order.customer_name}
           email={order.email}
           phone={order.phone}
@@ -239,7 +628,8 @@ export function OrderTracker({
         order.status !== "returned" && (
           <PaymentProofReupload
             orderNumber={order.order_number}
-            trackingToken={manualToken || storedToken(order.order_number)}
+            trackingToken={activeToken || manualToken || storedToken(order.order_number)}
+            phone={activePhone || phoneInput}
             paymentMethod={order.payment_method}
             codDepositMinor={order.cod_deposit_minor}
             totalMinor={order.total_minor}

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { hashToken } from "@/features/checkout/security";
+import { matchEgyptianPhone } from "@/features/checkout/validation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,13 +47,23 @@ export async function GET(
   const ownsOrder = Boolean(
     claims?.claims?.sub && claims.claims.sub === order.user_id,
   );
-  const token = new URL(request.url).searchParams.get("token") ?? "";
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token") ?? "";
+  const phone = url.searchParams.get("phone") ?? "";
+
   const validToken =
     token.length >= 32 &&
     equalHash(hashToken(token), order.tracking_token_hash);
-  if (!ownsOrder && !validToken)
+  const validPhone = Boolean(phone && matchEgyptianPhone(phone, order.phone));
+
+  if (!ownsOrder && !validToken && !validPhone)
     return NextResponse.json(
-      { error: "tracking_token_required" },
+      {
+        error: "tracking_token_required",
+        has_account: Boolean(order.user_id),
+        email: order.email ?? null,
+        phone_hint: order.phone ? order.phone.slice(-4) : null,
+      },
       { status: 401 },
     );
 

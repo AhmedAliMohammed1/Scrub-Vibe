@@ -19,6 +19,7 @@ import { formatMoney } from "@/lib/money";
 type Props = {
   orderNumber: string;
   trackingToken?: string;
+  phone?: string;
   paymentMethod: string;
   codDepositMinor?: number;
   totalMinor?: number;
@@ -30,6 +31,7 @@ type Props = {
 export function PaymentProofReupload({
   orderNumber,
   trackingToken,
+  phone,
   paymentMethod,
   codDepositMinor,
   totalMinor,
@@ -131,6 +133,9 @@ export function PaymentProofReupload({
       formData.append("locale", locale);
       if (trackingToken) {
         formData.append("trackingToken", trackingToken);
+      }
+      if (phone) {
+        formData.append("phone", phone);
       }
 
       const response = await fetch(

@@ -4,6 +4,7 @@ import {
   paymentProofExtensionFromBytes,
 } from "../../src/features/checkout/payment-proof";
 import { hashToken, issuePrivateToken } from "../../src/features/checkout/security";
+import { matchEgyptianPhone } from "../../src/features/checkout/validation";
 
 describe("Payment Proof Re-upload Workflow", () => {
   describe("File Magic Bytes & Extension Validation", () => {
@@ -95,6 +96,104 @@ describe("Payment Proof Re-upload Workflow", () => {
     it("does not trigger re-upload when payment is already paid or pending initial proof", () => {
       expect(isEligibleForReupload("confirmed", "vodafone_cash", "paid")).toBe(false);
       expect(isEligibleForReupload("payment_review", "vodafone_cash", "proof_submitted")).toBe(false);
+    });
+  });
+
+  describe("Phone Verification for Ghost Mode Access & Re-upload", () => {
+    it("matches local 010... with stored E.164 +2010...", () => {
+      expect(matchEgyptianPhone("01012345678", "+201012345678")).toBe(true);
+      expect(matchEgyptianPhone("+201012345678", "01012345678")).toBe(true);
+    });
+
+    it("matches 0020 international prefix with local 011...", () => {
+      expect(matchEgyptianPhone("00201198765432", "01198765432")).toBe(true);
+    });
+
+    it("matches digits formatted with spaces or hyphens", () => {
+      expect(matchEgyptianPhone("012 1111 2222", "+201211112222")).toBe(true);
+      expect(matchEgyptianPhone("015-3333-4444", "01533334444")).toBe(true);
+    });
+
+    it("rejects mismatched phone numbers", () => {
+      expect(matchEgyptianPhone("01012345678", "01099998888")).toBe(false);
+      expect(matchEgyptianPhone("01012345678", "01112345678")).toBe(false);
+    });
+
+    it("rejects null or short input", () => {
+      expect(matchEgyptianPhone(null, "01012345678")).toBe(false);
+      expect(matchEgyptianPhone("1234", "01012345678")).toBe(false);
+    });
+  });
+
+  describe("Ghost Mode Multi-Factor Authorization Guard", () => {
+    const isCallerAuthorized = ({
+      isOwner,
+      incomingToken,
+      storedTokenHash,
+      incomingPhone,
+      orderPhone,
+    }: {
+      isOwner: boolean;
+      incomingToken?: string;
+      storedTokenHash: string;
+      incomingPhone?: string;
+      orderPhone: string;
+    }) => {
+      if (isOwner) return true;
+      if (incomingToken && incomingToken.length >= 32) {
+        const tokenHash = hashToken(incomingToken);
+        const a = Buffer.from(tokenHash, "hex");
+        const b = Buffer.from(storedTokenHash, "hex");
+        if (a.length === b.length && timingSafeEqual(a, b)) return true;
+      }
+      if (incomingPhone && matchEgyptianPhone(incomingPhone, orderPhone)) {
+        return true;
+      }
+      return false;
+    };
+
+    it("authorizes when caller is authenticated order owner", () => {
+      const auth = isCallerAuthorized({
+        isOwner: true,
+        storedTokenHash: "somehash",
+        orderPhone: "+201012345678",
+      });
+      expect(auth).toBe(true);
+    });
+
+    it("authorizes in ghost mode when valid token is supplied in URL/storage", () => {
+      const token = issuePrivateToken();
+      const auth = isCallerAuthorized({
+        isOwner: false,
+        incomingToken: token,
+        storedTokenHash: hashToken(token),
+        orderPhone: "+201012345678",
+      });
+      expect(auth).toBe(true);
+    });
+
+    it("authorizes in ghost mode when customer confirms matching checkout phone", () => {
+      const token = issuePrivateToken();
+      const auth = isCallerAuthorized({
+        isOwner: false,
+        storedTokenHash: hashToken(token),
+        incomingPhone: "01012345678",
+        orderPhone: "+201012345678",
+      });
+      expect(auth).toBe(true);
+    });
+
+    it("denies access in ghost mode when neither token nor phone matches", () => {
+      const tokenA = issuePrivateToken();
+      const tokenB = issuePrivateToken();
+      const auth = isCallerAuthorized({
+        isOwner: false,
+        incomingToken: tokenA,
+        storedTokenHash: hashToken(tokenB),
+        incomingPhone: "01199990000",
+        orderPhone: "+201012345678",
+      });
+      expect(auth).toBe(false);
     });
   });
 });

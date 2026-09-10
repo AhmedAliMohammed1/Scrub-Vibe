@@ -10,6 +10,16 @@ export function normalizeEgyptianPhone(value: string) {
   return egyptianPhone.test(phone) ? phone : null;
 }
 
+export function matchEgyptianPhone(a?: string | null, b?: string | null): boolean {
+  if (!a || !b) return false;
+  const normA = normalizeEgyptianPhone(a);
+  const normB = normalizeEgyptianPhone(b);
+  if (normA && normB) return normA === normB;
+  const digA = a.replace(/\D/g, "").slice(-10);
+  const digB = b.replace(/\D/g, "").slice(-10);
+  return digA.length >= 9 && digA === digB;
+}
+
 export const otpRequestSchema = z.object({
   phone: z.string().transform((value, context) => {
     const normalized = normalizeEgyptianPhone(value);

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { paymentProofExtension } from "@/features/checkout/payment-proof";
 import { hashToken } from "@/features/checkout/security";
+import { matchEgyptianPhone } from "@/features/checkout/validation";
 import { sendStaffEmail } from "@/features/notifications/email";
 import { getSiteOrigin } from "@/features/auth/site-url";
 import { formatMoney } from "@/lib/money";
@@ -27,6 +28,7 @@ export async function POST(
 
   const proof = formData.get("proof");
   const trackingToken = String(formData.get("trackingToken") ?? "");
+  const phone = String(formData.get("phone") ?? "");
   const locale = formData.get("locale") === "ar" ? "ar" : "en";
   const ar = locale === "ar";
 
@@ -45,7 +47,7 @@ export async function POST(
   const { data: order, error: orderError } = await admin
     .from("orders")
     .select(
-      "id, order_number, user_id, status, payment_status, payment_method, total_minor, cod_deposit_minor, tracking_token_hash, customer_name, email",
+      "id, order_number, user_id, status, payment_status, payment_method, total_minor, cod_deposit_minor, tracking_token_hash, customer_name, email, phone",
     )
     .eq("order_number", orderNumber.toUpperCase())
     .maybeSingle();
@@ -57,7 +59,7 @@ export async function POST(
     );
   }
 
-  // Authorize caller: authenticated owner OR valid tracking token
+  // Authorize caller: authenticated owner OR valid tracking token OR matching phone
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub ?? null;
@@ -66,6 +68,9 @@ export async function POST(
   let isAuthorized = isOwner;
   if (!isAuthorized && trackingToken && trackingToken.length >= 32) {
     isAuthorized = equalHash(hashToken(trackingToken), order.tracking_token_hash);
+  }
+  if (!isAuthorized && phone) {
+    isAuthorized = matchEgyptianPhone(phone, order.phone);
   }
 
   if (!isAuthorized) {
