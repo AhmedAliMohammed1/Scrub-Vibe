@@ -8,6 +8,7 @@ import {
 } from "@/features/notifications/email";
 import { catalog } from "@/lib/catalog";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { processOperationsEscalation } from "@/features/operations/escalation";
 
 export async function processCommercialAutomation() {
   const admin = createAdminClient();
@@ -108,15 +109,13 @@ export async function processCommercialAutomation() {
         })
         .eq("id", existing.id);
     } else {
-      await admin
-        .from("inventory_alerts")
-        .insert({
-          variant_id: row.variant_id,
-          available_quantity: row.available,
-          threshold: row.low_stock_threshold,
-          last_detected_at: now,
-          last_notified_at: now,
-        });
+      await admin.from("inventory_alerts").insert({
+        variant_id: row.variant_id,
+        available_quantity: row.available,
+        threshold: row.low_stock_threshold,
+        last_detected_at: now,
+        last_notified_at: now,
+      });
     }
   }
   const resolvedIds = (openAlerts ?? [])
@@ -139,11 +138,13 @@ export async function processCommercialAutomation() {
       `<p>These variants need attention:</p><ul>${lines}</ul>`,
     );
   }
+  const operations = await processOperationsEscalation();
   return {
     subscriptionsScanned: subscriptionRows?.length ?? 0,
     customersNotified: notified,
     lowStockVariants: lowRows.length,
     newLowStockAlerts: newLowRows.length,
     resolvedAlerts: resolvedIds.length,
+    operations,
   };
 }

@@ -4,7 +4,7 @@
 - **Current branch:** `main`
 - **Hosted application:** `https://scrub-vibe-tau.vercel.app`
 - **Supabase project:** `iqufqtjotgpmhhtvlxwf`
-- **Latest feature:** Customer Product Reviews & Star Ratings, followed by the product-page back-in-stock notification dialog
+- **Latest feature:** Production operations foundation: health/readiness, structured runtime errors, fail-closed cron security, operational escalation, verified backup/restore drills, release/rollback and incident runbooks, and automated smoke/security workflows
 - **Known application bugs:** None confirmed in the implemented scope
 
 ## Implemented
@@ -26,6 +26,7 @@
 - Three-stage abandoned-cart recovery with signed unsubscribe, recovery discounts, conversion attribution and Vercel Cron scheduling.
 - Pagination for long customer and admin collections, responsive admin tools and role-aware navigation.
 - RLS, least-privilege grants, private storage, server-authoritative commerce operations, idempotent callbacks and security regression coverage.
+- Production operations with liveness/readiness endpoints, structured server-error logs, fail-closed cron authentication, expired-reservation cleanup, stale proof/payment/webhook escalation, database and Storage backup integrity tooling, non-production restore drills, hourly smoke monitoring, weekly dependency/CodeQL scanning and complete operator runbooks.
 
 ## Remaining or externally blocked
 
@@ -34,11 +35,11 @@
 3. Implement automated WhatsApp Business notifications; current WhatsApp usage is link-based only.
 4. Verify a Scrub Vibe sender domain in Resend and set `RESEND_FROM_EMAIL`.
 5. Configure GA4, Meta Pixel and Meta CAPI credentials and validate event deduplication in production.
-6. Configure/confirm `CRON_SECRET` and monitor the recovery and commercial cron executions.
-7. Add production observability and distributed rate limiting (Sentry and Upstash Redis are reserved in the environment contract but not integrated).
+6. Configure `CRON_SECRET` and `OPERATIONS_SECRET` in Vercel and confirm the deployed health/cron workflows.
+7. Optionally add longer-retention external observability and distributed rate limiting (Vercel-native structured logging and smoke monitoring are implemented; Sentry and Upstash remain optional extensions).
 8. Add committed Playwright end-to-end journeys for authentication, checkout, proof review, returns, reviews and admin operations.
-9. Complete production backup/restore, rollback, incident-response and monitoring runbooks.
-10. Re-run final live Supabase security/performance advisors and verify Auth leaked-password protection before launch sign-off.
+9. Run the first encrypted backup and non-production restore drill, then record the measured RPO/RTO.
+10. Upgrade Supabase to Pro if leaked-password protection is required; the setting is unavailable on the current Free plan. Re-review the remaining intentional/optimization advisor findings before launch sign-off.
 
 ## External configuration required
 
@@ -52,10 +53,11 @@
 
 ## Verification baseline
 
-- Customer Reviews checkpoint: **32 test files / 319 tests passed**, ESLint passed, strict TypeScript passed and Next.js 16.3.3 production build passed.
-- Review security was checked against the hosted Supabase project, including anonymous/authenticated execution boundaries.
-- Responsive English, Arabic/RTL and 390px product/review/admin flows passed browser QA without horizontal overflow or framework overlays.
-- The subsequent back-in-stock PDP notification UI includes dedicated Vitest coverage.
+- Production operations checkpoint: **34 test files / 332 tests passed**; ESLint, strict TypeScript and the Next.js 16.3.3 production build passed.
+- Live migration verification confirmed three operational indexes, eleven optimized owner policies and revoked direct access to trigger-only functions.
+- Responsive English, Arabic/RTL and 390px product/review/admin flows remain covered by the previous browser QA checkpoint.
+- Supabase leaked-password protection remains unavailable on the current Free plan; other remaining advisor entries are intentional access patterns or future optimization work.
+- Full historical verification evidence is recorded in `TEST_REPORT.md`.
 
 ## Next action
 

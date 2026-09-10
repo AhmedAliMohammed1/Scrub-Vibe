@@ -55,7 +55,8 @@
 - [x] **DONE** Implement verified-purchase Customer Product Reviews & Star Ratings with customer management, moderation, responses, aggregates, catalogue ratings and structured SEO. Tests: PASS (319 total + live Supabase verification).
 - [x] **DONE** Add an accessible product-page back-in-stock notification dialog for unavailable variants with dedicated tests.
 - [ ] **TODO** Add Resend sender domain verification and update `RESEND_FROM_EMAIL` in Vercel env vars.
-- [ ] **TODO** Add production observability/monitoring (Sentry DSN, Upstash Redis rate limiting).
+- [x] **DONE** Implement production operations: structured Vercel logs, liveness/readiness, fail-closed cron authentication, expired-reservation and stale-payment escalation, verified database/Storage backups, protected non-production restore drills, release/rollback and incident runbooks, hourly smoke checks and weekly dependency/CodeQL scanning.
 - [ ] **TODO** Configure GA4, Meta Pixel and Meta CAPI credentials and validate event deduplication.
 - [ ] **TODO** Add committed Playwright end-to-end journeys for critical customer and staff workflows.
-- [ ] **TODO** Complete and rehearse backup/restore, rollback and incident-response runbooks.
+- [ ] **TODO** Configure production operations secrets, run the first encrypted backup/non-production restore drill, and record measured RPO/RTO evidence.
+- [ ] **BLOCKED** Enable Supabase leaked-password protection after upgrading the project from Free to Pro; the signed-in dashboard confirms the feature is plan-gated.

@@ -1,5 +1,18 @@
 # Test report
 
+## Production operations checkpoint — 2026-09-11
+
+- Full suite: PASS — 34 files, 332 tests.
+- Lint: PASS — ESLint completed with zero warnings.
+- Typecheck: PASS — strict TypeScript completed successfully.
+- Build: PASS — Next.js 16.3.3 production build, including `/api/health/live` and `/api/health/ready`.
+- Script validation: PASS — all production-operation PowerShell scripts parse successfully and all Node.js operation scripts pass syntax checks.
+- Local production smoke checks: PASS — liveness returned `200`, readiness failed safely with a minimal `503` when dependencies were intentionally unavailable, and an unauthenticated cron request returned `401`.
+- Hosted database hardening: PASS — migration `20260910215258_production_operations_hardening` is applied to `iqufqtjotgpmhhtvlxwf`; three missing foreign-key indexes exist, eleven owner policies use cached `auth.uid()` evaluation, and trigger-only functions are no longer directly executable by `anon` or `authenticated`.
+- Supabase advisors: PARTIAL — missing-FK-index and per-row Auth RLS warnings are resolved. Remaining findings are two intentionally private OTP tables without direct policies, guarded public/domain security-definer RPCs, multiple-permissive-policy opportunities and expected unused-index notices on the low-traffic database.
+- Leaked-password protection: BLOCKED BY PLAN — the signed-in dashboard confirms the control is available only on Supabase Pro and above; this Free-plan project cannot enable it without a billing upgrade.
+- External production actions: NOT_RUN — the first encrypted backup/non-production restore drill and deployed secret-backed monitor checks require operator credentials and infrastructure configuration.
+
 ## Current verification baseline — 2026-09-11
 
 - Customer Product Reviews & Star Ratings checkpoint: PASS — 32 files, 319 tests.

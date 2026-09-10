@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Implemented the production operations foundation with liveness/readiness endpoints, structured Next.js server-error logging, fail-closed Vercel cron authentication, expired-reservation cleanup and stale payment/proof/webhook escalation.
+- Added SHA-256-verified Supabase database and Storage backup tooling, production-protected restore drills, release/rollback, backup/recovery, monitoring and incident-response runbooks.
+- Added hourly production smoke monitoring plus weekly dependency audit, dependency review and CodeQL workflows.
+- Applied live Supabase operational hardening for trigger-only function grants, missing foreign-key indexes and owner-policy Auth evaluation; recorded the remaining Pro-only leaked-password protection constraint.
 - Added verified-purchase Customer Product Reviews & Star Ratings with customer management, moderation, staff responses, aggregate summaries, catalogue ratings and product structured data.
 - Added an accessible back-in-stock notification dialog to product pages for unavailable colour/size selections.
 - Added colour-specific multi-image product galleries, complete admin product editing/deletion, pagination and strengthened mobile/RTL layouts.

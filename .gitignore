@@ -8,6 +8,8 @@ coverage/
 *.tsbuildinfo
 playwright-report/
 test-results/
+backups/
+*.backup
 
 .vercel
 .env*
