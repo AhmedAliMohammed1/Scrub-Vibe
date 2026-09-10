@@ -7,6 +7,13 @@ import { z } from "zod";
 import { requireRoles } from "@/server/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { renderReturnUpdate, sendEmail } from "@/features/notifications/email";
+import {
+  formatReturnErrorMessage,
+  parseEgpToMinor,
+  returnRefundMethods,
+  returnResolutions,
+  returnStatuses,
+} from "@/features/commercial/return-workflow";
 
 function localeFrom(form: FormData) {
   return form.get("locale") === "ar" ? ("ar" as const) : ("en" as const);
@@ -140,18 +147,16 @@ export async function saveRecommendationAction(formData: FormData) {
     "admin",
     "super_admin",
   ]);
-  const { error } = await supabase
-    .from("product_recommendations")
-    .upsert(
-      {
-        product_id: parsed.data.productId,
-        related_product_id: parsed.data.relatedProductId,
-        kind: parsed.data.kind,
-        created_by: userId,
-        is_active: true,
-      },
-      { onConflict: "product_id,related_product_id,kind" },
-    );
+  const { error } = await supabase.from("product_recommendations").upsert(
+    {
+      product_id: parsed.data.productId,
+      related_product_id: parsed.data.relatedProductId,
+      kind: parsed.data.kind,
+      created_by: userId,
+      is_active: true,
+    },
+    { onConflict: "product_id,related_product_id,kind" },
+  );
   if (error) done(locale, error.message, true);
   revalidatePath(`/${locale}/admin/commercial`);
   revalidatePath(`/${locale}`, "layout");
@@ -189,17 +194,13 @@ export async function updateReturnAction(formData: FormData) {
   const parsed = z
     .object({
       id: z.string().uuid(),
-      status: z.enum([
-        "requested",
-        "reviewing",
-        "approved",
-        "rejected",
-        "received",
-        "completed",
-        "cancelled",
-      ]),
-      resolution: z.enum(["", "refund", "exchange", "store_credit"]),
+      status: z.enum(returnStatuses),
+      resolution: z.union([z.literal(""), z.enum(returnResolutions)]),
       note: z.string().trim().max(1000),
+      internalNote: z.string().trim().max(2000),
+      refundAmount: z.string().trim().max(20),
+      refundMethod: z.union([z.literal(""), z.enum(returnRefundMethods)]),
+      refundReference: z.string().trim().max(160),
     })
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success)
@@ -208,63 +209,112 @@ export async function updateReturnAction(formData: FormData) {
       locale === "ar" ? "بيانات التحديث غير صالحة." : "Invalid return update.",
       true,
     );
-  const { supabase, userId } = await requireRoles([
+
+  const itemIds = formData.getAll("itemId").map(String);
+  const receivedQuantities = formData.getAll("receivedQuantity").map(String);
+  const restockedQuantities = formData.getAll("restockedQuantity").map(String);
+  if (
+    itemIds.length !== receivedQuantities.length ||
+    itemIds.length !== restockedQuantities.length
+  )
+    done(
+      locale,
+      locale === "ar"
+        ? "بيانات كميات المنتجات غير مكتملة."
+        : "Return item quantities are incomplete.",
+      true,
+    );
+
+  const itemReceipts = itemIds.map((id, index) => ({
+    id,
+    received_quantity: Number(receivedQuantities[index]),
+    restocked_quantity: Number(restockedQuantities[index]),
+  }));
+  if (
+    itemReceipts.some(
+      (item) =>
+        !/^\d+$/.test(item.id) ||
+        !Number.isInteger(item.received_quantity) ||
+        !Number.isInteger(item.restocked_quantity),
+    )
+  )
+    done(
+      locale,
+      locale === "ar"
+        ? "كميات المنتجات غير صحيحة."
+        : "Return item quantities are invalid.",
+      true,
+    );
+
+  const refundAmountMinor =
+    parsed.data.refundAmount === ""
+      ? 0
+      : parseEgpToMinor(parsed.data.refundAmount);
+  if (refundAmountMinor === null)
+    done(
+      locale,
+      locale === "ar"
+        ? "أدخل مبلغ الاسترداد بالجنيه ورقمين عشريين كحد أقصى."
+        : "Enter the refund in EGP with no more than two decimal places.",
+      true,
+    );
+
+  const { supabase } = await requireRoles([
     "support",
     "warehouse",
     "admin",
     "super_admin",
   ]);
-  const now = new Date().toISOString();
-  const timestamps =
-    parsed.data.status === "received"
-      ? { received_at: now }
-      : parsed.data.status === "completed"
-        ? { completed_at: now }
-        : ["approved", "rejected"].includes(parsed.data.status)
-          ? { reviewed_at: now }
-          : {};
-  const { error } = await supabase
-    .from("return_requests")
-    .update({
-      status: parsed.data.status,
-      resolution: parsed.data.resolution || null,
-      staff_note: parsed.data.note || null,
-      ...timestamps,
-    })
-    .eq("id", parsed.data.id);
-  if (error) done(locale, error.message, true);
-  const { error: historyError } = await supabase
-    .from("return_status_history")
-    .insert({
-      return_request_id: parsed.data.id,
-      status: parsed.data.status,
-      note: parsed.data.note || null,
-      actor_id: userId,
-    });
-  if (historyError) done(locale, historyError.message, true);
+  const { error } = await supabase.rpc("admin_update_return", {
+    p_return_id: parsed.data.id,
+    p_status: parsed.data.status,
+    p_resolution: parsed.data.resolution || undefined,
+    p_customer_note: parsed.data.note || undefined,
+    p_internal_note: parsed.data.internalNote || undefined,
+    p_refund_amount_minor: refundAmountMinor,
+    p_refund_method: parsed.data.refundMethod || undefined,
+    p_refund_reference: parsed.data.refundReference || undefined,
+    p_item_receipts: itemReceipts,
+  });
+  if (error)
+    done(locale, formatReturnErrorMessage(error.message, locale), true);
+
   const admin = createAdminClient();
   const { data: request } = await admin
     .from("return_requests")
     .select(
-      "return_number, request_type, status, orders(email, customer_name, order_number)",
+      "return_number, request_type, status, resolution, refund_amount_minor, refund_method, refund_reference, orders(email, customer_name, order_number)",
     )
     .eq("id", parsed.data.id)
     .single();
-  if (request?.orders?.email)
-    await sendEmail(
-      renderReturnUpdate({
-        email: request.orders.email,
-        customerName: request.orders.customer_name,
-        orderNumber: request.orders.order_number,
-        returnNumber: request.return_number,
-        requestType: request.request_type,
-        status: request.status,
-        note: parsed.data.note || null,
-        locale,
-      }),
-    );
+  if (request?.orders?.email) {
+    try {
+      await sendEmail(
+        renderReturnUpdate({
+          email: request.orders.email,
+          customerName: request.orders.customer_name,
+          orderNumber: request.orders.order_number,
+          returnNumber: request.return_number,
+          requestType: request.request_type,
+          status: request.status,
+          resolution: request.resolution,
+          refundAmountMinor: request.refund_amount_minor,
+          refundMethod: request.refund_method,
+          refundReference: request.refund_reference,
+          note: parsed.data.note || null,
+          locale,
+        }),
+      );
+    } catch (emailError) {
+      console.error("[email] Failed to send return update", emailError);
+    }
+  }
   revalidatePath(`/${locale}/admin/commercial`);
+  revalidatePath(`/${locale}/admin/orders`);
+  revalidatePath(`/${locale}/account`);
   revalidatePath(`/${locale}/account/returns`);
+  if (request?.orders?.order_number)
+    revalidatePath(`/${locale}/track/${request.orders.order_number}`);
   done(
     locale,
     locale === "ar" ? "تم تحديث طلب الاسترجاع." : "Return request updated.",

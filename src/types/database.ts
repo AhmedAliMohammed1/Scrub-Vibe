@@ -1678,14 +1678,48 @@ export type Database = {
         }
         Relationships: []
       }
+      return_internal_notes: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: number
+          note: string
+          return_request_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: never
+          note: string
+          return_request_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: never
+          note?: string
+          return_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_internal_notes_return_request_id_fkey"
+            columns: ["return_request_id"]
+            isOneToOne: false
+            referencedRelation: "return_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       return_request_items: {
         Row: {
           condition_note: string | null
           id: number
           order_item_id: number
           quantity: number
+          received_quantity: number
           requested_colour: string | null
           requested_size: string | null
+          restocked_quantity: number
           return_request_id: string
         }
         Insert: {
@@ -1693,8 +1727,10 @@ export type Database = {
           id?: never
           order_item_id: number
           quantity: number
+          received_quantity?: number
           requested_colour?: string | null
           requested_size?: string | null
+          restocked_quantity?: number
           return_request_id: string
         }
         Update: {
@@ -1702,8 +1738,10 @@ export type Database = {
           id?: never
           order_item_id?: number
           quantity?: number
+          received_quantity?: number
           requested_colour?: string | null
           requested_size?: string | null
+          restocked_quantity?: number
           return_request_id?: string
         }
         Relationships: [
@@ -1732,6 +1770,10 @@ export type Database = {
           order_id: string
           reason_code: string
           received_at: string | null
+          refund_amount_minor: number
+          refund_completed_at: string | null
+          refund_method: Database["public"]["Enums"]["return_refund_method"] | null
+          refund_reference: string | null
           request_type: Database["public"]["Enums"]["return_request_type"]
           requested_at: string
           resolution: Database["public"]["Enums"]["return_resolution"] | null
@@ -1750,6 +1792,10 @@ export type Database = {
           order_id: string
           reason_code: string
           received_at?: string | null
+          refund_amount_minor?: number
+          refund_completed_at?: string | null
+          refund_method?: Database["public"]["Enums"]["return_refund_method"] | null
+          refund_reference?: string | null
           request_type: Database["public"]["Enums"]["return_request_type"]
           requested_at?: string
           resolution?: Database["public"]["Enums"]["return_resolution"] | null
@@ -1768,6 +1814,10 @@ export type Database = {
           order_id?: string
           reason_code?: string
           received_at?: string | null
+          refund_amount_minor?: number
+          refund_completed_at?: string | null
+          refund_method?: Database["public"]["Enums"]["return_refund_method"] | null
+          refund_reference?: string | null
           request_type?: Database["public"]["Enums"]["return_request_type"]
           requested_at?: string
           resolution?: Database["public"]["Enums"]["return_resolution"] | null
@@ -2201,6 +2251,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_update_return: {
+        Args: {
+          p_customer_note?: string
+          p_internal_note?: string
+          p_item_receipts?: Json
+          p_refund_amount_minor?: number
+          p_refund_method?: Database["public"]["Enums"]["return_refund_method"]
+          p_refund_reference?: string
+          p_resolution?: Database["public"]["Enums"]["return_resolution"]
+          p_return_id: string
+          p_status: Database["public"]["Enums"]["return_request_status"]
+        }
+        Returns: Json
+      }
       create_promotional_order: {
         Args: {
           p_order: Json
@@ -2305,6 +2369,7 @@ export type Database = {
         | "shipped"
         | "out_for_delivery"
         | "delivered"
+        | "partially_returned"
         | "cancelled"
         | "returned"
       payment_method: "cod" | "vodafone_cash" | "instapay" | "paymob"
@@ -2312,6 +2377,7 @@ export type Database = {
         | "pending"
         | "proof_submitted"
         | "paid"
+        | "partially_refunded"
         | "rejected"
         | "failed"
         | "cod_due"
@@ -2328,6 +2394,12 @@ export type Database = {
         | "completed"
         | "cancelled"
       return_request_type: "return" | "exchange"
+      return_refund_method:
+        | "original_payment"
+        | "vodafone_cash"
+        | "instapay"
+        | "bank_transfer"
+        | "cash"
       return_resolution: "refund" | "exchange" | "store_credit"
       stock_subscription_status: "active" | "notified" | "unsubscribed"
     }
@@ -2488,6 +2560,7 @@ export const Constants = {
         "shipped",
         "out_for_delivery",
         "delivered",
+        "partially_returned",
         "cancelled",
         "returned",
       ],
@@ -2496,6 +2569,7 @@ export const Constants = {
         "pending",
         "proof_submitted",
         "paid",
+        "partially_refunded",
         "rejected",
         "failed",
         "cod_due",
@@ -2514,6 +2588,13 @@ export const Constants = {
         "cancelled",
       ],
       return_request_type: ["return", "exchange"],
+      return_refund_method: [
+        "original_payment",
+        "vodafone_cash",
+        "instapay",
+        "bank_transfer",
+        "cash",
+      ],
       return_resolution: ["refund", "exchange", "store_credit"],
       stock_subscription_status: ["active", "notified", "unsubscribed"],
     },

@@ -159,6 +159,22 @@ const returnReviewPermissions = readFileSync(
   "utf8",
 ).toLowerCase();
 
+const partialReturnStatuses = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260910021400_add_partial_return_statuses.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
+const completeReturnWorkflow = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260910021429_complete_return_workflow.sql",
+  ),
+  "utf8",
+).toLowerCase();
+
 describe("foundation migration security", () => {
   it("enables RLS on every public table it creates", () => {
     const tables = [
@@ -579,6 +595,52 @@ describe("foundation migration security", () => {
     expect(returnReviewPermissions).toContain("actor_id = (select auth.uid())");
     expect(returnReviewPermissions).toContain(
       "array['support','warehouse','admin','super_admin']::public.app_role[]",
+    );
+  });
+
+  it("models partial returns and refunds explicitly", () => {
+    expect(partialReturnStatuses).toContain(
+      "add value if not exists 'partially_returned'",
+    );
+    expect(partialReturnStatuses).toContain(
+      "add value if not exists 'partially_refunded'",
+    );
+  });
+
+  it("keeps return completion atomic, role-scoped, and auditable", () => {
+    expect(completeReturnWorkflow).toContain(
+      "create or replace function public.admin_update_return",
+    );
+    expect(completeReturnWorkflow).toContain("security invoker");
+    expect(completeReturnWorkflow).not.toContain("security definer");
+    expect(completeReturnWorkflow).toContain("invalid_return_transition");
+    expect(completeReturnWorkflow).toContain("return_completion_forbidden");
+    expect(completeReturnWorkflow).toContain("refund_reference_required");
+    expect(completeReturnWorkflow).toContain("partially_refunded");
+    expect(completeReturnWorkflow).toContain("partially_returned");
+    expect(completeReturnWorkflow).toContain(
+      "perform public.admin_update_order",
+    );
+    expect(completeReturnWorkflow).toContain(
+      "insert into public.inventory_movements",
+    );
+    expect(completeReturnWorkflow).toContain(
+      "revoke execute on function public.admin_update_return",
+    );
+  });
+
+  it("stores private notes in a customer-inaccessible RLS table", () => {
+    expect(completeReturnWorkflow).toContain(
+      "alter table public.return_internal_notes enable row level security",
+    );
+    expect(completeReturnWorkflow).toContain(
+      "revoke all on public.return_internal_notes from anon, authenticated",
+    );
+    expect(completeReturnWorkflow).toContain(
+      "create policy return_internal_notes_staff_select",
+    );
+    expect(completeReturnWorkflow).not.toMatch(
+      /return_internal_notes_customer_select/,
     );
   });
 });

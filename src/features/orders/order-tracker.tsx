@@ -3,7 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
-import { Check, Clock3, ExternalLink, Lock, PackageCheck, Truck } from "lucide-react";
+import {
+  Check,
+  Clock3,
+  ExternalLink,
+  Lock,
+  PackageCheck,
+  Truck,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
@@ -34,8 +41,7 @@ async function fetchTrackedOrder(orderNumber: string, token: string) {
     `/api/orders/${encodeURIComponent(orderNumber)}?token=${encodeURIComponent(token)}`,
     { cache: "no-store" },
   );
-  if (response.status === 401)
-    return { state: "locked" as const, order: null };
+  if (response.status === 401) return { state: "locked" as const, order: null };
   if (!response.ok) return { state: "error" as const, order: null };
   return {
     state: "ready" as const,
@@ -52,9 +58,9 @@ export function OrderTracker({
 }) {
   const ar = locale === "ar";
   const [order, setOrder] = useState<TrackedOrder | null>(null);
-  const [state, setState] = useState<
-    "loading" | "ready" | "locked" | "error"
-  >("loading");
+  const [state, setState] = useState<"loading" | "ready" | "locked" | "error">(
+    "loading",
+  );
   const [manualToken, setManualToken] = useState("");
 
   useEffect(() => {
@@ -173,21 +179,23 @@ export function OrderTracker({
   const currentIndex = progress.indexOf(
     order.status as (typeof progress)[number],
   );
-  const paymentLabel: Record<TrackedOrder["payment_status"], [string, string]> = {
-    pending: ["Payment in progress", "الدفع قيد التنفيذ"],
-    proof_submitted: ["Proof under review", "إيصال الدفع قيد المراجعة"],
-    paid: ["Payment verified", "تم الدفع بنجاح"],
-    rejected: ["Payment proof rejected", "تم رفض إيصال الدفع"],
-    failed: ["Payment failed", "فشل الدفع"],
-    cod_due: order.cod_deposit_minor
-      ? [
-          "Deposit verified · balance due on delivery",
-          "تم تأكيد المقدم · الباقي عند الاستلام",
-        ]
-      : ["Cash due on delivery", "الدفع عند الاستلام"],
-    cod_collected: ["Cash collected", "تم تحصيل المبلغ"],
-    refunded: ["Payment refunded", "تم رد المبلغ"],
-  };
+  const paymentLabel: Record<TrackedOrder["payment_status"], [string, string]> =
+    {
+      pending: ["Payment in progress", "الدفع قيد التنفيذ"],
+      proof_submitted: ["Proof under review", "إيصال الدفع قيد المراجعة"],
+      paid: ["Payment verified", "تم الدفع بنجاح"],
+      partially_refunded: ["Payment partially refunded", "تم رد جزء من المبلغ"],
+      rejected: ["Payment proof rejected", "تم رفض إيصال الدفع"],
+      failed: ["Payment failed", "فشل الدفع"],
+      cod_due: order.cod_deposit_minor
+        ? [
+            "Deposit verified · balance due on delivery",
+            "تم تأكيد المقدم · الباقي عند الاستلام",
+          ]
+        : ["Cash due on delivery", "الدفع عند الاستلام"],
+      cod_collected: ["Cash collected", "تم تحصيل المبلغ"],
+      refunded: ["Payment refunded", "تم رد المبلغ"],
+    };
 
   return (
     <main className="mx-auto min-h-[70vh] max-w-5xl px-5 py-10 sm:px-6 md:px-10 md:py-16">
@@ -207,15 +215,21 @@ export function OrderTracker({
       </div>
 
       {/* Progress Timeline Stepper */}
-      {order.status === "cancelled" || order.status === "returned" ? (
+      {order.status === "cancelled" ||
+      order.status === "partially_returned" ||
+      order.status === "returned" ? (
         <div className="mt-8 rounded-xs border border-[#a5472f]/40 bg-[#a5472f]/10 p-5 text-sm font-semibold text-[#a5472f]">
           {order.status === "cancelled"
             ? ar
               ? "تم إلغاء هذا الطلب بناءً على طلبك أو لتعذر تأكيد الدفع."
               : "This order was cancelled."
-            : ar
-              ? "تم إرجاع هذا الطلب وتأكيد الاستلام بالمخزن."
-              : "This order was returned."}
+            : order.status === "partially_returned"
+              ? ar
+                ? "تم استرجاع جزء من هذا الطلب وإكمال تسويته."
+                : "Part of this order was returned and settled."
+              : ar
+                ? "تم إرجاع هذا الطلب وتأكيد الاستلام بالمخزن."
+                : "This order was returned."}
         </div>
       ) : (
         <div className="mt-8 rounded-xs border border-[var(--border-subtle)] bg-white p-5 shadow-xs sm:p-7">
@@ -250,7 +264,11 @@ export function OrderTracker({
                           : "bg-black/10 text-neutral-500"
                       }`}
                     >
-                      {active ? <Check size={13} strokeWidth={2.5} /> : index + 1}
+                      {active ? (
+                        <Check size={13} strokeWidth={2.5} />
+                      ) : (
+                        index + 1
+                      )}
                     </span>
                     <strong className="text-[11px] font-bold uppercase tracking-[.08em] text-[var(--text-strong)]">
                       {labels[status][ar ? 1 : 0]}
@@ -343,7 +361,9 @@ export function OrderTracker({
                     rel="noreferrer"
                     className="mt-3 inline-flex items-center gap-1.5 font-bold uppercase tracking-[.1em] text-[#0e7468] underline"
                   >
-                    <span>{ar ? "تتبع الشحنة خارجياً" : "Track with courier"}</span>
+                    <span>
+                      {ar ? "تتبع الشحنة خارجياً" : "Track with courier"}
+                    </span>
                     <ExternalLink size={12} aria-hidden="true" />
                   </a>
                 )}
@@ -430,7 +450,11 @@ export function OrderTracker({
       {/* Status History Timeline */}
       <section className="mt-8 rounded-xs border border-[var(--border-subtle)] bg-white p-5 shadow-xs sm:p-7">
         <h2 className="flex items-center gap-2.5 font-serif text-2xl text-[var(--text-strong)]">
-          <PackageCheck size={22} className="text-[#0e7468]" aria-hidden="true" />
+          <PackageCheck
+            size={22}
+            className="text-[#0e7468]"
+            aria-hidden="true"
+          />
           <span>{ar ? "سجل تحديثات الطلب" : "Order status history"}</span>
         </h2>
         <ol className="mt-6 space-y-4">

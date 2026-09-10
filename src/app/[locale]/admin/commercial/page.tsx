@@ -6,8 +6,12 @@ import {
   removeRecommendationAction,
   saveBundleAction,
   saveRecommendationAction,
-  updateReturnAction,
 } from "@/features/commercial/admin-actions";
+import { ReturnReviewForm } from "@/features/commercial/return-review-form";
+import {
+  returnResolutionLabel,
+  returnStatusLabel,
+} from "@/features/commercial/return-workflow";
 
 const field = "mt-1.5 h-11 w-full border border-black/15 bg-white px-3 text-sm";
 
@@ -65,7 +69,7 @@ export default async function CommercialPage({
     supabase
       .from("return_requests")
       .select(
-        "id, return_number, request_type, status, resolution, reason_code, customer_note, staff_note, evidence_paths, requested_at, orders(order_number, customer_name, email), return_request_items(quantity, requested_colour, requested_size, condition_note)",
+        "id, return_number, request_type, status, resolution, reason_code, customer_note, staff_note, evidence_paths, requested_at, refund_amount_minor, refund_method, refund_reference, orders(order_number, customer_name, email, status, payment_status, total_minor), return_request_items(id, quantity, received_quantity, restocked_quantity, requested_colour, requested_size, condition_note, order_items(title_en, title_ar, colour_en, colour_ar, size, unit_price_minor)), return_internal_notes(note, created_at)",
       )
       .order("requested_at", { ascending: false })
       .limit(50),
@@ -361,89 +365,150 @@ export default async function CommercialPage({
           </h2>
           <div className="mt-4 space-y-4">
             {returns.length ? (
-              returns.map((item) => (
-                <article key={item.id} className="border border-black/10 p-4">
-                  <div className="flex flex-wrap justify-between gap-3">
-                    <div>
-                      <strong>{item.return_number}</strong>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        {item.orders?.order_number} ·{" "}
-                        {item.orders?.customer_name} · {item.request_type} ·{" "}
-                        {item.reason_code.replaceAll("_", " ")}
-                      </p>
-                    </div>
-                    <span className="bg-[#e7f2ef] px-3 py-1 text-[10px] font-bold uppercase text-[#073b36]">
-                      {item.status}
-                    </span>
-                  </div>
-                  {item.customer_note && (
-                    <p className="mt-3 bg-neutral-50 p-3 text-xs">
-                      {item.customer_note}
-                    </p>
-                  )}
-                  {item.evidence_paths.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-3">
-                      {item.evidence_paths.map((path, index) => (
-                        <a
-                          key={path}
-                          href={`/api/admin/returns/evidence?path=${encodeURIComponent(path)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-bold text-[#0e7468] underline"
-                        >
-                          {ar ? `صورة ${index + 1}` : `Evidence ${index + 1}`}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                  <form
-                    action={updateReturnAction}
-                    className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_2fr_auto]"
+              returns.map((item) => {
+                const eligibleItemsMinor = item.return_request_items.reduce(
+                  (sum, line) =>
+                    sum +
+                    line.quantity * (line.order_items?.unit_price_minor ?? 0),
+                  0,
+                );
+                const reviewItems = item.return_request_items.map((line) => ({
+                  id: line.id,
+                  title:
+                    (ar
+                      ? line.order_items?.title_ar
+                      : line.order_items?.title_en) ??
+                    (ar ? "منتج" : "Product"),
+                  variant: [
+                    ar
+                      ? line.order_items?.colour_ar
+                      : line.order_items?.colour_en,
+                    line.order_items?.size,
+                  ]
+                    .filter(Boolean)
+                    .join(" · "),
+                  quantity: line.quantity,
+                  receivedQuantity: line.received_quantity,
+                  restockedQuantity: line.restocked_quantity,
+                  conditionNote: line.condition_note,
+                }));
+                return (
+                  <article
+                    key={item.id}
+                    className="rounded-xs border border-black/10 p-4"
                   >
-                    <input type="hidden" name="locale" value={locale} />
-                    <input type="hidden" name="id" value={item.id} />
-                    <select
-                      name="status"
-                      defaultValue={item.status}
-                      className={field}
-                    >
-                      {[
-                        "requested",
-                        "reviewing",
-                        "approved",
-                        "rejected",
-                        "received",
-                        "completed",
-                        "cancelled",
-                      ].map((status) => (
-                        <option key={status}>{status}</option>
+                    <div className="flex flex-wrap justify-between gap-3">
+                      <div>
+                        <strong>{item.return_number}</strong>
+                        <p className="mt-1 text-xs text-neutral-500">
+                          {item.orders?.order_number} ·{" "}
+                          {item.orders?.customer_name} · {item.request_type} ·{" "}
+                          {item.reason_code.replaceAll("_", " ")}
+                        </p>
+                      </div>
+                      <span className="self-start rounded-full bg-[#e7f2ef] px-3 py-1 text-[10px] font-bold uppercase text-[#073b36]">
+                        {returnStatusLabel(item.status, locale)}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-neutral-600">
+                      <span>
+                        {ar ? "حالة الطلب" : "Order"}:{" "}
+                        {item.orders?.status.replaceAll("_", " ")}
+                      </span>
+                      <span>
+                        {ar ? "الدفع" : "Payment"}:{" "}
+                        {item.orders?.payment_status.replaceAll("_", " ")}
+                      </span>
+                      {item.resolution && (
+                        <span>
+                          {ar ? "التسوية" : "Resolution"}:{" "}
+                          {returnResolutionLabel(item.resolution, locale)}
+                        </span>
+                      )}
+                    </div>
+                    {item.customer_note && (
+                      <div className="mt-3 rounded-xs bg-neutral-50 p-3 text-xs">
+                        <strong className="block text-[10px] uppercase text-neutral-500">
+                          {ar ? "ملاحظة العميل" : "Customer request note"}
+                        </strong>
+                        <p className="mt-1">{item.customer_note}</p>
+                      </div>
+                    )}
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {reviewItems.map((line) => (
+                        <div
+                          key={line.id}
+                          className="rounded-xs border border-black/10 p-3 text-xs"
+                        >
+                          <strong>{line.title}</strong>
+                          <p className="mt-1 text-neutral-500">
+                            {line.variant} · {ar ? "مطلوب" : "requested"}{" "}
+                            {line.quantity} · {ar ? "مستلم" : "received"}{" "}
+                            {line.receivedQuantity} ·{" "}
+                            {ar ? "مخزون" : "restocked"}{" "}
+                            {line.restockedQuantity}
+                          </p>
+                        </div>
                       ))}
-                    </select>
-                    <select
-                      name="resolution"
-                      defaultValue={item.resolution ?? ""}
-                      className={field}
-                    >
-                      <option value="">No resolution</option>
-                      <option value="refund">Refund</option>
-                      <option value="exchange">Exchange</option>
-                      <option value="store_credit">Store credit</option>
-                    </select>
-                    <input
-                      name="note"
-                      maxLength={1000}
-                      defaultValue={item.staff_note ?? ""}
-                      placeholder={
-                        ar ? "ملاحظة للعميل" : "Customer-facing note"
-                      }
-                      className={field}
+                    </div>
+                    {item.evidence_paths.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {item.evidence_paths.map((path, index) => (
+                          <a
+                            key={path}
+                            href={`/api/admin/returns/evidence?path=${encodeURIComponent(path)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-bold text-[#0e7468] underline"
+                          >
+                            {ar ? `صورة ${index + 1}` : `Evidence ${index + 1}`}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {item.return_internal_notes.length > 0 && (
+                      <details className="mt-4 rounded-xs border border-amber-200 bg-amber-50 p-3 text-xs">
+                        <summary className="cursor-pointer font-bold text-amber-900">
+                          {ar
+                            ? "ملاحظات داخلية خاصة"
+                            : "Private internal notes"}{" "}
+                          ({item.return_internal_notes.length})
+                        </summary>
+                        <ul className="mt-3 space-y-2 text-amber-950">
+                          {item.return_internal_notes
+                            .toSorted((a, b) =>
+                              b.created_at.localeCompare(a.created_at),
+                            )
+                            .map((note) => (
+                              <li key={`${note.created_at}-${note.note}`}>
+                                <span className="text-amber-800">
+                                  {new Intl.DateTimeFormat(locale, {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  }).format(new Date(note.created_at))}
+                                </span>
+                                <p className="mt-0.5">{note.note}</p>
+                              </li>
+                            ))}
+                        </ul>
+                      </details>
+                    )}
+                    <ReturnReviewForm
+                      locale={locale}
+                      returnId={item.id}
+                      initialStatus={item.status}
+                      initialResolution={item.resolution}
+                      customerFacingNote={item.staff_note}
+                      refundAmountMinor={item.refund_amount_minor}
+                      refundMethod={item.refund_method}
+                      refundReference={item.refund_reference}
+                      orderTotalMinor={item.orders?.total_minor ?? 0}
+                      eligibleItemsMinor={eligibleItemsMinor}
+                      items={reviewItems}
                     />
-                    <button className="mt-1.5 min-h-11 bg-[#073b36] px-4 text-xs font-bold uppercase text-white">
-                      {ar ? "تحديث" : "Update"}
-                    </button>
-                  </form>
-                </article>
-              ))
+                  </article>
+                );
+              })
             ) : (
               <p className="py-7 text-sm text-neutral-500">
                 {ar ? "لا توجد طلبات استرجاع." : "No return cases."}

@@ -45,8 +45,34 @@ describe("commercial lifecycle emails", () => {
       renderReturnUpdate({
         ...input,
         status: "approved",
+        resolution: "exchange",
+        refundAmountMinor: 0,
+        refundMethod: null,
+        refundReference: null,
         note: "Bring the item sealed.",
       }).html,
     ).toContain("Bring the item sealed.");
+  });
+
+  it("escapes customer-facing return notes and includes refund settlement details", () => {
+    const email = renderReturnUpdate({
+      email: "doctor@example.com",
+      customerName: "Mona <script>",
+      orderNumber: "SV-100",
+      returnNumber: "SVR-2026-ABCD",
+      requestType: "return",
+      status: "completed",
+      resolution: "refund",
+      refundAmountMinor: 42550,
+      refundMethod: "instapay",
+      refundReference: "IPN-42",
+      note: "Sent <b>today</b>",
+      locale: "en",
+    });
+    expect(email.html).toContain("EGP 425.50");
+    expect(email.html).toContain("InstaPay");
+    expect(email.html).toContain("IPN-42");
+    expect(email.html).toContain("Sent &lt;b&gt;today&lt;/b&gt;");
+    expect(email.html).not.toContain("<script>");
   });
 });

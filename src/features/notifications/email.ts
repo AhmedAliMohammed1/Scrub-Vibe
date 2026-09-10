@@ -1,4 +1,23 @@
 import { Resend } from "resend";
+import {
+  returnRefundMethodLabel,
+  returnResolutionLabel,
+  type ReturnRefundMethod,
+  type ReturnResolution,
+} from "@/features/commercial/return-workflow";
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>'"]/g, (character) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      '"': "&quot;",
+    };
+    return entities[character];
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Client — falls back to console preview when the key is absent (local dev)
@@ -82,14 +101,31 @@ export function renderReturnUpdate(input: {
   returnNumber: string;
   requestType: string;
   status: string;
+  resolution: ReturnResolution | null;
+  refundAmountMinor: number;
+  refundMethod: ReturnRefundMethod | null;
+  refundReference: string | null;
   note: string | null;
   locale: "en" | "ar";
 }): EmailPayload {
   const ar = input.locale === "ar";
+  const customerName = escapeHtml(input.customerName);
+  const orderNumber = escapeHtml(input.orderNumber);
+  const returnNumber = escapeHtml(input.returnNumber);
+  const requestType = escapeHtml(input.requestType.replaceAll("_", " "));
+  const status = escapeHtml(input.status.replaceAll("_", " "));
+  const note = input.note ? escapeHtml(input.note) : null;
   const subject = ar
-    ? `تحديث طلب ${input.returnNumber}`
-    : `Update for ${input.returnNumber}`;
-  const content = `<p style="font-size:14px;color:#444">${ar ? `مرحباً ${input.customerName}، تم تحديث طلبك المرتبط بالطلب ${input.orderNumber}.` : `Hi ${input.customerName}, your request for order ${input.orderNumber} has been updated.`}</p><table width="100%" style="background:#f0f5f3;padding:16px;font-size:13px"><tr><td>${ar ? "النوع" : "Type"}</td><td style="text-align:right;font-weight:700">${input.requestType.replaceAll("_", " ")}</td></tr><tr><td>${ar ? "الحالة" : "Status"}</td><td style="text-align:right;font-weight:700">${input.status.replaceAll("_", " ")}</td></tr></table>${input.note ? `<p style="font-size:13px;color:#555"><strong>${ar ? "ملاحظة الفريق:" : "Team note:"}</strong><br>${input.note}</p>` : ""}`;
+    ? `تحديث طلب ${returnNumber}`
+    : `Update for ${returnNumber}`;
+  const resolution = input.resolution
+    ? `<tr><td>${ar ? "التسوية" : "Resolution"}</td><td style="text-align:right;font-weight:700">${returnResolutionLabel(input.resolution, input.locale)}</td></tr>`
+    : "";
+  const refund =
+    input.resolution === "refund" && input.refundAmountMinor > 0
+      ? `<p style="font-size:13px;color:#355"><strong>${ar ? "مبلغ الاسترداد:" : "Refund amount:"}</strong> ${formatPriceMajor(input.refundAmountMinor)}${input.refundMethod ? `<br>${returnRefundMethodLabel(input.refundMethod, input.locale)}` : ""}${input.refundReference ? ` · ${escapeHtml(input.refundReference)}` : ""}</p>`
+      : "";
+  const content = `<p style="font-size:14px;color:#444">${ar ? `مرحباً ${customerName}، تم تحديث طلبك المرتبط بالطلب ${orderNumber}.` : `Hi ${customerName}, your request for order ${orderNumber} has been updated.`}</p><table width="100%" style="background:#f0f5f3;padding:16px;font-size:13px"><tr><td>${ar ? "النوع" : "Type"}</td><td style="text-align:right;font-weight:700">${requestType}</td></tr><tr><td>${ar ? "الحالة" : "Status"}</td><td style="text-align:right;font-weight:700">${status}</td></tr>${resolution}</table>${note ? `<p style="font-size:13px;color:#555"><strong>${ar ? "ملاحظة الفريق:" : "Team note:"}</strong><br>${note}</p>` : ""}${refund}`;
   return { to: input.email, subject, html: baseLayout(subject, content, ar) };
 }
 

@@ -16,8 +16,28 @@ export type TrackedOrder = {
   cod_surcharge_minor: number;
   delivery_min_days: number | null;
   delivery_max_days: number | null;
-  status: "awaiting_payment" | "payment_review" | "confirmed" | "processing" | "ready_to_ship" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "returned";
-  payment_status: "pending" | "proof_submitted" | "paid" | "rejected" | "failed" | "cod_due" | "cod_collected" | "refunded";
+  status:
+    | "awaiting_payment"
+    | "payment_review"
+    | "confirmed"
+    | "processing"
+    | "ready_to_ship"
+    | "shipped"
+    | "out_for_delivery"
+    | "delivered"
+    | "partially_returned"
+    | "cancelled"
+    | "returned";
+  payment_status:
+    | "pending"
+    | "proof_submitted"
+    | "paid"
+    | "partially_refunded"
+    | "rejected"
+    | "failed"
+    | "cod_due"
+    | "cod_collected"
+    | "refunded";
   payment_method: "cod" | "vodafone_cash" | "instapay" | "paymob";
   cod_deposit_minor: number;
   cod_balance_due_minor: number;
@@ -38,13 +58,25 @@ export type TrackedOrder = {
   shipped_at: string | null;
   delivered_at: string | null;
   order_items: {
-    id: number; sku: string; title_en: string; title_ar: string; colour_en: string | null;
-    colour_ar: string | null; size: string | null; image_url: string | null;
-    unit_price_minor: number; quantity: number; line_total_minor: number;
-    cod_deposit_unit_minor: number; cod_deposit_line_minor: number;
+    id: number;
+    sku: string;
+    title_en: string;
+    title_ar: string;
+    colour_en: string | null;
+    colour_ar: string | null;
+    size: string | null;
+    image_url: string | null;
+    unit_price_minor: number;
+    quantity: number;
+    line_total_minor: number;
+    cod_deposit_unit_minor: number;
+    cod_deposit_line_minor: number;
   }[];
   order_status_history: {
-    id: number; status: TrackedOrder["status"]; payment_status: TrackedOrder["payment_status"];
-    note: string | null; created_at: string;
+    id: number;
+    status: TrackedOrder["status"];
+    payment_status: TrackedOrder["payment_status"];
+    note: string | null;
+    created_at: string;
   }[];
 };

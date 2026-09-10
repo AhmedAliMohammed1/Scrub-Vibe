@@ -21,8 +21,30 @@ import {
 const schema = z.object({
   locale: z.enum(["en", "ar"]),
   orderId: z.uuid(),
-  status: z.enum(["awaiting_payment", "payment_review", "confirmed", "processing", "ready_to_ship", "shipped", "out_for_delivery", "delivered", "cancelled", "returned"]),
-  paymentStatus: z.enum(["pending", "proof_submitted", "paid", "rejected", "failed", "cod_due", "cod_collected", "refunded"]),
+  status: z.enum([
+    "awaiting_payment",
+    "payment_review",
+    "confirmed",
+    "processing",
+    "ready_to_ship",
+    "shipped",
+    "out_for_delivery",
+    "delivered",
+    "partially_returned",
+    "cancelled",
+    "returned",
+  ]),
+  paymentStatus: z.enum([
+    "pending",
+    "proof_submitted",
+    "paid",
+    "partially_refunded",
+    "rejected",
+    "failed",
+    "cod_due",
+    "cod_collected",
+    "refunded",
+  ]),
   note: z.string().trim().max(500),
   shipmentNumber: z.string().trim().max(120),
   courier: z.string().trim().max(120),
@@ -70,10 +92,18 @@ export async function updateOrderAction(formData: FormData) {
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     const locale = formData.get("locale") === "ar" ? "ar" : "en";
-    const msg = locale === "ar" ? "بيانات تحديث الطلب غير صالحة." : "Invalid order update details.";
+    const msg =
+      locale === "ar"
+        ? "بيانات تحديث الطلب غير صالحة."
+        : "Invalid order update details.";
     redirect(`/${locale}/admin/orders?error=${encodeURIComponent(msg)}`);
   }
-  const { supabase } = await requireRoles(["support", "warehouse", "admin", "super_admin"]);
+  const { supabase } = await requireRoles([
+    "support",
+    "warehouse",
+    "admin",
+    "super_admin",
+  ]);
   const value = parsed.data;
 
   // 1. Fetch current order before update to know previous status and payment_status
@@ -87,7 +117,9 @@ export async function updateOrderAction(formData: FormData) {
   let effectiveProofStatus = value.proofStatus || undefined;
   if (
     !effectiveProofStatus &&
-    (value.paymentStatus === "paid" || value.paymentStatus === "cod_due" || value.status === "confirmed")
+    (value.paymentStatus === "paid" ||
+      value.paymentStatus === "cod_due" ||
+      value.status === "confirmed")
   ) {
     const { data: pendingProof } = await supabase
       .from("payment_proofs")
@@ -127,15 +159,21 @@ export async function updateOrderAction(formData: FormData) {
 
   if (error) {
     const friendly = formatOrderErrorMessage(error.message, value.locale);
-    const filterQuery = value.currentFilter ? `&status=${encodeURIComponent(value.currentFilter)}` : "";
-    redirect(`/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}${filterQuery}`);
+    const filterQuery = value.currentFilter
+      ? `&status=${encodeURIComponent(value.currentFilter)}`
+      : "";
+    redirect(
+      `/${value.locale}/admin/orders?error=${encodeURIComponent(friendly)}${filterQuery}`,
+    );
   }
 
   // 1. Fetch updated order data for emails & customer tracking revalidation
   const admin = createAdminClient();
   const { data: orderData } = await admin
     .from("orders")
-    .select("order_number, customer_name, email, subtotal_minor, discount_minor, discount_code, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)")
+    .select(
+      "order_number, customer_name, email, subtotal_minor, discount_minor, discount_code, shipping_minor, total_minor, payment_method, courier, shipment_number, tracking_url, order_items(title_en, title_ar, colour_en, colour_ar, size, quantity, line_total_minor)",
+    )
     .eq("id", value.orderId)
     .single();
 
@@ -174,34 +212,59 @@ export async function updateOrderAction(formData: FormData) {
         previousOrder?.payment_status !== "paid" &&
         previousOrder?.payment_status !== "cod_due";
 
-      const statusChanged = Boolean(previousOrder && previousOrder.status !== value.status);
+      const statusChanged = Boolean(
+        previousOrder && previousOrder.status !== value.status,
+      );
 
       if (proofApprovedNow) {
-        await sendEmail(renderPaymentApproved(emailOrder, locale, customerNote));
+        await sendEmail(
+          renderPaymentApproved(emailOrder, locale, customerNote),
+        );
       } else if (statusChanged) {
         if (value.status === "processing" || value.status === "ready_to_ship") {
-          await sendEmail(renderOrderProcessing(emailOrder, locale, customerNote));
+          await sendEmail(
+            renderOrderProcessing(emailOrder, locale, customerNote),
+          );
         } else if (value.status === "shipped") {
           await sendEmail(renderOrderShipped(emailOrder, locale, customerNote));
         } else if (value.status === "out_for_delivery") {
-          await sendEmail(renderOrderOutForDelivery(emailOrder, locale, customerNote));
+          await sendEmail(
+            renderOrderOutForDelivery(emailOrder, locale, customerNote),
+          );
         } else if (value.status === "delivered") {
-          await sendEmail(renderOrderDelivered(emailOrder, locale, customerNote));
+          await sendEmail(
+            renderOrderDelivered(emailOrder, locale, customerNote),
+          );
         } else if (value.status === "cancelled") {
-          await sendEmail(renderOrderCancelled(emailOrder, locale, customerNote));
+          await sendEmail(
+            renderOrderCancelled(emailOrder, locale, customerNote),
+          );
         } else if (value.status === "confirmed") {
-          await sendEmail(renderPaymentApproved(emailOrder, locale, customerNote));
+          await sendEmail(
+            renderPaymentApproved(emailOrder, locale, customerNote),
+          );
         }
       } else if (customerNote) {
-        await sendEmail(renderOrderStatusNote(emailOrder, locale, customerNote, value.status));
+        await sendEmail(
+          renderOrderStatusNote(emailOrder, locale, customerNote, value.status),
+        );
       }
     } catch (emailError) {
-      console.error("[email] Failed to send admin email notification:", emailError);
+      console.error(
+        "[email] Failed to send admin email notification:",
+        emailError,
+      );
     }
   }
 
   const successMsg =
-    value.locale === "ar" ? "تم تحديث الطلب بنجاح." : "Order updated successfully.";
-  const filterQuery = value.currentFilter ? `&status=${encodeURIComponent(value.currentFilter)}` : "";
-  redirect(`/${value.locale}/admin/orders?success=${encodeURIComponent(successMsg)}${filterQuery}`);
+    value.locale === "ar"
+      ? "تم تحديث الطلب بنجاح."
+      : "Order updated successfully.";
+  const filterQuery = value.currentFilter
+    ? `&status=${encodeURIComponent(value.currentFilter)}`
+    : "";
+  redirect(
+    `/${value.locale}/admin/orders?success=${encodeURIComponent(successMsg)}${filterQuery}`,
+  );
 }
