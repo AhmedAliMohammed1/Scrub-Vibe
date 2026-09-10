@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 import type { TrackedOrder } from "./types";
+import { OrderAccountPrompt } from "./order-account-prompt";
 
 const progress = [
   "confirmed",
@@ -213,6 +214,23 @@ export function OrderTracker({
           {paymentLabel[order.payment_status][ar ? 1 : 0]}
         </div>
       </div>
+
+      {/* Post-Purchase Account Suggestion */}
+      {!order.has_account && (
+        <OrderAccountPrompt
+          orderNumber={order.order_number}
+          trackingToken={manualToken || storedToken(order.order_number)}
+          customerName={order.customer_name}
+          email={order.email}
+          phone={order.phone}
+          locale={locale}
+          onSuccess={() => {
+            setOrder((prev) =>
+              prev ? { ...prev, has_account: true, is_owner: true } : null,
+            );
+          }}
+        />
+      )}
 
       {/* Progress Timeline Stepper */}
       {order.status === "cancelled" ||

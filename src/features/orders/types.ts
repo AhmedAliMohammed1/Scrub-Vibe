@@ -57,6 +57,14 @@ export type TrackedOrder = {
   paid_at: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
+  email?: string | null;
+  street_address?: string;
+  building?: string | null;
+  floor?: string | null;
+  apartment?: string | null;
+  landmark?: string | null;
+  has_account?: boolean;
+  is_owner?: boolean;
   order_items: {
     id: number;
     sku: string;

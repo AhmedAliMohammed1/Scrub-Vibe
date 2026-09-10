@@ -7,10 +7,14 @@ import {
   BadgePercent,
   CheckCircle2,
   CreditCard,
+  Eye,
+  EyeOff,
+  KeyRound,
   Loader2,
   LockKeyhole,
   Package,
   SlidersHorizontal,
+  Sparkles,
   X,
   Zap,
 } from "lucide-react";
@@ -30,6 +34,12 @@ import {
 import type { CustomerAddress, AddressLabel } from "@/features/addresses/types";
 import { CheckoutAddressSelector } from "@/features/addresses/checkout-address-selector";
 import { createCustomerAddressAction } from "@/features/addresses/actions";
+import {
+  checkEmailExistsAction,
+  claimOrderWithPasswordAction,
+  createAccountAndClaimOrderAction,
+} from "@/features/orders/claim-actions";
+import { createClient } from "@/lib/supabase/client";
 import { trackStoreEvent } from "@/lib/analytics";
 
 type PaymentMethod = "cod" | "vodafone_cash" | "instapay" | "paymob";
@@ -162,6 +172,38 @@ export function CheckoutForm({
       : "",
   );
   const [customerNotes, setCustomerNotes] = useState("");
+
+  const [wantAccount, setWantAccount] = useState(false);
+  const [accountPassword, setAccountPassword] = useState("");
+  const [showAccountPassword, setShowAccountPassword] = useState(false);
+  const [accountEmailExists, setAccountEmailExists] = useState<boolean | null>(
+    null,
+  );
+  const [checkingAccountEmail, setCheckingAccountEmail] = useState(false);
+
+  const isEligibleAccountCheck = Boolean(
+    wantAccount && email && email.includes("@"),
+  );
+  const effectiveAccountEmailExists = isEligibleAccountCheck
+    ? accountEmailExists
+    : null;
+
+  useEffect(() => {
+    if (!isEligibleAccountCheck) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      setCheckingAccountEmail(true);
+      void checkEmailExistsAction(email).then((res) => {
+        if (!active) return;
+        setAccountEmailExists(res.exists);
+        setCheckingAccountEmail(false);
+      });
+    }, 150);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [isEligibleAccountCheck, email]);
 
   const handleSwitchAddressMode = (nextMode: "quick" | "detailed") => {
     if (nextMode === addressMode) return;
@@ -606,6 +648,54 @@ export function CheckoutForm({
       );
       return;
     }
+    if (wantAccount && !isAuthenticated) {
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail || !trimmedEmail.includes("@")) {
+        setError(
+          ar
+            ? "يرجى كتابة بريد إلكتروني صالح لإنشاء حساب أو ربط طلبك."
+            : "Please enter a valid email address to register or link your account.",
+        );
+        return;
+      }
+      if (
+        !accountPassword ||
+        accountPassword.length < (effectiveAccountEmailExists ? 6 : 8)
+      ) {
+        setError(
+          effectiveAccountEmailExists
+            ? ar
+              ? "يرجى إدخال كلمة المرور الخاصة بحسابك المسجل."
+              : "Please enter your password for your existing account."
+            : ar
+              ? "يجب أن تكون كلمة المرور ٨ أحرف على الأقل."
+              : "Password must be at least 8 characters.",
+        );
+        return;
+      }
+
+      if (effectiveAccountEmailExists) {
+        setBusy("order");
+        try {
+          const supabase = createClient();
+          const { error: signInErr } = await supabase.auth.signInWithPassword({
+            email: trimmedEmail.toLowerCase(),
+            password: accountPassword,
+          });
+          if (signInErr) {
+            setBusy(null);
+            setError(
+              ar
+                ? "كلمة المرور غير صحيحة. يرجى التحقق وإعادة المحاولة."
+                : "Incorrect password. Please verify your password and try again.",
+            );
+            return;
+          }
+        } catch {
+          // Fall through if network error
+        }
+      }
+    }
     setBusy("order");
     setError("");
     const form = new FormData(event.currentTarget);
@@ -682,6 +772,41 @@ export function CheckoutForm({
     if (!response.ok || !result.orderNumber || !result.trackingToken) {
       showResponseError(result);
       return;
+    }
+    if (
+      wantAccount &&
+      !isAuthenticated &&
+      email &&
+      accountPassword &&
+      result.orderNumber &&
+      result.trackingToken
+    ) {
+      try {
+        if (effectiveAccountEmailExists) {
+          await claimOrderWithPasswordAction({
+            orderNumber: result.orderNumber,
+            trackingToken: result.trackingToken,
+            email: email.trim(),
+            password: accountPassword,
+            locale,
+          });
+        } else {
+          await createAccountAndClaimOrderAction({
+            orderNumber: result.orderNumber,
+            trackingToken: result.trackingToken,
+            email: email.trim(),
+            password: accountPassword,
+            fullName: customerName.trim(),
+            phone: phone.trim(),
+            locale,
+          });
+        }
+      } catch (claimErr) {
+        console.warn(
+          "[checkout] Account registration/linking failed non-fatally",
+          claimErr,
+        );
+      }
     }
     if (saveNewAddress && isAuthenticated) {
       const targetGov = shippingLocations.find(
@@ -959,6 +1084,122 @@ export function CheckoutForm({
                   </p>
                 )}
               </div>
+
+              {!isAuthenticated && (
+                <div className="sm:col-span-2 rounded-xs border border-[#0e7468]/20 bg-[#f4f8f6] p-4 transition-all">
+                  <label className="flex cursor-pointer items-start gap-3 select-none">
+                    <input
+                      type="checkbox"
+                      checked={wantAccount}
+                      onChange={(e) => setWantAccount(e.target.checked)}
+                      className="mt-0.5 size-4 accent-[#0e7468] rounded-xs"
+                    />
+                    <div className="flex-1">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-[#073b36]">
+                        <Sparkles size={14} className="text-[#0e7468]" />
+                        {ar
+                          ? "حفظ بياناتي وإنشاء حساب لمتابعة طلباتي القادمة"
+                          : "Save my details & create an account for future orders"}
+                      </span>
+                      <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                        {ar
+                          ? "سيتم ربط هذا الطلب بحسابك فوراً وحفظ عنوانك للتوصيل السريع."
+                          : "This order will be instantly linked to your account and your address saved."}
+                      </p>
+                    </div>
+                  </label>
+
+                  {wantAccount && (
+                    <div className="mt-4 border-t border-[#0e7468]/15 pt-3 space-y-3">
+                      {checkingAccountEmail ? (
+                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                          <Loader2
+                            size={13}
+                            className="animate-spin text-[#0e7468]"
+                          />
+                          <span>
+                            {ar
+                              ? "جارٍ التحقق من البريد…"
+                              : "Checking account status…"}
+                          </span>
+                        </div>
+                      ) : effectiveAccountEmailExists ? (
+                        <div className="rounded-xs border border-amber-500/30 bg-amber-50/90 p-2.5 text-xs text-amber-950">
+                          <p className="font-semibold flex items-center gap-1.5 text-[#073b36]">
+                            <KeyRound size={13} className="text-[#0e7468]" />
+                            {ar
+                              ? "لديك حساب بالفعل بهذا البريد الإلكتروني!"
+                              : "An account already exists with this email!"}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+                            {ar
+                              ? "أدخل كلمة المرور الخاصة بك للتحقق وربط الطلب بحسابك تلقائياً."
+                              : "Enter your password to verify and link this order to your account automatically."}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-[var(--text-muted)]">
+                          {ar
+                            ? "أنشئ كلمة مرور (٨ أحرف على الأقل) لحسابك الجديد لحفظ بياناتك."
+                            : "Create a password (min 8 characters) to save your details for future orders."}
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="grid gap-1 text-[11px] font-bold text-[var(--text-muted)]">
+                          {effectiveAccountEmailExists
+                            ? ar
+                              ? "كلمة المرور الخاصة بحسابك"
+                              : "Your account password"
+                            : ar
+                              ? "تعيين كلمة مرور جديدة"
+                              : "Set a password"}
+                          <div className="relative">
+                            <input
+                              type={showAccountPassword ? "text" : "password"}
+                              value={accountPassword}
+                              onChange={(e) =>
+                                setAccountPassword(e.target.value)
+                              }
+                              placeholder={
+                                effectiveAccountEmailExists
+                                  ? "••••••••"
+                                  : ar
+                                    ? "٨ أحرف على الأقل"
+                                    : "Minimum 8 characters"
+                              }
+                              autoComplete={
+                                effectiveAccountEmailExists
+                                  ? "current-password"
+                                  : "new-password"
+                              }
+                              className={`${inputClass} pe-9`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowAccountPassword(!showAccountPassword)
+                              }
+                              className="absolute inset-y-0 end-0 flex items-center pe-3 text-[var(--text-muted)] hover:text-[var(--text-strong)]"
+                              aria-label={
+                                showAccountPassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
+                            >
+                              {showAccountPassword ? (
+                                <EyeOff size={15} />
+                              ) : (
+                                <Eye size={15} />
+                              )}
+                            </button>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
@@ -1191,9 +1432,7 @@ export function CheckoutForm({
                       minLength={5}
                       maxLength={300}
                       placeholder={
-                        ar
-                          ? "اسم الشارع والمنطقة"
-                          : "Street name & area"
+                        ar ? "اسم الشارع والمنطقة" : "Street name & area"
                       }
                       autoComplete="street-address"
                     />
@@ -1226,7 +1465,9 @@ export function CheckoutForm({
                       name="apartment"
                       value={apartment}
                       onChange={(e) => setApartment(e.target.value)}
-                      placeholder={ar ? "رقم العيادة أو الشقة" : "Clinic or apt #"}
+                      placeholder={
+                        ar ? "رقم العيادة أو الشقة" : "Clinic or apt #"
+                      }
                       maxLength={50}
                       className={inputClass}
                     />
@@ -1237,7 +1478,9 @@ export function CheckoutForm({
                       name="landmark"
                       value={landmark}
                       onChange={(e) => setLandmark(e.target.value)}
-                      placeholder={ar ? "بجوار، أمام، خلف..." : "Near, opposite, behind..."}
+                      placeholder={
+                        ar ? "بجوار، أمام، خلف..." : "Near, opposite, behind..."
+                      }
                       maxLength={200}
                       className={inputClass}
                     />
