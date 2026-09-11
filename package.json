@@ -14,7 +14,8 @@
     "test:integration": "vitest run tests/integration",
     "format:check": "prettier --check .",
     "verify:release": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "ops:verify-backup": "node scripts/operations/verify-backup.mjs"
+    "ops:verify-backup": "node scripts/operations/verify-backup.mjs",
+    "ops:set-role": "node scripts/operations/set-user-role.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",
