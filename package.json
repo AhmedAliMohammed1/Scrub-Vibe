@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "verify:release": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "ops:verify-backup": "node scripts/operations/verify-backup.mjs",
-    "ops:set-role": "node scripts/operations/set-user-role.mjs"
+    "ops:set-role": "node scripts/operations/set-user-role.mjs",
+    "ops:remove-role": "node scripts/operations/set-user-role.mjs --remove"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",

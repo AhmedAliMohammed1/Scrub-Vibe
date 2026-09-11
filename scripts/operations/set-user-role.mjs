@@ -34,8 +34,19 @@ if (!url || !key) {
   process.exit(1);
 }
 
-const email = process.argv[2]?.trim().toLowerCase();
-const role = process.argv[3]?.trim().toLowerCase() || "super_admin";
+const args = process.argv.slice(2);
+const isRemove =
+  args.includes("--remove") ||
+  args.includes("-r") ||
+  args[0] === "remove" ||
+  process.env.npm_lifecycle_event === "ops:remove-role";
+
+const cleanArgs = args.filter(
+  (a) => a !== "--remove" && a !== "-r" && a !== "remove",
+);
+
+const email = cleanArgs[0]?.trim().toLowerCase();
+const role = cleanArgs[1]?.trim().toLowerCase() || "admin";
 
 const allowedRoles = [
   "customer",
@@ -51,13 +62,20 @@ const allowedRoles = [
 if (!email) {
   console.log(`
 Usage:
-  node scripts/operations/set-user-role.mjs <email> [role]
+  Grant a role:
+    npm run ops:set-role -- <email> [role]
+    node scripts/operations/set-user-role.mjs <email> [role]
+
+  Remove a role:
+    npm run ops:remove-role -- <email> [role]
+    node scripts/operations/set-user-role.mjs <email> [role] --remove
 
 Available roles:
   ${allowedRoles.join(", ")}
 
-Example:
-  node scripts/operations/set-user-role.mjs admin@example.com super_admin
+Examples:
+  npm run ops:set-role -- doctor@example.com admin
+  npm run ops:remove-role -- doctor@example.com admin
 `);
   process.exit(0);
 }
@@ -100,30 +118,64 @@ async function main() {
     userId = match.id;
   }
 
-  // Grant role in user_roles
-  const { error: insertErr } = await supabase.from("user_roles").upsert(
-    {
-      user_id: userId,
-      role,
-    },
-    { onConflict: "user_id,role" },
-  );
+  if (isRemove) {
+    // Remove role from user_roles
+    const { error: deleteErr } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId)
+      .eq("role", role);
 
-  if (insertErr) {
-    console.error("Failed to grant role:", insertErr);
-    process.exit(1);
+    if (deleteErr) {
+      console.error("Failed to remove role:", deleteErr);
+      process.exit(1);
+    }
+
+    // Ensure user still has at least "customer" role
+    const { data: checkRoles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    if (!checkRoles || checkRoles.length === 0) {
+      await supabase.from("user_roles").insert({ user_id: userId, role: "customer" });
+    }
+
+    const { data: allRoles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    console.log(`\nSuccessfully REMOVED role "${role}" from user:`);
+    console.log(`  Email: ${email}`);
+    console.log(`  User ID: ${userId}`);
+    console.log(`  Remaining active roles: ${allRoles?.map((r) => r.role).join(", ")}\n`);
+  } else {
+    // Grant role in user_roles
+    const { error: insertErr } = await supabase.from("user_roles").upsert(
+      {
+        user_id: userId,
+        role,
+      },
+      { onConflict: "user_id,role" },
+    );
+
+    if (insertErr) {
+      console.error("Failed to grant role:", insertErr);
+      process.exit(1);
+    }
+
+    // Fetch updated roles for this user
+    const { data: allRoles } = await supabase
+      .from("user_roles")
+      .select("role, granted_at")
+      .eq("user_id", userId);
+
+    console.log(`\nSuccessfully GRANTED role "${role}" to user:`);
+    console.log(`  Email: ${email}`);
+    console.log(`  User ID: ${userId}`);
+    console.log(`  Current active roles: ${allRoles?.map((r) => r.role).join(", ")}\n`);
   }
-
-  // Fetch updated roles for this user
-  const { data: allRoles } = await supabase
-    .from("user_roles")
-    .select("role, granted_at")
-    .eq("user_id", userId);
-
-  console.log(`\nSuccessfully granted role "${role}" to user:`);
-  console.log(`  Email: ${email}`);
-  console.log(`  User ID: ${userId}`);
-  console.log(`  Current active roles: ${allRoles?.map((r) => r.role).join(", ")}\n`);
 }
 
 main().catch((err) => {
